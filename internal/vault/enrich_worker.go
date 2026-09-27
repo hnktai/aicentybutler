@@ -309,12 +309,6 @@ func (w *EnrichWorker) processChunk(ctx context.Context, items []eventbus.VaultD
 		}
 	}
 
-	// Resolve provider once per chunk (all items share tenantID)
-	provider, model := w.resolveProviderForTenant(ctx, tenantID)
-	if provider == nil {
-		slog.Warn("vault.enrich: no provider available", "tenant", tenantID)
-		return
-	}
 	docIDs := make([]string, len(pending))
 	for i, item := range pending {
 		docIDs[i] = item.DocID
@@ -327,6 +321,20 @@ func (w *EnrichWorker) processChunk(ctx context.Context, items []eventbus.VaultD
 	docMap := make(map[string]*store.VaultDocument, len(existingDocs))
 	for i := range existingDocs {
 		docMap[existingDocs[i].ID] = &existingDocs[i]
+	}
+
+	// Body chunks need no LLM, so they are indexed even without a provider.
+	for _, item := range pending {
+		if doc := docMap[item.DocID]; doc != nil && doc.DocType != "media" && doc.DocType != "document" {
+			indexBody(ctx, w.vault, tenantID, item.DocID, item.ContentHash, filepath.Join(item.Workspace, item.Path))
+		}
+	}
+
+	// Resolve provider once per chunk (all items share tenantID)
+	provider, model := w.resolveProviderForTenant(ctx, tenantID)
+	if provider == nil {
+		slog.Warn("vault.enrich: no provider available", "tenant", tenantID)
+		return
 	}
 
 	var all []prepared
