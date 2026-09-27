@@ -38,15 +38,18 @@ func chunkBody(raw []byte) []store.VaultChunk {
 
 // indexBody rebuilds the body chunks of one text document from its workspace
 // file. The store skips the write when the chunks already match contentHash.
-func indexBody(ctx context.Context, vs store.VaultStore, tenantID, docID, contentHash, fullPath string) {
+// Failures are logged here; the error only tells the caller to retry later.
+func indexBody(ctx context.Context, vs store.VaultStore, tenantID, docID, contentHash, fullPath string) error {
 	raw, err := os.ReadFile(fullPath)
 	if err != nil {
 		slog.Warn("vault.body_index: read_file", "path", fullPath, "err", err)
-		return
+		return err
 	}
 	if err := vs.ReplaceDocumentChunks(ctx, tenantID, docID, contentHash, chunkBody(raw)); err != nil {
 		slog.Warn("vault.body_index: replace_chunks", "doc", docID, "err", err)
+		return err
 	}
+	return nil
 }
 
 // bodyIndexRuns keeps one IndexStaleBodies pass per tenant.
@@ -72,7 +75,7 @@ func IndexStaleBodies(ctx context.Context, vs store.VaultStore, tenantID, worksp
 		if ctx.Err() != nil {
 			return true
 		}
-		indexBody(ctx, vs, tenantID, doc.ID, doc.ContentHash, filepath.Join(workspace, doc.Path))
+		_ = indexBody(ctx, vs, tenantID, doc.ID, doc.ContentHash, filepath.Join(workspace, doc.Path))
 	}
 	if len(docs) > 0 {
 		slog.Info("vault.body_index: backfilled", "tenant", tenantID, "count", len(docs))
