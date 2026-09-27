@@ -47,7 +47,17 @@ func (m *AgentsMethods) handleDelete(ctx context.Context, client *gateway.Client
 		}
 
 		if err := m.agentStore.Delete(ctx, ag.ID); err != nil {
-			client.SendResponse(protocol.NewErrorResponse(req.ID, protocol.ErrInternal, i18n.T(locale, i18n.MsgFailedToDelete, "agent", fmt.Sprintf("%v", err))))
+			// A UNIQUE violation here is the vault-document orphan collision of #1550:
+			// the FK sets agent_id to NULL, the scope trigger moves the row to 'shared',
+			// and before migration 000099 every orphan in a tenant shared one key, so a
+			// path another deleted owner already orphaned aborts the whole delete. Say
+			// that instead of surfacing the raw SQLSTATE as an internal error.
+			detail := fmt.Sprintf("%v", err)
+			if isDuplicateKeyErr(err) {
+				detail = "a vault document of this agent collides with one already orphaned at the same path; " +
+					"delete or re-path the agent's vault documents first, or upgrade past schema version 99"
+			}
+			client.SendResponse(protocol.NewErrorResponse(req.ID, protocol.ErrInternal, i18n.T(locale, i18n.MsgFailedToDelete, "agent", detail)))
 			return
 		}
 
