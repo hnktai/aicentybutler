@@ -20,7 +20,7 @@ func init() {
 		MsgFailedToSave:     "%s 저장에 실패했습니다: %s",
 		MsgInvalidUpdates:   "잘못된 업데이트",
 		// TODO(i18n): translate to ko
-		MsgAgentDeleteVaultConflict: "failed to delete agent: a vault document of this agent is at a path another deleted owner already orphaned; delete or re-path this agent's vault documents first, or upgrade past schema version 99",
+		MsgAgentDeleteVaultConflict: "failed to delete agent: a vault document of this agent is at a path another deleted owner already orphaned; delete or re-path this agent's vault documents first, or upgrade to schema version 99 or later",
 
 		// Agent
 		MsgAgentNotFound:       "에이전트를 찾을 수 없습니다: %s",
@@ -83,12 +83,12 @@ func init() {
 		MsgNotImplemented: "%s은(는) 아직 구현되지 않았습니다",
 
 		// Agent links
-		MsgLinksNotConfigured: "에이전트 링크가 설정되지 않았습니다",
-		MsgInvalidDirection:   "방향은 outbound, inbound, 또는 bidirectional이어야 합니다",
-		MsgSourceTargetSame:   "소스와 대상은 서로 다른 에이전트여야 합니다",
-		MsgCannotDelegateOpen: "오픈 에이전트에게는 위임할 수 없습니다 — 사전 정의된 에이전트만 위임 대상이 될 수 있습니다",
-		MsgNoUpdatesProvided:  "업데이트가 제공되지 않았습니다",
-		MsgInvalidLinkStatus:  "상태는 active 또는 disabled여야 합니다",
+		MsgLinksNotConfigured:   "에이전트 링크가 설정되지 않았습니다",
+		MsgInvalidDirection:     "방향은 outbound, inbound, 또는 bidirectional이어야 합니다",
+		MsgSourceTargetSame:     "소스와 대상은 서로 다른 에이전트여야 합니다",
+		MsgCannotDelegateOpen:   "오픈 에이전트에게는 위임할 수 없습니다 — 사전 정의된 에이전트만 위임 대상이 될 수 있습니다",
+		MsgNoUpdatesProvided:    "업데이트가 제공되지 않았습니다",
+		MsgInvalidLinkStatus:    "상태는 active 또는 disabled여야 합니다",
 
 		// Teams
 		MsgTeamsNotConfigured:   "팀이 설정되지 않았습니다",
