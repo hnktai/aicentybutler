@@ -2,27 +2,59 @@
    AICENTY BUTLER: FUTURISTIC LUXURY TECH THEME OVERLAY
    Deep Black (#05070B) & Electric Blue Glow (#00D2FF, #0070F3, #38BDF8)
    ============================================================================== */
-:root {
+
+:root,
+html,
+body,
+.dark,
+html.dark,
+body.dark,
+[data-theme="dark"] {
   --background: #05070B !important;
   --foreground: #F8FAFC !important;
+  
   --card: #090D16 !important;
   --card-foreground: #F8FAFC !important;
+  
   --popover: #090D16 !important;
   --popover-foreground: #F8FAFC !important;
+  
   --primary: #00D2FF !important;
   --primary-foreground: #000000 !important;
+  
   --secondary: #111827 !important;
   --secondary-foreground: #F8FAFC !important;
+  
   --muted: #0F172A !important;
   --muted-foreground: #94A3B8 !important;
+  
   --accent: #0070F3 !important;
   --accent-foreground: #FFFFFF !important;
+  
   --destructive: #EF4444 !important;
   --destructive-foreground: #FFFFFF !important;
+  
   --border: #1E293B !important;
   --input: #1E293B !important;
   --ring: #00D2FF !important;
-  --glow-electric: 0 0 25px rgba(0, 210, 255, 0.55);
+  
+  --chat-bubble-user: #0070F3 !important;
+  --chat-bubble-user-foreground: #FFFFFF !important;
+  
+  --sidebar: #05070B !important;
+  --sidebar-foreground: #F8FAFC !important;
+  --sidebar-primary: #00D2FF !important;
+  --sidebar-primary-foreground: #000000 !important;
+  --sidebar-accent: #0E1626 !important;
+  --sidebar-accent-foreground: #00D2FF !important;
+  --sidebar-border: #1E293B !important;
+  --sidebar-ring: #00D2FF !important;
+  
+  --chart-1: #00D2FF !important;
+  --chart-2: #0070F3 !important;
+  --chart-3: #38BDF8 !important;
+  --chart-4: #10B981 !important;
+  --chart-5: #6366F1 !important;
 }
 
 body {
@@ -30,30 +62,43 @@ body {
   color: #F8FAFC !important;
 }
 
-/* Biến đổi toàn bộ các phần tử cam cũ của GoClaw thành Ánh Sáng Xanh Điện Tử */
-.bg-orange-500, .bg-orange-600, .bg-amber-500, .bg-primary {
+/* Triệt tiêu 100% tất cả màu cam và hổ phách (Tailwind orange/amber) */
+.bg-orange-500, .bg-orange-600, .bg-orange-700,
+.bg-amber-500, .bg-amber-600,
+[class*="bg-orange-"], [class*="bg-amber-"],
+.bg-primary {
   background-color: #00D2FF !important;
   color: #000000 !important;
   box-shadow: 0 0 15px rgba(0, 210, 255, 0.4) !important;
 }
 
-.text-orange-500, .text-orange-600, .text-amber-500 {
+.text-orange-500, .text-orange-600, .text-orange-700,
+.text-amber-500, .text-amber-600,
+[class*="text-orange-"], [class*="text-amber-"],
+.text-primary {
   color: #00D2FF !important;
   text-shadow: 0 0 10px rgba(0, 210, 255, 0.5) !important;
 }
 
-.border-orange-500, .border-orange-600, .border-amber-500 {
+.border-orange-500, .border-orange-600,
+.border-amber-500, .border-amber-600,
+[class*="border-orange-"], [class*="border-amber-"],
+.border-primary {
   border-color: #00D2FF !important;
   box-shadow: 0 0 10px rgba(0, 210, 255, 0.3) !important;
 }
 
-/* Card & Surface Elevation - Trùng khớp 100% nền Deep Black */
+.ring-primary, [class*="ring-orange-"], [class*="ring-amber-"] {
+  --tw-ring-color: #00D2FF !important;
+}
+
+/* Nền thẻ Card & Khung kính mờ Futuristic */
 .bg-card, .bg-surface, .bg-background {
   background-color: #090D16 !important;
   border-color: #1E293B !important;
 }
 
-/* Logo styling: Hòa quyện hoàn hảo 100% với nền web không đường viền hay lệch màu */
+/* Logo styling: Hòa quyện hoàn hảo 100% với nền web */
 img[src*="logo"], img[src*="goclaw-icon"], .loader-logo {
   mix-blend-mode: screen !important;
   background: transparent !important;
@@ -61,7 +106,7 @@ img[src*="logo"], img[src*="goclaw-icon"], .loader-logo {
   filter: drop-shadow(0 0 14px rgba(0, 210, 255, 0.5)) !important;
 }
 
-/* Nút kết nối / submit / CTA sang trọng */
+/* Nút CTA / Kết nối sang trọng */
 button.bg-primary, .btn-primary {
   background: linear-gradient(135deg, #00D2FF 0%, #0070F3 100%) !important;
   color: #000000 !important;
