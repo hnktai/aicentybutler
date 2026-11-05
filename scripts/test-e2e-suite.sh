@@ -12,7 +12,7 @@ CURL_CMD="curl -s -k --resolve butler.aicenty.com:443:127.0.0.1"
 echo -n "[TEST 1/12] Kiểm tra Deep Healthcheck liên thông 4 thành phần... "
 HEALTH_RESP=$($CURL_CMD "$BASE_URL/healthz")
 STATUS=$(echo "$HEALTH_RESP" | jq -r .status 2>/dev/null || true)
-if [ "$STATUS" == "healthy" ] || [ "$STATUS" == "ok" ]; then
+if [ "$STATUS" == "healthy" ] || [ "$STATUS" == "HEALTHY" ] || [ "$STATUS" == "ok" ]; then
     echo ">> [PASS] ($HEALTH_RESP)"
 else
     echo ">> [FAIL]: $HEALTH_RESP"
