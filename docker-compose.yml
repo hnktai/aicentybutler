@@ -1,89 +1,95 @@
-# Base docker-compose — shared service definition.
-# Pre-built images: ghcr.io/nextlevelbuilder/goclaw (also on Docker Hub: digitop/goclaw)
-#
-# The default `latest` image includes an embedded web dashboard (no separate nginx needed).
-# Web UI is served at the same port as the API (default: 18790).
-#
-# Quick start:
-#   docker compose -f docker-compose.yml -f docker-compose.postgres.yml up -d
-#   # Dashboard: http://localhost:18790
-#
-# Optional nginx (for custom SSL, reverse proxy, caching):
-#   make up WITH_WEB_NGINX=1
-#   # or: docker compose -f docker-compose.yml -f docker-compose.postgres.yml -f docker-compose.selfservice.yml up -d
-#   # Dashboard via nginx: http://localhost:3000
-#
-# Docker image variants:
-#   latest       — Backend + embedded web UI + Python (recommended)
-#   latest-base  — Backend API-only, no web UI, no runtimes
-#   latest-full  — All runtimes + skill dependencies pre-installed
-#   latest-otel  — Latest + OpenTelemetry tracing
-#
-# With OTel tracing:  add -f docker-compose.otel.yml
-# With Claude CLI:    add -f docker-compose.claude-cli.yml
-
 services:
-  goclaw:
+  aicenty-butler-core:
     image: ghcr.io/nextlevelbuilder/goclaw:latest
-    build:
-      context: ${GOCLAW_DIR:-.}
-      dockerfile: Dockerfile
-      args:
-        ENABLE_OTEL: "${ENABLE_OTEL:-false}"
-        ENABLE_EMBEDUI: "${ENABLE_EMBEDUI:-true}"  # set to false when using WITH_WEB_NGINX
-        ENABLE_PYTHON: "${ENABLE_PYTHON:-true}"
-        ENABLE_FULL_SKILLS: "${ENABLE_FULL_SKILLS:-false}"
-        VERSION: "${GOCLAW_VERSION:-dev}"
-    # Uncomment to test update UI: GOCLAW_VERSION=v1.0.0
+    container_name: aicenty-butler-engine
+    restart: unless-stopped
+    stop_grace_period: 30s
     ports:
-      - "${GOCLAW_PORT:-18790}:18790"
+      - "127.0.0.1:18895:18790"
     env_file:
-      - path: .env
-        required: false
+      - .env
     environment:
+      - APP_ENV=production
+      - PORT=18790
       - GOCLAW_HOST=0.0.0.0
       - GOCLAW_PORT=18790
-      - GOCLAW_CONFIG=/app/data/config.json
-      - GOCLAW_GATEWAY_TOKEN=${GOCLAW_GATEWAY_TOKEN:?run ./prepare-env.sh or set GOCLAW_GATEWAY_TOKEN}
-      - GOCLAW_ENCRYPTION_KEY=${GOCLAW_ENCRYPTION_KEY:-}
-      - GOCLAW_SKILLS_DIR=/app/data/skills
-      # Debug
-      - GOCLAW_TRACE_VERBOSE=${GOCLAW_TRACE_VERBOSE:-0}
-      - BITRIX24_LOG_RAW_EVENT=${BITRIX24_LOG_RAW_EVENT:-0}
-      - BITRIX24_FORCE_REREGISTER=${BITRIX24_FORCE_REREGISTER:-0}
-      - BITRIX24_DEBUG_UNREDACTED_TOKEN=${BITRIX24_DEBUG_UNREDACTED_TOKEN:-0}
+      - GOCLAW_GATEWAY_TOKEN=${GOCLAW_GATEWAY_TOKEN}
+      - DB_HOST=aicenty-butler-postgres
+      - DB_PORT=5432
+      - DB_NAME=aicenty_butler_db
+      - DB_USER=aicenty_user
+      - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_HOST=aicenty-butler-redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     volumes:
-      - goclaw-data:/app/data
-      - goclaw-workspace:/app/workspace
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    security_opt:
-      - no-new-privileges:true
-    init: true
-    cap_drop:
-      - ALL
-    cap_add:
-      - SETUID
-      - SETGID
-      - CHOWN
-    tmpfs:
-      - /tmp:rw,noexec,nosuid,size=256m
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-          cpus: '2.0'
-          pids: 200
+      - zalo_sessions_vault:/opt/goclaw-aicenty/data/sessions
+      - aicenty_media_vault:/opt/goclaw-aicenty/data/media
     networks:
-      - default
-      - goclaw-net
+      - aicenty_internal_net
+    depends_on:
+      aicenty-butler-postgres:
+        condition: service_healthy
+      aicenty-butler-redis:
+        condition: service_healthy
+
+  aicenty-butler-postgres:
+    image: pgvector/pgvector:pg16
+    container_name: aicenty-butler-postgres
     restart: unless-stopped
+    environment:
+      POSTGRES_DB: aicenty_butler_db
+      POSTGRES_USER: aicenty_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    command: >
+      postgres
+      -c shared_buffers=512MB
+      -c effective_cache_size=1536MB
+      -c maintenance_work_mem=128MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=16MB
+      -c max_wal_size=4GB
+    ports:
+      - "127.0.0.1:5435:5432"
+    volumes:
+      - aicenty_pgdata:/var/lib/postgresql/data
+    networks:
+      - aicenty_internal_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aicenty_user -d aicenty_butler_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+  aicenty-butler-redis:
+    image: redis:7-alpine
+    container_name: aicenty-butler-redis
+    restart: unless-stopped
+    command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes --appendfsync everysec --maxmemory 512mb --maxmemory-policy volatile-lru
+    ports:
+      - "127.0.0.1:6380:6379"
+    volumes:
+      - aicenty_redisdata:/data
+    networks:
+      - aicenty_internal_net
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} --no-auth-warning ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
 volumes:
-  goclaw-data:
-  goclaw-workspace:
+  aicenty_pgdata:
+  aicenty_redisdata:
+  zalo_sessions_vault:
+  aicenty_media_vault:
 
 networks:
-  goclaw-net:
-    name: goclaw-net
+  aicenty_internal_net:
     driver: bridge
