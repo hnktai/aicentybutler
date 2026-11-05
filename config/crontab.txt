@@ -1,0 +1,4 @@
+# Aicenty Butler Automated Crons
+0 0 * * * docker exec -i aicenty-butler-postgres psql -U aicenty_user -d aicenty_butler_db -c 'SELECT fn_reset_daily_fup();' >> /opt/goclaw-aicenty/logs/cron_fup.log 2>&1
+0 2 * * 0 /opt/goclaw-aicenty/scripts/db-maintenance.sh >> /opt/goclaw-aicenty/logs/cron_db.log 2>&1
+0 3 * * * /opt/goclaw-aicenty/scripts/backup-local-db.sh >> /opt/goclaw-aicenty/logs/cron_backup.log 2>&1
