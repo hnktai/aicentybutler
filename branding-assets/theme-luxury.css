@@ -1,0 +1,77 @@
+/* ==============================================================================
+   AICENTY BUTLER: FUTURISTIC LUXURY TECH THEME OVERLAY
+   Deep Black (#05070B) & Electric Blue Glow (#00D2FF, #0070F3, #38BDF8)
+   ============================================================================== */
+:root {
+  --background: #05070B !important;
+  --foreground: #F8FAFC !important;
+  --card: #090D16 !important;
+  --card-foreground: #F8FAFC !important;
+  --popover: #090D16 !important;
+  --popover-foreground: #F8FAFC !important;
+  --primary: #00D2FF !important;
+  --primary-foreground: #000000 !important;
+  --secondary: #111827 !important;
+  --secondary-foreground: #F8FAFC !important;
+  --muted: #0F172A !important;
+  --muted-foreground: #94A3B8 !important;
+  --accent: #0070F3 !important;
+  --accent-foreground: #FFFFFF !important;
+  --destructive: #EF4444 !important;
+  --destructive-foreground: #FFFFFF !important;
+  --border: #1E293B !important;
+  --input: #1E293B !important;
+  --ring: #00D2FF !important;
+  --glow-electric: 0 0 25px rgba(0, 210, 255, 0.55);
+}
+
+body {
+  background-color: #05070B !important;
+  color: #F8FAFC !important;
+}
+
+/* Biến đổi toàn bộ các phần tử cam cũ của GoClaw thành Ánh Sáng Xanh Điện Tử */
+.bg-orange-500, .bg-orange-600, .bg-amber-500, .bg-primary {
+  background-color: #00D2FF !important;
+  color: #000000 !important;
+  box-shadow: 0 0 15px rgba(0, 210, 255, 0.4) !important;
+}
+
+.text-orange-500, .text-orange-600, .text-amber-500 {
+  color: #00D2FF !important;
+  text-shadow: 0 0 10px rgba(0, 210, 255, 0.5) !important;
+}
+
+.border-orange-500, .border-orange-600, .border-amber-500 {
+  border-color: #00D2FF !important;
+  box-shadow: 0 0 10px rgba(0, 210, 255, 0.3) !important;
+}
+
+/* Card & Surface Elevation - Trùng khớp 100% nền Deep Black */
+.bg-card, .bg-surface, .bg-background {
+  background-color: #090D16 !important;
+  border-color: #1E293B !important;
+}
+
+/* Logo styling: Hòa quyện hoàn hảo 100% với nền web không đường viền hay lệch màu */
+img[src*="logo"], img[src*="goclaw-icon"], .loader-logo {
+  mix-blend-mode: screen !important;
+  background: transparent !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 0 14px rgba(0, 210, 255, 0.5)) !important;
+}
+
+/* Nút kết nối / submit / CTA sang trọng */
+button.bg-primary, .btn-primary {
+  background: linear-gradient(135deg, #00D2FF 0%, #0070F3 100%) !important;
+  color: #000000 !important;
+  font-weight: 600 !important;
+  border: none !important;
+  box-shadow: 0 0 20px rgba(0, 210, 255, 0.45) !important;
+  transition: all 0.25s ease !important;
+}
+
+button.bg-primary:hover, .btn-primary:hover {
+  box-shadow: 0 0 30px rgba(0, 210, 255, 0.75) !important;
+  transform: translateY(-1px) !important;
+}

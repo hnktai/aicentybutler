@@ -41,11 +41,14 @@
         align-items: center;
       }
       .loader-logo {
-        max-width: 220px;
-        max-height: 55px;
+        width: 140px;
+        height: 140px;
+        max-width: 150px;
+        max-height: 150px;
         object-fit: contain;
-        filter: drop-shadow(0 0 16px rgba(0, 210, 255, 0.45));
-        animation: pulse 1.5s ease-in-out infinite;
+        mix-blend-mode: screen;
+        filter: drop-shadow(0 0 20px rgba(0, 210, 255, 0.65));
+        animation: pulse 1.8s ease-in-out infinite;
       }
       .loader-shimmer {
         width: 12rem;
@@ -75,7 +78,16 @@
       @keyframes pulse { 0%, 100% { opacity: .7; transform: scale(.95); } 50% { opacity: 1; transform: scale(1.02); } }
       @keyframes shimmer { from { transform: translateX(-12rem); } to { transform: translateX(12rem); } }
       .fade-out { opacity: 0; transition: opacity 300ms ease; }
-      @media (prefers-reduced-motion: reduce) { .loader-logo { animation: none; opacity: 1; } .shimmer-bar { animation: none; } }
+      @media (prefers-reduced-motion: reduce) { .loader-logo {
+        width: 140px;
+        height: 140px;
+        max-width: 150px;
+        max-height: 150px;
+        object-fit: contain;
+        mix-blend-mode: screen;
+        filter: drop-shadow(0 0 20px rgba(0, 210, 255, 0.65));
+        animation: pulse 1.8s ease-in-out infinite;
+      } .shimmer-bar { animation: none; } }
     </style>
     <script type="module" crossorigin src="/assets/index-C9qLyWFK.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/chunk-Bj-mKKzh.js">
