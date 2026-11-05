@@ -70,7 +70,7 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
             redis_ok = check_redis()
             engine_ok = check_engine()
             all_ok = db_ok and redis_ok and engine_ok
-            status_str = "healthy" if all_ok else "degraded"
+            status_str = "HEALTHY" if all_ok else "degraded"
             
             self._send_json(200 if all_ok else 503, {
                 "status": status_str,
@@ -97,7 +97,7 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
 
         # 1. Healthcheck via POST
         if self.path in ['/health', '/healthz'] or payload.get("health") is True:
-            self._send_json(200, {"status": "healthy", "service": "aicenty-butler"})
+            self._send_json(200, {"status": "HEALTHY", "service": "aicenty-butler"})
             return
 
         # 2. Internal Guardrail Simulation Endpoint
