@@ -2,10 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=1793888545" />
-    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=1793888545" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=1793888545" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=1793888545" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=20261105_v5" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=20261105_v5" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=20261105_v5" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=20261105_v5" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png?v=20261105_v5" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20261105_v5" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=20261105_v5" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <!--
       Content-Security-Policy (Phase 06):
@@ -217,10 +220,19 @@
     <link rel="stylesheet" href="/branding-assets/theme-luxury.css" />
     <script>
       (function() {
+        const TARGET_SUBTITLE = "Quản Gia Thời Hiện Đại Cho Mọi Nhà";
         function replaceText(node) {
           if (node.nodeType === Node.TEXT_NODE) {
-            if (node.nodeValue && node.nodeValue.includes('GoClaw')) {
-              node.nodeValue = node.nodeValue.replace(/GoClaw/g, 'Aicenty Butler');
+            if (node.nodeValue) {
+              if (node.nodeValue.includes('GoClaw')) {
+                node.nodeValue = node.nodeValue.replace(/GoClaw/g, 'Aicenty Butler');
+              }
+              if (node.nodeValue.includes('Đăng nhập vào bảng điều khiển gateway') ||
+                  node.nodeValue.includes('Sign in to the gateway') ||
+                  node.nodeValue.includes('gateway dashboard') ||
+                  node.nodeValue.includes('bảng điều khiển gateway')) {
+                node.nodeValue = TARGET_SUBTITLE;
+              }
             }
           } else if (node.nodeType === Node.ELEMENT_NODE) {
             if (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') {

@@ -92,18 +92,47 @@ body {
   --tw-ring-color: #00D2FF !important;
 }
 
-/* Nền thẻ Card & Khung kính mờ Futuristic */
+/* Nền thẻ Card & Khung kính mờ */
 .bg-card, .bg-surface, .bg-background {
   background-color: #090D16 !important;
   border-color: #1E293B !important;
 }
 
-/* Logo styling: Hòa quyện hoàn hảo 100% với nền web */
-img[src*="logo"], img[src*="goclaw-icon"], .loader-logo {
+/* ==============================================================================
+   TRANG LOGIN: ĐIỀU CHỈNH KÍCH THƯỚC LOGO, ẨN TIÊU ĐỀ TRÙNG VÀ LÀM ĐẸP SUBTITLE
+   ============================================================================== */
+
+/* 1. Phóng to Logo trên trang login cho cân đối, hài hòa và nổi bật */
+div[class*="max-w-sm"] .text-center img,
+div[class*="max-w-sm"] img[src*="goclaw-icon"],
+div[class*="max-w-sm"] img[src*="logo"] {
+  width: 140px !important;
+  height: 140px !important;
+  max-width: 150px !important;
+  max-height: 150px !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 1.25rem !important;
   mix-blend-mode: screen !important;
   background: transparent !important;
   object-fit: contain !important;
-  filter: drop-shadow(0 0 14px rgba(0, 210, 255, 0.5)) !important;
+  filter: drop-shadow(0 0 25px rgba(0, 210, 255, 0.65)) !important;
+}
+
+/* 2. CHỈ ẨN text "Aicenty Butler" trên trang login */
+div[class*="max-w-sm"] .text-center h1,
+div[class*="max-w-sm"] h1.text-3xl {
+  display: none !important;
+}
+
+/* 3. Tinh chỉnh subtitle "Quản Gia Thời Hiện Đại Cho Mọi Nhà" */
+div[class*="max-w-sm"] .text-center p,
+div[class*="max-w-sm"] p.text-muted-foreground {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  color: #38BDF8 !important;
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.45) !important;
+  margin-bottom: 0.75rem !important;
 }
 
 /* Nút CTA / Kết nối sang trọng */
