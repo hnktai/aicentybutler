@@ -45,8 +45,8 @@ PAYLOAD=$(cat <<JSON
     "code": "SUB BUTLER_FAM1",
     "content": "SUB BUTLER_FAM1",
     "transferType": "in",
-    "transferAmount": 199000,
-    "accumulated": 199000,
+    "transferAmount": 500000,
+    "accumulated": 500000,
     "subAccount": null,
     "referenceCode": "$TEST_TX_ID",
     "description": "Gia hạn gói tháng gia đình"
