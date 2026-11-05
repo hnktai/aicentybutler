@@ -233,11 +233,23 @@
                   node.nodeValue.includes('bảng điều khiển gateway')) {
                 node.nodeValue = TARGET_SUBTITLE;
               }
+              if (node.nodeValue.includes('toàn quyền hệ thống') || 
+                  node.nodeValue.includes('Dùng "system"') ||
+                  node.nodeValue.includes('Use "system"')) {
+                node.nodeValue = '';
+                if (node.parentElement) node.parentElement.style.display = 'none';
+              }
             }
           } else if (node.nodeType === Node.ELEMENT_NODE) {
             if (node.tagName === 'INPUT' || node.tagName === 'TEXTAREA') {
               if (node.placeholder && node.placeholder.includes('GoClaw')) {
                 node.placeholder = node.placeholder.replace(/GoClaw/g, 'Aicenty Butler');
+              }
+            }
+            // Hide setup logo dynamically if on setup page
+            if (window.location.pathname.includes('/setup')) {
+              if (node.tagName === 'IMG' && node.closest('div[class*="max-w-2xl"]')) {
+                node.style.display = 'none';
               }
             }
             for (let child of node.childNodes) {
