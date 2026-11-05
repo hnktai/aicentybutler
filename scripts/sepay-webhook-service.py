@@ -28,7 +28,7 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(data, ensure_ascii=False).encode('utf-8'))
 
     def do_GET(self):
-        if self.path in ['/health', '/healthz', '/api/v1/billing/webhook/sepay/health']:
+        if self.path in ['/health', '/healthz', '/api/v1/billing/webhook/sepay/health', '/api/v1/billing/webhook/sepay']:
             self._send_json(200, {"status": "HEALTHY", "service": "aicenty-sepay-webhook", "port": 18896})
         else:
             self._send_json(404, {"error": "Not Found"})
@@ -40,14 +40,18 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
 
         try:
             content_length = int(self.headers.get('Content-Length', 0))
-            body = self.rfile.read(content_length).decode('utf-8')
+            body = self.rfile.read(content_length).decode('utf-8') if content_length > 0 else "{}"
             payload = json.loads(body) if body else {}
         except Exception as e:
             logging.error(f"Error parsing JSON payload: {e}")
-            self._send_json(400, {"success": false, "error": "Invalid JSON payload"})
+            self._send_json(400, {"success": False, "error": "Invalid JSON payload"})
             return
 
         logging.info(f"Incoming SePay Webhook Payload: {payload}")
+
+        if payload.get("health") is True:
+            self._send_json(200, {"status": "HEALTHY", "service": "aicenty-sepay-webhook", "port": 18896})
+            return
 
         # Extract fields from SePay standard format
         tx_id = str(payload.get('id') or payload.get('referenceCode') or payload.get('transaction_id') or '')
@@ -58,7 +62,7 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
 
         if not tx_id or amount <= 0:
             logging.warning("Missing tx_id or invalid amount")
-            self._send_json(400, {"success": false, "error": "Missing transaction id or invalid amount"})
+            self._send_json(400, {"success": False, "error": "Missing transaction id or invalid amount"})
             return
 
         try:
