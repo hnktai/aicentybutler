@@ -99,13 +99,10 @@ body {
 }
 
 /* ==============================================================================
-   1. KHU VỰC SIDEBAR HEADER (GÓC TRÊN BÊN TRÁI)
-   - ẨN text "Aicenty Butler" ngay khu vực này
-   - Thay logo bằng banner ngang metallic AICENTY BUTLER
-   - Tối ưu cân đối cho Desktop & Mobile
+   1. DASHBOARD SIDEBAR: LOGO NHỎ LẠI CHO HÀI HÒA & CÂN ĐỐI
    ============================================================================== */
 
-/* ẨN DUY NHẤT text "Aicenty Butler" trong sidebar header */
+/* Ẩn text "Aicenty Butler" trong sidebar header */
 aside .h-14 span,
 aside .h-14 span.text-sidebar-primary,
 aside .h-14 span.text-lg,
@@ -114,52 +111,48 @@ div[class*="border-b"] span.text-sidebar-primary {
   display: none !important;
 }
 
-/* Banner Logo ngang trong Sidebar Header */
-aside .h-14 .flex.items-center,
-aside .h-14 {
-  width: 100% !important;
-}
-
+/* Logo Aicenty Butler trong Dashboard: Kích thước tinh gọn, cân đối, thoáng đãng */
 aside .h-14 .flex.items-center img,
 aside .h-14 img {
   content: url('/logo-banner.png') !important;
-  width: 175px !important;
-  max-width: 190px !important;
-  height: 36px !important;
-  max-height: 40px !important;
+  width: 135px !important;
+  max-width: 145px !important;
+  height: 28px !important;
+  max-height: 30px !important;
   object-fit: contain !important;
   mix-blend-mode: screen !important;
-  filter: drop-shadow(0 0 14px rgba(0, 210, 255, 0.5)) !important;
+  filter: drop-shadow(0 0 12px rgba(0, 210, 255, 0.5)) !important;
   margin: 0 !important;
   transition: all 0.2s ease !important;
 }
 
-/* Khi sidebar co gọn (collapsed w-16): Hiển thị icon A kim loại */
+/* Khi sidebar thu gọn (w-16): Hiển thị icon A kim loại */
 aside.w-16 .h-14 img,
 aside[class*="w-16"] .h-14 img {
   content: url('/favicon.png') !important;
-  width: 32px !important;
-  height: 32px !important;
-  max-width: 32px !important;
+  width: 28px !important;
+  height: 28px !important;
+  max-width: 28px !important;
   margin: 0 auto !important;
 }
 
 /* ==============================================================================
-   2. KHU VỰC TRANG LOGIN
-   - Logo banner ngang Aicenty Butler cân đối (260px)
-   - Ẩn text h1 "Aicenty Butler" tránh trùng lặp
-   - Subtitle "Quản Gia Thời Hiện Đại Cho Mọi Nhà"
+   2. TRANG LOGIN: TINH CHỈNH HOÀN THIỆN
+   - Ẩn text "Aicenty Butler" trên trang login
+   - Cập nhật subtitle thành: "Quản Gia Thời Hiện Đại Cho Mọi Nhà"
+   - Ẩn text: "Dùng "system" để có toàn quyền hệ thống"
    ============================================================================== */
 
+/* Logo trên login card */
 div[class*="max-w-sm"] .text-center img,
 div[class*="max-w-sm"] img[src*="goclaw-icon"],
 div[class*="max-w-sm"] img[src*="logo"] {
   content: url('/logo-banner.png') !important;
-  width: 260px !important;
-  max-width: 280px !important;
-  height: 55px !important;
-  max-height: 60px !important;
-  margin: 0.5rem auto 1rem auto !important;
+  width: 250px !important;
+  max-width: 270px !important;
+  height: 52px !important;
+  max-height: 56px !important;
+  margin: 0.5rem auto 1.25rem auto !important;
   mix-blend-mode: screen !important;
   background: transparent !important;
   object-fit: contain !important;
@@ -172,15 +165,39 @@ div[class*="max-w-sm"] h1.text-3xl {
   display: none !important;
 }
 
-/* Subtitle "Quản Gia Thời Hiện Đại Cho Mọi Nhà" */
-div[class*="max-w-sm"] .text-center p,
-div[class*="max-w-sm"] p.text-muted-foreground {
+/* Biến đổi Subtitle thành "Quản Gia Thời Hiện Đại Cho Mọi Nhà" */
+div[class*="max-w-sm"] .text-center p.text-muted-foreground {
+  font-size: 0 !important;
+  margin-bottom: 0.85rem !important;
+  line-height: 1 !important;
+}
+div[class*="max-w-sm"] .text-center p.text-muted-foreground::after {
+  content: "Quản Gia Thời Hiện Đại Cho Mọi Nhà" !important;
   font-size: 15px !important;
   font-weight: 600 !important;
   letter-spacing: 0.06em !important;
   color: #38BDF8 !important;
   text-shadow: 0 0 12px rgba(56, 189, 248, 0.45) !important;
-  margin-bottom: 0.75rem !important;
+  display: block !important;
+  line-height: 1.5 !important;
+}
+
+/* ẨN HOÀN TOÀN text: "Dùng "system" để có toàn quyền hệ thống" */
+div[class*="space-y-2"]:has(#userId) p,
+form p.text-xs.text-muted-foreground,
+form p:has(+ #token),
+#userId ~ p {
+  display: none !important;
+}
+
+/* ==============================================================================
+   3. TRANG SETUP (/setup): ẨN HOÀN TOÀN LOGO
+   ============================================================================== */
+
+div[class*="max-w-2xl"] .text-center img,
+div[class*="max-w-2xl"] img[src*="goclaw-icon"],
+div[class*="max-w-2xl"] img[src*="logo"] {
+  display: none !important;
 }
 
 /* Nút CTA / Kết nối sang trọng */
