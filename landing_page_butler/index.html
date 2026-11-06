@@ -788,29 +788,62 @@
        ======================================================= */
     .chat-demo-section {
       padding: 72px 0;
-      background: radial-gradient(ellipse at 50% 50%, rgba(34, 211, 238, 0.05), transparent 70%), var(--onyx);
+      background: radial-gradient(ellipse at 50% 50%, rgba(34, 211, 238, 0.06), transparent 70%), var(--onyx);
       border-bottom: 1px solid var(--graphite);
     }
+    .demo-chips-wrap {
+      max-width: 760px;
+      margin: 0 auto 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    .demo-chip-btn {
+      background: rgba(34, 211, 238, 0.08);
+      border: 1px solid rgba(34, 211, 238, 0.3);
+      color: var(--bone);
+      padding: 8px 16px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .demo-chip-btn:hover {
+      background: rgba(34, 211, 238, 0.2);
+      border-color: var(--accent-bright);
+      color: #ffffff;
+      transform: translateY(-2px);
+    }
     .zalo-mockup-wrap {
-      max-width: 680px;
+      max-width: 760px;
       margin: 0 auto;
       background: #000000;
       border: 1px solid var(--slate);
       border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.85);
     }
     .zalo-top-bar {
       background: #0068ff;
       padding: 14px 20px;
       display: flex;
       align-items: center;
-      gap: 14px;
+      justify-content: space-between;
       color: #ffffff;
     }
+    .zalo-top-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
     .zalo-avatar-butler {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: #ffffff;
       color: #0068ff;
@@ -819,23 +852,41 @@
       justify-content: center;
       font-weight: 800;
       font-size: 16px;
-      border: 2px solid rgba(255,255,255,0.4);
+      border: 2px solid rgba(255,255,255,0.6);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      flex-shrink: 0;
     }
-    .zalo-top-info strong { display: block; font-size: 16px; color: #fff; }
-    .zalo-top-info span { font-size: 12px; color: #dbeafe; }
+    .zalo-top-info strong { display: block; font-size: 15px; color: #fff; line-height: 1.3; }
+    .zalo-top-info span { font-size: 12px; color: #dbeafe; display: inline-flex; align-items: center; gap: 5px; }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      display: inline-block;
+      box-shadow: 0 0 8px #22c55e;
+    }
     .zalo-chat-body {
       padding: 24px 20px;
       background: #0b0e14;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 16px;
       font-size: 14px;
+      max-height: 460px;
+      overflow-y: auto;
+      scroll-behavior: smooth;
     }
     .chat-bubble {
-      max-width: 82%;
-      padding: 14px 18px;
+      max-width: 84%;
+      padding: 13px 17px;
       border-radius: 14px;
       line-height: 1.6;
+      animation: fadeInBubble 0.25s ease-out;
+    }
+    @keyframes fadeInBubble {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .bubble-user {
       align-self: flex-end;
@@ -851,6 +902,88 @@
       border-bottom-left-radius: 2px;
     }
     .bubble-butler strong { color: var(--accent-bright); }
+    .bubble-sender {
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .bubble-user .bubble-sender {
+      color: #dbeafe;
+      justify-content: flex-end;
+    }
+    .zalo-chat-input-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      background: #0f131c;
+      border-top: 1px solid var(--slate);
+    }
+    #demo-chat-input {
+      flex: 1;
+      background: #181d28;
+      border: 1px solid var(--slate);
+      border-radius: 24px;
+      color: #f8fafc;
+      padding: 11px 18px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    #demo-chat-input:focus {
+      border-color: var(--accent-bright);
+      box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+    }
+    #demo-send-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--accent-bright);
+      color: #08080a;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s ease, background-color 0.2s ease;
+      flex-shrink: 0;
+    }
+    #demo-send-btn:hover {
+      background: #06b6d4;
+      transform: scale(1.05);
+    }
+    #demo-send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .typing-dots span {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: #22d3ee;
+      border-radius: 50%;
+      margin-right: 3px;
+      animation: typingBounce 1.4s infinite ease-in-out both;
+    }
+    .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes typingBounce {
+      0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+    .demo-footer-note {
+      padding: 10px 18px;
+      background: #090c12;
+      border-top: 1px dashed rgba(255,255,255,0.08);
+      font-size: 12px;
+      color: var(--mist);
+      text-align: center;
+    }
 
     /* 5 PILLARS OF AICENTY BUTLER */
     .pillars-section {
@@ -1692,6 +1825,7 @@
       <div class="nav-links" id="nav-links">
         <a href="#quy-trinh">Quy trình</a>
         <a href="#niem-hanh-phuc">Giá trị</a>
+        <a href="#demo-quan-gia">Demo Quản Gia</a>
         <a href="#loi-ich-gia-dinh">Lợi ích</a>
         <a href="#cau-chuyen">Câu chuyện</a>
         <a href="#so-sanh">So sánh</a>
@@ -2274,47 +2408,75 @@
   </section>
 
   <!-- =======================================================
-       NEW SECTION: DEMO CHAT ZALO THỰC TẾ RA LỆNH CHO QUẢN GIA
-       (THỂ HIỆN SỞ HỮU, MANG TÊN RIÊNG & ZALO RIÊNG)
+       INTERACTIVE AGENT DEMO: TRẢI NGHIỆM TRỰC TIẾP RA LỆNH CHO QUẢN GIA
        ======================================================= -->
-  <section class="chat-demo-section">
+  <section class="chat-demo-section" id="demo-quan-gia">
     <div class="wrap">
       <div class="section-title-center">
-        <div class="happiness-badge">TIỆN ÍCH KHÔNG GIỚI HẠN</div>
-        <h2>Quản Gia Của Riêng Gia Đình Bạn: Mang Tên Riêng, Zalo Riêng, Ra Lệnh Bất Kỳ Lúc Nào</h2>
-        <p>Không cần mở máy tính hay cài app rắc rối. Bạn chỉ cần mở Zalo và nhắn tin ra lệnh như một Gia Chủ thực thụ.</p>
+        <div class="happiness-badge">TRẢI NGHIỆM TƯƠNG TÁC THỰC TẾ TRỰC TUYẾN</div>
+        <h2>Trải Nghiệm Trực Tiếp: Ra Lệnh Cho Quản Gia AI Ngay Bây Giờ</h2>
+        <p>Không cần tưởng tượng! Hãy bấm vào các gợi ý lệnh mẫu bên dưới hoặc tự gõ bất kỳ câu hỏi nào để trực tiếp trải nghiệm tốc độ phản hồi và sự chu toàn của Quản Gia Thời Hiện Đại.</p>
       </div>
 
+      <!-- Quick Prompt Chips -->
+      <div class="demo-chips-wrap">
+        <button type="button" class="demo-chip-btn" onclick="sendDemoPreset('toan')">
+          <span>📚</span> Kèm con Toán hình Lớp 8 (Socratic)
+        </button>
+        <button type="button" class="demo-chip-btn" onclick="sendDemoPreset('dinh-duong')">
+          <span>🥗</span> Gợi ý thực đơn tối thanh đạm giảm mỡ máu
+        </button>
+        <button type="button" class="demo-chip-btn" onclick="sendDemoPreset('tai-chinh')">
+          <span>💰</span> Lập kế hoạch tài chính 50/30/20
+        </button>
+        <button type="button" class="demo-chip-btn" onclick="sendDemoPreset('tam-ly')">
+          <span>💖</span> Con cáu gắt và đóng cửa phòng một mình
+        </button>
+        <button type="button" class="demo-chip-btn" onclick="sendDemoPreset('nhac-lich')">
+          <span>📋</span> Nhắc lịch gia đình & việc nhà tuần này
+        </button>
+      </div>
+
+      <!-- Interactive Zalo Mockup -->
       <div class="zalo-mockup-wrap">
         <div class="zalo-top-bar">
-          <div class="zalo-avatar-butler">BP</div>
-          <div class="zalo-top-info">
-            <strong>Bác Phúc (Quản Gia Nhà Họ Nguyễn)</strong>
-            <span>Đang túc trực 24/7 trên Zalo • Sẵn sàng nhận lệnh</span>
+          <div class="zalo-top-left">
+            <div class="zalo-avatar-butler">BP</div>
+            <div class="zalo-top-info">
+              <strong>Bác Phúc (Quản Gia Demo Gia Đình)</strong>
+              <span><span class="status-dot"></span> Đang túc trực 24/7 trên Zalo • Sẵn sàng nhận lệnh</span>
+            </div>
+          </div>
+          <button type="button" onclick="resetDemoChat()" style="background: rgba(255,255,255,0.15); border: none; color: #fff; font-size: 12px; padding: 5px 12px; border-radius: 6px; cursor: pointer;">Làm mới chat ↺</button>
+        </div>
+
+        <div class="zalo-chat-body" id="demo-chat-body">
+          <!-- Initial Welcome Message from Butler -->
+          <div class="chat-bubble bubble-butler">
+            <div class="bubble-sender">🤖 Quản Gia Bác Phúc (Túc trực 24/7)</div>
+            "Dạ kính chào Quý Gia Chủ! Tôi là <strong>Quản Gia Thời Hiện Đại</strong> — người đại diện gia đình trên Zalo để điều phối 24 AI Agent chuyên trách: từ kèm cặp 15 môn học phổ thông mới nhất, lập kế hoạch chi tiêu 50/30/20, gợi ý dinh dưỡng đến lắng nghe tâm lý con trẻ.<br><br>
+            Gia Chủ hãy <strong>bấm vào các nút lệnh mẫu bên trên</strong> hoặc <strong>nhập bất kỳ yêu cầu nào vào khung chat bên dưới</strong> để trải nghiệm thử tài năng của Quản Gia ngay nhé ạ!"
           </div>
         </div>
 
-        <div class="zalo-chat-body">
-          <!-- Turn 1 -->
-          <div class="chat-bubble bubble-user">
-            "Bác Phúc ơi, tối nay nhắc bé Khôi ôn lại bài toán hình lớp 8 giúp mẹ nhé. Dạo này phần tam giác đồng dạng con hơi lúng túng."
-          </div>
-
-          <!-- Turn 2 -->
-          <div class="chat-bubble bubble-butler">
-            "Dạ thưa Mẹ Lan! Bác Phúc đã ghi nhận ạ. Bác Phúc đã kết nối ngay cùng <strong>Gia sư Toán Lớp 8</strong> để chuẩn bị sẵn 3 câu hỏi gợi mở Socratic bẻ nhỏ định lý tam giác đồng dạng cho cháu Khôi rồi ạ. Tối nay cháu chỉ cần chụp ảnh bài tập gửi vào đây, thầy cô AI sẽ kiên nhẫn hướng dẫn cháu từng bước để cháu tự làm được. Đúng 21h30, Quản gia sẽ gửi báo cáo tiến độ kín vào Zalo riêng của Ba Mẹ nhé ạ!"
-          </div>
-
-          <!-- Turn 3 -->
-          <div class="chat-bubble bubble-user">
-            "Tiện thể gợi ý giúp mẹ thực đơn bữa tối nay cho cả nhà với, bố đang muốn ăn thanh đạm giảm mỡ máu."
-          </div>
-
-          <!-- Turn 4 -->
-          <div class="chat-bubble bubble-butler">
-            "Dạ thưa Mẹ Lan, <strong>Chuyên gia Dinh dưỡng Gia đình</strong> gợi ý ngay cho bữa tối ấm cúng của nhà mình 3 món chuẩn 4 nhóm chất: Canh chua cá lóc thanh nhiệt, Ức gà áp chảo sốt cam cho bé Khôi nhiều đạm nạc, và Rau củ luộc chấm kho quẹt ít muối cho Ba bồi bổ tim mạch. Tổng thời gian nấu chỉ 25 phút thôi ạ. Quản gia chúc cả nhà mình có bữa cơm ngon miệng!"
-          </div>
+        <!-- Chat Input Bar -->
+        <div class="zalo-chat-input-bar">
+          <input type="text" id="demo-chat-input" placeholder="Nhập câu hỏi hoặc ra lệnh cho Quản gia (ví dụ: kèm con học toán, lên thực đơn, quản lý chi tiêu...)..." autocomplete="off" />
+          <button type="button" id="demo-send-btn" onclick="handleDemoSend()" aria-label="Gửi tin nhắn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+          </button>
         </div>
+
+        <div class="demo-footer-note">
+          ★ Lưu ý: Đây là phiên bản tương tác mô phỏng trên web. Khi đăng ký, Quản Gia sẽ có số Zalo cá nhân riêng mang tên riêng do gia đình bạn chọn, lưu trữ hồ sơ bảo mật và gửi báo cáo kín qua Zalo riêng của Ba Mẹ.
+        </div>
+      </div>
+
+      <!-- CTA Under Chat -->
+      <div style="text-align: center; margin-top: 32px;">
+        <a href="#dang-ky" class="btn-cta" style="font-size: 15px; padding: 15px 36px; display: inline-flex; align-items: center; gap: 8px;">
+          KÍCH HOẠT QUẢN GIA THẬT TRÊN ZALO CHO GIA ĐÌNH BẠN (7 NGÀY MIỄN PHÍ) ↗
+        </a>
       </div>
     </div>
   </section>
@@ -2753,5 +2915,152 @@
       });
     });
   </script>
+
+  <!-- =======================================================
+       INTERACTIVE DEMO BUTLER AGENT ENGINE
+       ======================================================= -->
+  <script>
+    const demoPresets = {
+      'toan': {
+        user: "Bác Phúc ơi, tối nay nhắc bé Khôi ôn lại bài toán hình lớp 8 giúp mẹ nhé. Dạo này phần tam giác đồng dạng con hơi lúng túng.",
+        reply: "Dạ thưa Mẹ Lan! Bác Phúc đã ghi nhận ạ. Bác Phúc đã kết nối ngay cùng <strong>Gia sư Toán Lớp 8 (Phương pháp Socratic)</strong> để chuẩn bị sẵn 3 câu hỏi gợi mở bẻ nhỏ định lý tam giác đồng dạng cho cháu Khôi.<br><br>Gia sư AI sẽ kiên nhẫn hướng dẫn từng bước để cháu tự tư duy và tự làm được bài, tuyệt đối không giải hộ chép bài đối phó. Đúng 21h30 tối nay, Quản gia sẽ gửi báo cáo tiến độ kín vào Zalo riêng của Ba Mẹ nhé ạ!"
+      },
+      'dinh-duong': {
+        user: "Quản gia gợi ý giúp thực đơn bữa tối 4 nhóm chất cho cả nhà với, bố đang muốn ăn thanh đạm giảm mỡ máu.",
+        reply: "Dạ thưa Gia Chủ, <strong>Chuyên gia Dinh dưỡng Gia đình</strong> gợi ý ngay cho bữa tối ấm cúng của nhà mình 3 món chuẩn 4 nhóm chất:<br>• <strong>Canh chua cá lóc:</strong> Vừa thanh nhiệt vừa giàu axit béo lành mạnh.<br>• <strong>Ức gà áp chảo sốt cam:</strong> Cung cấp đạm nạc dồi dào cho các con phát triển chiều cao.<br>• <strong>Rau củ luộc ngũ sắc chấm kho quẹt ít muối:</strong> Bổ sung chất xơ và kali hỗ trợ thanh lọc mạch máu cho Ba.<br><br>Tổng thời gian chế biến chỉ 25 phút. Quản gia chúc cả nhà có bữa cơm tối ngon miệng và ấm áp!"
+      },
+      'tai-chinh': {
+        user: "Lập kế hoạch chi tiêu tháng này cho gia đình 4 người với tổng thu nhập 40 triệu theo quy tắc 50/30/20 giúp tôi.",
+        reply: "Dạ thưa Gia Chủ, <strong>Quản Gia Tài Chính & Quỹ Dự Phòng</strong> đã lập sẵn hạn mức ngân sách 40 triệu tháng này cho tổ ấm:<br>• <strong>50% Nhu cầu thiết yếu (20.000.000đ):</strong> Tiền chợ búa (8tr), tiền học chính khóa 2 con (6tr), hóa đơn điện nước internet (3tr), xăng xe phát sinh (3tr).<br>• <strong>30% Nâng cao chất lượng sống (12.000.000đ):</strong> Ăn ngoài cuối tuần, mua sắm cần thiết, khóa học kỹ năng cho con.<br>• <strong>20% Quỹ tích lũy dự phòng & đầu tư (8.000.000đ):</strong> Tự động chuyển vào tài khoản tiết kiệm khẩn cấp ngay khi có lương.<br><br>Quản gia sẽ tự động nhắc nhở khi từng hạng mục chi tiêu chạm mốc 80% định mức ạ!"
+      },
+      'tam-ly': {
+        user: "Bác Phúc ơi, dạo này con trai hay cáu gắt và đi học về là đóng chặt cửa phòng một mình, mẹ lo quá.",
+        reply: "Dạ thưa Mẹ, Bác Phúc rất hiểu và chia sẻ nỗi âu lo này của Mẹ. Ở độ tuổi dậy thì, các con thường gặp khủng hoảng tâm lý hoặc áp lực từ bạn bè, thầy cô nhưng ngại chia sẻ vì sợ ba mẹ lo lắng hoặc phán xét.<br><br>Bác Phúc với vai trò <strong>Cố Vấn Tâm Lý</strong> sẽ chủ động nhắn tin hỏi han nhẹ nhàng như một người bạn lớn, mở lòng lắng nghe tâm tư của con qua Zalo riêng. Nếu phát hiện con có dấu hiệu bị bạo lực học đường hay căng thẳng vượt ngưỡng, Bác Phúc sẽ kích hoạt ngay <strong>Hotline cho Ba Mẹ</strong> và báo cáo kín để Ba Mẹ kịp thời đồng hành cùng con ạ!"
+      },
+      'nhac-lich': {
+        user: "Nhắc lịch gia đình tuần này: tiền điện nước, bảo dưỡng xe và lịch khám răng của bé giúp tôi.",
+        reply: "Dạ thưa Gia Chủ, <strong>Trợ Lý Lịch Trình & Hành Chính Gia Đình</strong> đã lên lịch chính xác 100%:<br>• <strong>Thứ Ba (10h00):</strong> Hạn chót đóng tiền điện nước EVN (Quản gia sẽ gửi kèm link thanh toán 1-chạm).<br>• <strong>Thứ Sáu (16h30):</strong> Lịch bảo dưỡng định kỳ xe ô tô/xe máy.<br>• <strong>Thứ Bảy (09h00):</strong> Lịch tái khám răng định kỳ cho bé tại phòng khám Nha khoa.<br><br>Quản gia cũng đã đồng bộ nhiệm vụ phụ giúp dọn nhà cuối tuần vào hệ thống thưởng Sao Tích Lũy để hai bé hào hứng cùng Ba Mẹ làm việc nhà nhé ạ!"
+      }
+    };
+
+    function appendDemoMessage(sender, text, isUser) {
+      const chatBody = document.getElementById('demo-chat-body');
+      if (!chatBody) return;
+
+      const bubble = document.createElement('div');
+      bubble.className = isUser ? 'chat-bubble bubble-user' : 'chat-bubble bubble-butler';
+
+      const senderTag = document.createElement('div');
+      senderTag.className = 'bubble-sender';
+      senderTag.innerHTML = isUser ? '👤 Bạn (Gia Chủ)' : '🤖 Quản Gia Bác Phúc (Túc trực 24/7)';
+
+      const content = document.createElement('div');
+      content.innerHTML = text;
+
+      bubble.appendChild(senderTag);
+      bubble.appendChild(content);
+      chatBody.appendChild(bubble);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    function showDemoTyping() {
+      const chatBody = document.getElementById('demo-chat-body');
+      if (!chatBody) return null;
+
+      const typing = document.createElement('div');
+      typing.id = 'demo-typing';
+      typing.className = 'chat-bubble bubble-butler';
+      typing.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div> <em>Quản gia đang kết nối AI Agent chuyên trách và chuẩn bị câu trả lời...</em>';
+      chatBody.appendChild(typing);
+      chatBody.scrollTop = chatBody.scrollHeight;
+      return typing;
+    }
+
+    function removeDemoTyping() {
+      const typing = document.getElementById('demo-typing');
+      if (typing) typing.remove();
+    }
+
+    function sendDemoPreset(key) {
+      const preset = demoPresets[key];
+      if (!preset) return;
+
+      const sendBtn = document.getElementById('demo-send-btn');
+      if (sendBtn) sendBtn.disabled = true;
+
+      appendDemoMessage('Gia Chủ', preset.user, true);
+      showDemoTyping();
+
+      setTimeout(() => {
+        removeDemoTyping();
+        appendDemoMessage('Bác Phúc', preset.reply, false);
+        if (sendBtn) sendBtn.disabled = false;
+      }, 900);
+    }
+
+    function handleDemoSend() {
+      const input = document.getElementById('demo-chat-input');
+      if (!input) return;
+      const text = input.value.trim();
+      if (!text) return;
+
+      const sendBtn = document.getElementById('demo-send-btn');
+      if (sendBtn) sendBtn.disabled = true;
+
+      appendDemoMessage('Gia Chủ', text, true);
+      input.value = '';
+      showDemoTyping();
+
+      // Intelligent Client Response Generator
+      setTimeout(() => {
+        removeDemoTyping();
+        const lower = text.toLowerCase();
+        let reply = '';
+
+        if (lower.includes('toán') || lower.includes('văn') || lower.includes('anh') || lower.includes('lý') || lower.includes('hóa') || lower.includes('học') || lower.includes('bài') || lower.includes('socratic') || lower.includes('gia sư') || lower.includes('ielts')) {
+          reply = "Dạ thưa Ba Mẹ! Quản gia đã tiếp nhận yêu cầu và điều phối ngay <strong>Gia sư Socratic GDPT Mới Nhất</strong> chuyên trách môn học này.<br><br>Gia sư AI sẽ tuyệt đối không giải sẵn đáp án để con chép, mà đặt các câu hỏi gợi mở bẻ nhỏ bài toán để chính con tự tư duy và tìm ra cách giải. Báo cáo mức độ tiến bộ của con sẽ được gửi kín vào Zalo riêng của Ba Mẹ sau mỗi buổi học ạ!";
+        } else if (lower.includes('ăn') || lower.includes('cơm') || lower.includes('món') || lower.includes('thực đơn') || lower.includes('dinh dưỡng') || lower.includes('nấu') || lower.includes('sức khỏe') || lower.includes('béo') || lower.includes('giảm cân')) {
+          reply = "Dạ thưa Gia Chủ! Quản gia đã kết nối ngay cùng <strong>Chuyên gia Dinh dưỡng Gia đình</strong>. Quản gia xin gợi ý thực đơn chuẩn 4 nhóm chất cho thể trạng gia đình Việt:<br>• Món canh thanh nhiệt giải độc.<br>• Món mặn giàu protein nạc ít dầu mỡ bão hòa.<br>• Rau củ tươi luộc cung cấp vitamin và chất xơ dồi dào.<br><br>Thời gian nấu tối ưu chỉ 25-30 phút. Quản gia chúc cả nhà có bữa cơm đầm ấm và khỏe mạnh!";
+        } else if (lower.includes('tiền') || lower.includes('chi tiêu') || lower.includes('tài chính') || lower.includes('ngân sách') || lower.includes('50/30/20') || lower.includes('lương') || lower.includes('tiết kiệm')) {
+          reply = "Dạ thưa Gia Chủ! Quản gia đã kích hoạt <strong>Agent Quản Trị Tài Chính 50/30/20</strong>:<br>• 50% Nhu cầu thiết yếu (nhà ở, ăn uống sinh hoạt, học phí).<br>• 30% Chi tiêu nâng cao chất lượng sống & phát triển bản thân.<br>• 20% Quỹ tiết kiệm khẩn cấp & tích lũy tương lai.<br><br>Quản gia sẽ tự động theo dõi từng dòng chi và cảnh báo sớm trước khi vượt hạn mức để gia đình luôn chủ động tài chính ạ!";
+        } else if (lower.includes('tâm lý') || lower.includes('cáu') || lower.includes('buồn') || lower.includes('khóc') || lower.includes('áp lực') || lower.includes('bắt nạt') || lower.includes('dậy thì') || lower.includes('tâm sự') || lower.includes('bác phúc')) {
+          reply = "Dạ thưa Ba Mẹ, <strong>Bác Phúc Cố Vấn Tâm Lý</strong> xin được lắng nghe và đồng hành cùng gia đình. Bác Phúc sẽ chủ động trò chuyện nhẹ nhàng với con qua Zalo riêng với sự thấu hiểu tuyệt đối và không phán xét.<br><br>Nếu phát hiện con gặp áp lực học đường hay xích mích bạn bè, Bác Phúc sẽ gửi cảnh báo kín ngay cho Ba Mẹ kèm số <strong>Hotline cho Ba Mẹ</strong> để gia đình kịp thời thấu hiểu và che chở cho con ạ!";
+        } else if (lower.includes('lịch') || lower.includes('nhắc') || lower.includes('việc nhà') || lower.includes('điện') || lower.includes('nước') || lower.includes('xe') || lower.includes('khám') || lower.includes('tiêm')) {
+          reply = "Dạ thưa Gia Chủ! <strong>Trợ Lý Lịch Trình & Việc Nhà</strong> đã lưu việc này vào Sổ Nhật Ký Gia Đình. Quản gia sẽ nhắc nhở đúng giờ trên Zalo cho người phụ trách, đồng thời kích hoạt hệ thống tích lũy Sao thưởng để các con hào hứng tự giác làm việc nhà giúp đỡ Ba Mẹ ạ!";
+        } else {
+          reply = `Dạ kính thưa Quý Gia Chủ! Yêu cầu <em>"${text}"</em> đã được Quản gia tiếp nhận và tự động phân công đến AI Agent chuyên trách phù hợp trong hệ thống 24 Agent của gia đình.<br><br>Quản gia túc trực 24/7 trên Zalo để giải quyết chu toàn mọi việc từ học tập của con đến tài chính và cuộc sống gia đình. Để kích hoạt Quản Gia riêng mang tên dòng họ của bạn, mời bạn bấm nút đăng ký dùng thử 7 ngày miễn phí bên dưới nhé ạ!`;
+        }
+
+        appendDemoMessage('Bác Phúc', reply, false);
+        if (sendBtn) sendBtn.disabled = false;
+      }, 950);
+    }
+
+    function resetDemoChat() {
+      const chatBody = document.getElementById('demo-chat-body');
+      if (!chatBody) return;
+      chatBody.innerHTML = `
+        <div class="chat-bubble bubble-butler">
+          <div class="bubble-sender">🤖 Quản Gia Bác Phúc (Túc trực 24/7)</div>
+          "Dạ kính chào Quý Gia Chủ! Tôi là <strong>Quản Gia Thời Hiện Đại</strong> — người đại diện gia đình trên Zalo để điều phối 24 AI Agent chuyên trách: từ kèm cặp 15 môn học phổ thông mới nhất, lập kế hoạch chi tiêu 50/30/20, gợi ý dinh dưỡng đến lắng nghe tâm lý con trẻ.<br><br>
+          Gia Chủ hãy <strong>bấm vào các nút lệnh mẫu bên trên</strong> hoặc <strong>nhập bất kỳ yêu cầu nào vào khung chat bên dưới</strong> để trải nghiệm thử tài năng của Quản Gia ngay nhé ạ!"
+        </div>
+      `;
+    }
+
+    // Support Enter key in input
+    document.addEventListener('DOMContentLoaded', function() {
+      const input = document.getElementById('demo-chat-input');
+      if (input) {
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            handleDemoSend();
+          }
+        });
+      }
+    });
+  </script>
+
 </body>
 </html>
