@@ -7,6 +7,7 @@ Listens on 127.0.0.1:18896
 import json
 import logging
 import urllib.request
+import urllib.parse
 import socket
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import psycopg2
@@ -82,6 +83,39 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
                     "sepay_daemon": "ok"
                 }
             })
+        elif self.path.startswith('/api/v1/internal/tenant-lookup'):
+            try:
+                parsed_url = urllib.parse.urlparse(self.path)
+                params = urllib.parse.parse_qs(parsed_url.query)
+                user_id = params.get('user_id', [''])[0].strip().lower()
+                if not user_id:
+                    self._send_json(400, {"ok": False, "error": "user_id is required"})
+                    return
+                conn = psycopg2.connect(**DB_CONFIG)
+                cur = conn.cursor(cursor_factory=RealDictCursor)
+                cur.execute("""
+                    SELECT t.id, t.name, t.slug, u.role
+                    FROM tenant_users u
+                    JOIN tenants t ON u.tenant_id = t.id
+                    WHERE LOWER(u.user_id) = %s AND t.status = 'active'
+                    LIMIT 1
+                """, (user_id,))
+                row = cur.fetchone()
+                cur.close()
+                conn.close()
+                if row:
+                    self._send_json(200, {
+                        "ok": True,
+                        "tenant_id": str(row["id"]),
+                        "slug": row["slug"],
+                        "name": row["name"],
+                        "role": row["role"]
+                    })
+                else:
+                    self._send_json(404, {"ok": False, "error": "No tenant found for user"})
+            except Exception as e:
+                logging.error(f"tenant-lookup error: {e}")
+                self._send_json(500, {"ok": False, "error": str(e)})
         else:
             self._send_json(404, {"error": "Not Found"})
 
