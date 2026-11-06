@@ -147,6 +147,7 @@
     }
 
     *, *::before, *::after { box-sizing: border-box; }
+    button, input, select, textarea { font-family: inherit; }
     html {
       -webkit-text-size-adjust: 100%;
       scroll-behavior: smooth;
@@ -1797,9 +1798,416 @@
       }
     }
 
-  </style>
+  
+    /* MODERN OPTIMIZED PRICING ARCHITECTURE (TỐI ƯU GIA ĐÌNH) */
+    .pricing-section {
+      padding: 65px 0 70px;
+      background: #080c14;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      position: relative;
+    }
+    .pricing-header {
+      text-align: center;
+      max-width: 760px;
+      margin: 0 auto 36px;
+    }
+    .pricing-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      align-items: stretch;
+      margin-bottom: 36px;
+    }
+    .p-card {
+      background: #0e1522;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 22px 18px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      transition: all 0.25s ease;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    }
+    .p-card:hover {
+      transform: translateY(-4px);
+      border-color: #38bdf8;
+      box-shadow: 0 15px 35px rgba(56, 189, 248, 0.18);
+    }
+    .p-card.featured {
+      border: 1.5px solid #38bdf8;
+      background: linear-gradient(180deg, rgba(56, 189, 248, 0.08), #0e1522);
+      box-shadow: 0 12px 35px rgba(56, 189, 248, 0.2);
+    }
+    .p-card.best-value {
+      border: 1.5px solid #fbbf24;
+      background: linear-gradient(180deg, rgba(251, 191, 36, 0.08), #0e1522);
+      box-shadow: 0 12px 35px rgba(251, 191, 36, 0.2);
+    }
+    .p-card-top {
+      margin-bottom: 16px;
+    }
+    .p-card-badge {
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+    }
+    .p-card-badge.cyan { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .p-card-badge.gold { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+    .p-card-badge.subtle { background: rgba(255, 255, 255, 0.05); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.1); }
+
+    .p-card-title {
+      font-size: 19px;
+      font-weight: 800;
+      color: #f8fafc;
+      margin: 0 0 5px;
+    }
+    .p-card-sub {
+      font-size: 12.5px;
+      color: #94a3b8;
+      margin: 0;
+      line-height: 1.4;
+      min-height: 35px;
+    }
+    .p-card-price-box {
+      margin: 14px 0 16px;
+      padding: 12px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .p-card-price {
+      font-size: 28px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1;
+      letter-spacing: -0.5px;
+    }
+    .p-card.featured .p-card-price { color: #38bdf8; }
+    .p-card.best-value .p-card-price { color: #fbbf24; }
+    .p-card-period {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 5px;
+    }
+    .p-card-saving {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 6px;
+    }
+    .p-card-saving.cyan { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .p-card-saving.gold { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+    .p-card-saving.none { visibility: hidden; }
+
+    .p-btn-plan {
+      font-family: inherit !important;
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-weight: 700 !important;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      text-align: center;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: #1e293b;
+      color: #f8fafc;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: block;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .p-btn-plan:hover {
+      background: #38bdf8;
+      color: #03131e;
+      border-color: #38bdf8;
+    }
+    .p-card.featured .p-btn-plan {
+      background: #38bdf8;
+      color: #03131e;
+      border-color: #38bdf8;
+      font-weight: 700 !important;
+    }
+    .p-card.featured .p-btn-plan:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+    }
+    .p-card.best-value .p-btn-plan {
+      background: linear-gradient(135deg, #fbbf24, #d97706);
+      color: #03131e;
+      border-color: #fbbf24;
+      font-weight: 700 !important;
+    }
+    .p-card.best-value .p-btn-plan:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+    }
+
+    /* ALL INCLUSIVE FEATURES SECTION (2-TIER ARCHITECTURE) */
+    .pricing-features-container {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 28px 24px 24px;
+    }
+    .features-header-title {
+      text-align: center;
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #f8fafc;
+      margin-bottom: 22px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .features-header-title span {
+      color: #38bdf8;
+    }
+    .features-grid-6 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .f-box {
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .f-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .f-text h4 {
+      font-size: 13.5px;
+      color: #f8fafc;
+      margin: 0 0 3px;
+      font-weight: 700;
+    }
+    .f-text p {
+      font-size: 12px;
+      color: #94a3b8;
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    /* PURCHASE POPUP MODAL STYLES (COMPACT, NO SCROLLBAR) */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(3, 7, 18, 0.88);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 999999;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    .modal-box {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      background: #0d1522;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 16px;
+      padding: 22px 24px 20px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(56, 189, 248, 0.15);
+      box-sizing: border-box;
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .modal-box::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .modal-close:hover {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+    .modal-form-group {
+      margin-bottom: 11px;
+    }
+    .modal-form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 4px;
+    }
+    .modal-form-group .req {
+      color: #ef4444;
+      font-weight: 700;
+    }
+    .modal-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 9px 12px;
+      font-size: 13.5px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: #151f32;
+      color: #ffffff;
+      outline: none;
+      transition: border-color 0.2s ease;
+      font-family: inherit;
+    }
+    .modal-input:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    }
+    .modal-submit-btn {
+      font-family: inherit !important;
+      margin-top: 12px;
+      width: 100%;
+      padding: 12px;
+      font-size: 14.5px;
+      font-weight: 700 !important;
+      background: linear-gradient(135deg, #fbbf24, #d97706);
+      color: #03131e;
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(251, 191, 36, 0.35);
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      transition: filter 0.2s ease;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .modal-submit-btn:hover {
+      filter: brightness(1.1);
+    }
+    .modal-submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 1040px) {
+      .pricing-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+      }
+      .features-grid-6 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 640px) {
+      .pricing-section {
+        padding: 45px 0 50px;
+      }
+      .pricing-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      .features-grid-6 {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .pricing-features-container {
+        padding: 20px 16px;
+      }
+      .modal-box {
+        padding: 18px 16px 16px;
+      }
+    }
+
+</style>
 </head>
 <body>
+
+  <!-- PURCHASE POPUP MODAL (OPTIMIZED, SUPER SLEEK, NO SCROLLBAR) -->
+  <div class="modal-backdrop" id="purchase-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" style="display: none;">
+    <div class="modal-box">
+      <button type="button" class="modal-close" onclick="closePurchaseModal()" aria-label="Đóng popup">&times;</button>
+      
+      <div style="text-align: center; margin-bottom: 14px;">
+        <div style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 3px;">ĐĂNG KÝ SỞ HỮU QUẢN GIA</div>
+        <h3 id="modal-title" style="font-size: 20px; font-weight: 800; color: #f8fafc; margin: 0 0 4px;">Đăng Ký Gói 6 Tháng</h3>
+        <p id="modal-plan-desc" style="font-size: 12px; color: #94a3b8; margin: 0; line-height: 1.4;">Điền thông tin để chuyển tiếp sang trang thanh toán VietQR SePay tự động.</p>
+      </div>
+
+      <div id="modal-alert" class="alert-box alert-error" style="display: none; margin-bottom: 10px; padding: 8px 12px; font-size: 12.5px;"></div>
+
+      <form id="purchase-form">
+        <input type="hidden" id="modal-plan" name="plan" value="6m">
+        <input type="hidden" name="consent" value="1">
+
+        <div class="modal-form-group">
+          <label for="modal-name">Họ và tên <span class="req">*</span></label>
+          <input type="text" id="modal-name" name="name" class="modal-input" placeholder="Ví dụ: Nguyễn Văn An" required>
+        </div>
+
+        <div class="modal-form-group">
+          <label for="modal-phone">Số điện thoại <span class="req">*</span></label>
+          <input type="tel" id="modal-phone" name="phone" class="modal-input" placeholder="Ví dụ: 0981224739" required>
+        </div>
+
+        <div class="modal-form-group">
+          <label for="modal-email">Email <span class="req">*</span></label>
+          <input type="email" id="modal-email" name="email" class="modal-input" placeholder="Ví dụ: an.nguyen@gmail.com" required>
+        </div>
+
+        <div class="modal-form-group">
+          <label for="modal-family-members">Số lượng thành viên trong gia đình <span class="req">*</span></label>
+          <select id="modal-family-members" name="family_members" class="modal-input" required>
+            <option value="3 thành viên (Ba mẹ + 1 con)">3 thành viên (Ba mẹ + 1 con)</option>
+            <option value="4 thành viên (Gia đình tiêu chuẩn: Ba mẹ + 2 con)" selected>4 thành viên (Gia đình tiêu chuẩn: Ba mẹ + 2 con)</option>
+            <option value="5 thành viên (Ba mẹ + 3 con hoặc có ông bà)">5 thành viên (Ba mẹ + 3 con hoặc có ông bà)</option>
+            <option value="6 thành viên trở lên (Gia đình đa thế hệ)">6 thành viên trở lên (Gia đình đa thế hệ)</option>
+          </select>
+        </div>
+
+        <button type="submit" id="modal-submit-btn" class="modal-submit-btn">
+          TIẾN HÀNH THANH TOÁN
+        </button>
+      </form>
+    </div>
+  </div>
+  <!-- /PURCHASE POPUP MODAL -->
+
 
   <!-- SITE HEADER & NAVIGATION -->
   <header class="site-header">
@@ -2673,7 +3081,149 @@
     </div>
   </section>
 
-  <!-- REGISTRATION FORM SECTION (NÂNG CẤP TOÀN DIỆN CHO GIA ĐÌNH) -->
+    <!-- PRICING SECTION (TỐI ƯU TOÀN DIỆN CHO GIA ĐÌNH) -->
+  <section class="pricing-section" id="bang-gia">
+    <div class="wrap">
+      <div class="pricing-header">
+        <h2 style="font-size: clamp(22px, 3.5vw, 30px); color: #f8fafc; margin: 0 0 8px; font-weight: 800;">
+          Bảng Giá Đồng Hành Quản Gia Riêng
+        </h2>
+        <p style="font-size: 14.5px; color: #94a3b8; line-height: 1.5; margin: 0;">
+          Tất cả các gói đều sở hữu trọn vẹn 100% công năng đa năng của Quản Gia. Gói càng dài, gia đình càng tiết kiệm chi phí và thời gian.
+        </p>
+      </div>
+
+      <!-- 4 CLEAN COMPACT CARDS -->
+      <div class="pricing-cards-grid">
+        <!-- GÓI 1 THÁNG -->
+        <div class="p-card">
+          <div class="p-card-top">
+            <span class="p-card-badge subtle">CƠ BẢN</span>
+            <h3 class="p-card-title">Gói 1 Tháng</h3>
+            <p class="p-card-sub">Trải nghiệm thực tế toàn diện công năng</p>
+            <div class="p-card-price-box">
+              <div class="p-card-price">500.000đ</div>
+              <div class="p-card-period">500.000đ / tháng</div>
+              <div class="p-card-saving none">Gói chuẩn</div>
+            </div>
+          </div>
+          <button type="button" class="p-btn-plan" onclick="openPurchaseModal('1m', 'Gói 1 Tháng', '500.000đ')">
+            CHỌN GÓI 1 THÁNG
+          </button>
+        </div>
+
+        <!-- GÓI 3 THÁNG -->
+        <div class="p-card">
+          <div class="p-card-top">
+            <span class="p-card-badge subtle">ỔN ĐỊNH</span>
+            <h3 class="p-card-title">Gói 3 Tháng</h3>
+            <p class="p-card-sub">Xây dựng nề nếp và ổn định sinh hoạt gia đình</p>
+            <div class="p-card-price-box">
+              <div class="p-card-price">1.200.000đ</div>
+              <div class="p-card-period">Chỉ 400.000đ / tháng</div>
+              <div class="p-card-saving cyan">Tiết kiệm 20% (Giảm 300.000đ)</div>
+            </div>
+          </div>
+          <button type="button" class="p-btn-plan" onclick="openPurchaseModal('3m', 'Gói 3 Tháng', '1.200.000đ')">
+            CHỌN GÓI 3 THÁNG
+          </button>
+        </div>
+
+        <!-- GÓI 6 THÁNG -->
+        <div class="p-card featured">
+          <div class="p-card-top">
+            <span class="p-card-badge cyan">PHỔ BIẾN NHẤT</span>
+            <h3 class="p-card-title" style="color: #38bdf8;">Gói 6 Tháng</h3>
+            <p class="p-card-sub">Đồng hành bền vững, đa số gia đình tin chọn</p>
+            <div class="p-card-price-box">
+              <div class="p-card-price">2.100.000đ</div>
+              <div class="p-card-period">Chỉ 350.000đ / tháng</div>
+              <div class="p-card-saving cyan">Tiết kiệm 30% (Giảm 900.000đ)</div>
+            </div>
+          </div>
+          <button type="button" class="p-btn-plan" onclick="openPurchaseModal('6m', 'Gói 6 Tháng', '2.100.000đ')">
+            CHỌN GÓI 6 THÁNG
+          </button>
+        </div>
+
+        <!-- GÓI 12 THÁNG -->
+        <div class="p-card best-value">
+          <div class="p-card-top">
+            <span class="p-card-badge gold">TIẾT KIỆM TỐI ĐA</span>
+            <h3 class="p-card-title" style="color: #fbbf24;">Gói 12 Tháng</h3>
+            <p class="p-card-sub">An tâm trọn năm, tối ưu chi phí và đồng hành dài lâu</p>
+            <div class="p-card-price-box">
+              <div class="p-card-price">3.600.000đ</div>
+              <div class="p-card-period">Chỉ 300.000đ / tháng (~10k/ngày)</div>
+              <div class="p-card-saving gold">Tiết kiệm 40% (Giảm 2.400.000đ)</div>
+            </div>
+          </div>
+          <button type="button" class="p-btn-plan" onclick="openPurchaseModal('12m', 'Gói 12 Tháng', '3.600.000đ')">
+            CHỌN GÓI 12 THÁNG
+          </button>
+        </div>
+      </div>
+
+      <!-- ALL PACKAGES INCLUDE 6 CORE VALUES (KHỐI ĐẶC QUYỀN ĐA NĂNG DÙNG CHUNG) -->
+      <div class="pricing-features-container">
+        <div class="features-header-title">
+          ✦ TẤT CẢ CÁC GÓI ĐỀU SỞ HỮU TRỌN VẸN <span>6 ĐẶC QUYỀN ĐA NĂNG CỐT LÕI</span> ✦
+        </div>
+        <div class="features-grid-6">
+          <div class="f-box">
+            <div class="f-icon">🤖</div>
+            <div class="f-text">
+              <h4>Dàn 24 AI Agent Trên Zalo 24/7</h4>
+              <p>Quản gia riêng mang tên gia đình đặt, nhận lệnh trực tiếp từ Ba Mẹ, bảo mật 100%.</p>
+            </div>
+          </div>
+
+          <div class="f-box">
+            <div class="f-icon">🎓</div>
+            <div class="f-text">
+              <h4>Gia Sư 15 Môn Kèm Cặp 1-1</h4>
+              <p>Phương pháp Socratic gợi mở tư duy, không giải hộ, bám sát GDPT mới nhất.</p>
+            </div>
+          </div>
+
+          <div class="f-box">
+            <div class="f-icon">💰</div>
+            <div class="f-text">
+              <h4>Quản Trị Tài Chính 50/30/20</h4>
+              <p>Phân bổ thu chi, cảnh báo vượt hạn mức và xây dựng quỹ tài chính gia đình vững bền.</p>
+            </div>
+          </div>
+
+          <div class="f-box">
+            <div class="f-icon">🥗</div>
+            <div class="f-text">
+              <h4>Chăm Sóc Dinh Dưỡng & Sức Khỏe</h4>
+              <p>Lên thực đơn khoa học 4 nhóm chất, theo dõi sức khỏe và nhắc lịch khám định kỳ.</p>
+            </div>
+          </div>
+
+          <div class="f-box">
+            <div class="f-icon">🛡️</div>
+            <div class="f-text">
+              <h4>Cố Vấn Tâm Lý & An Toàn</h4>
+              <p>Lắng nghe tâm sự con, phát hiện bất thường học đường và cảnh báo kín cho phụ huynh.</p>
+            </div>
+          </div>
+
+          <div class="f-box">
+            <div class="f-icon">👨‍👩‍👧‍👦</div>
+            <div class="f-text">
+              <h4>Trợ Lý Việc Nhà & Dùng Chung Cả Nhà</h4>
+              <p>Phân công việc nhà tích sao khen thưởng cho con, dùng chung không giới hạn thành viên.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- /PRICING SECTION -->
+
+<!-- REGISTRATION FORM SECTION (NÂNG CẤP TOÀN DIỆN CHO GIA ĐÌNH) -->
   <section class="form-section" id="dang-ky">
     <div class="wrap">
       <div class="form-container">
@@ -2701,7 +3251,6 @@
           <div class="form-group">
             <label for="family_members">Số lượng thành viên gia đình <span class="req">*</span></label>
             <select id="family_members" name="family_members" class="form-control" required>
-              <option value="2 thành viên (Vợ chồng / Độc thân)">2 thành viên</option>
               <option value="3 thành viên (Bố mẹ + 1 con)">3 thành viên</option>
               <option value="4 thành viên (Bố mẹ + 2 con)" selected>4 thành viên (Bố mẹ + 2 con)</option>
               <option value="5 thành viên (Bố mẹ + 3 con hoặc có ông bà)">5 thành viên</option>
@@ -2761,7 +3310,7 @@
         <details class="faq-item">
           <summary>Gia đình có được đặt tên riêng và chọn xưng hô cho Quản Gia không?</summary>
           <div class="faq-content">
-            Có, 100%! Gia đình bạn hoàn toàn làm chủ và sở hữu Quản Gia. Bạn có thể đặt tên Quản gia theo ý thích (Bác Phúc, Cô Tấm, Quản gia Nhà họ Nguyễn...) và thiết lập cách xưng hô chuẩn gia phong Việt Nam (ví dụ Ba Hùng, Mẹ Lan, Cậu Khôi). Quản gia sẽ túc trực 24/7 trên Zalo riêng để nhận lệnh của bạn.
+            Có, 100%! Gia đình bạn hoàn toàn làm chủ và sở hữu Quản Gia. Bạn có thể đặt tên Quản gia theo ý thích (Bác Phúc, Cô Tấm, Quản gia Nhà họ Nguyễn...) và thiết lập cách xưng hô chuẩn gia phong Việt Nam (ví dụ Ba Hùng, Mẹ Nguyên, Cậu Khôi). Quản gia sẽ túc trực 24/7 trên Zalo riêng để nhận lệnh của bạn.
           </div>
         </details>
 
@@ -2908,7 +3457,7 @@
     const demoPresets = {
       'toan': {
         user: "Bác Phúc ơi, tối nay nhắc bé Khôi ôn lại bài toán hình lớp 8 giúp mẹ nhé. Dạo này phần tam giác đồng dạng con hơi lúng túng.",
-        reply: "Dạ thưa Mẹ Lan! Bác Phúc đã ghi nhận ạ. Bác Phúc đã kết nối ngay cùng <strong>Gia sư Toán Lớp 8 (Phương pháp Socratic)</strong> để chuẩn bị sẵn 3 câu hỏi gợi mở bẻ nhỏ định lý tam giác đồng dạng cho cháu Khôi.<br><br>Gia sư AI sẽ kiên nhẫn hướng dẫn từng bước để cháu tự tư duy và tự làm được bài, tuyệt đối không giải hộ chép bài đối phó. Đúng 21h30 tối nay, Quản gia sẽ gửi báo cáo tiến độ kín vào Zalo riêng của Ba Mẹ nhé ạ!"
+        reply: "Dạ thưa Mẹ Nguyên! Bác Phúc đã ghi nhận ạ. Bác Phúc đã kết nối ngay cùng <strong>Gia sư Toán Lớp 8 (Phương pháp Socratic)</strong> để chuẩn bị sẵn 3 câu hỏi gợi mở bẻ nhỏ định lý tam giác đồng dạng cho cháu Khôi.<br><br>Gia sư AI sẽ kiên nhẫn hướng dẫn từng bước để cháu tự tư duy và tự làm được bài, tuyệt đối không giải hộ chép bài đối phó. Đúng 21h30 tối nay, Quản gia sẽ gửi báo cáo tiến độ kín vào Zalo riêng của Ba Mẹ nhé ạ!"
       },
       'dinh-duong': {
         user: "Quản gia gợi ý giúp thực đơn bữa tối 4 nhóm chất cho cả nhà với, bố đang muốn ăn thanh đạm giảm mỡ máu.",
@@ -3045,6 +3594,142 @@
         });
       }
     });
+  </script>
+
+
+  <!-- PURCHASE POPUP MODAL SCRIPT -->
+  <script>
+    (function() {
+      window.openPurchaseModal = function(planKey, planName, planPrice) {
+        var modal = document.getElementById('purchase-modal');
+        var modalPlanInput = document.getElementById('modal-plan');
+        var modalTitle = document.getElementById('modal-title');
+        
+        if (modalPlanInput) modalPlanInput.value = planKey || '6m';
+        if (modalTitle && planName) {
+          modalTitle.textContent = 'Đăng Ký ' + planName + (planPrice ? ' (' + planPrice + ')' : '');
+        }
+        
+        // Auto-fill from trial form if available
+        var trialName = document.getElementById('name');
+        var trialPhone = document.getElementById('phone');
+        var trialEmail = document.getElementById('email');
+        var trialFam = document.getElementById('family_members');
+
+        if (trialName && trialName.value) document.getElementById('modal-name').value = trialName.value;
+        if (trialPhone && trialPhone.value) document.getElementById('modal-phone').value = trialPhone.value;
+        if (trialEmail && trialEmail.value) document.getElementById('modal-email').value = trialEmail.value;
+        if (trialFam && trialFam.value) document.getElementById('modal-family-members').value = trialFam.value;
+
+        if (modal) {
+          modal.style.display = 'flex';
+          document.body.style.overflow = 'hidden';
+        }
+      };
+
+      window.closePurchaseModal = function() {
+        var modal = document.getElementById('purchase-modal');
+        var modalAlert = document.getElementById('modal-alert');
+        if (modal) {
+          modal.style.display = 'none';
+          document.body.style.overflow = '';
+        }
+        if (modalAlert) {
+          modalAlert.style.display = 'none';
+          modalAlert.textContent = '';
+        }
+      };
+
+      // Close on backdrop click
+      document.addEventListener('click', function(e) {
+        var modal = document.getElementById('purchase-modal');
+        if (modal && e.target === modal) {
+          closePurchaseModal();
+        }
+      });
+
+      // Close on Escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closePurchaseModal();
+      });
+
+      // Handle Purchase Form Submit
+      document.addEventListener('DOMContentLoaded', function() {
+        var purchaseForm = document.getElementById('purchase-form');
+        var modalAlert = document.getElementById('modal-alert');
+        var modalSubmitBtn = document.getElementById('modal-submit-btn');
+
+        if (purchaseForm) {
+          purchaseForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (modalAlert) {
+              modalAlert.style.display = 'none';
+              modalAlert.textContent = '';
+            }
+            if (modalSubmitBtn) {
+              modalSubmitBtn.disabled = true;
+              modalSubmitBtn.innerHTML = 'Đang chuyển đến cổng thanh toán...';
+            }
+
+            var formData = new FormData(purchaseForm);
+            var payload = {
+              plan: formData.get('plan') || '6m',
+              name: formData.get('name'),
+              phone: formData.get('phone'),
+              email: formData.get('email'),
+              family_members: formData.get('family_members') || '4 thành viên',
+              consent: 1,
+              affiliate_ref: localStorage.getItem('aicenty_affiliate_ref') || (document.cookie.match(/(?:^|; )strive_affiliate_ref=([^;]*)/) || [])[1] || ''
+            };
+
+            try {
+              var res = await fetch('/butler/purchase', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json'
+                },
+                body: JSON.stringify(payload)
+              });
+
+              var data = await res.json();
+
+              if (res.ok && data.status === 'success') {
+                sessionStorage.setItem('butler_lead_name', payload.name);
+                sessionStorage.setItem('butler_lead_phone', payload.phone);
+                sessionStorage.setItem('butler_lead_plan', payload.plan);
+                sessionStorage.setItem('butler_lead_family_members', payload.family_members);
+
+                window.location.href = data.redirect_url || '/butler/payment';
+              } else {
+                var errorMsg = data.message || 'Có lỗi xảy ra khi tạo đơn hàng. Vui lòng kiểm tra lại.';
+                if (data.errors) {
+                  var keys = Object.keys(data.errors);
+                  if (keys.length > 0) errorMsg = data.errors[keys[0]][0];
+                }
+                if (modalAlert) {
+                  modalAlert.textContent = errorMsg;
+                  modalAlert.style.display = 'block';
+                }
+                if (modalSubmitBtn) {
+                  modalSubmitBtn.disabled = false;
+                  modalSubmitBtn.innerHTML = 'TIẾN HÀNH THANH TOÁN';
+                }
+              }
+            } catch (err) {
+              if (modalAlert) {
+                modalAlert.textContent = 'Lỗi kết nối máy chủ. Vui lòng thử lại sau ít phút hoặc liên hệ Hotline/Zalo 0981224739.';
+                modalAlert.style.display = 'block';
+              }
+              if (modalSubmitBtn) {
+                modalSubmitBtn.disabled = false;
+                modalSubmitBtn.innerHTML = 'TIẾN HÀNH THANH TOÁN';
+              }
+            }
+          });
+        }
+      });
+    })();
   </script>
 
 </body>
