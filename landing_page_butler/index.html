@@ -98,7 +98,7 @@
             "name": "Aicenty Butler khác gì so với việc cho con hỏi bài trên ChatGPT hay Google?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "ChatGPT hoặc Google chỉ quăng ra đáp án có sẵn, khiến con ỷ lại, lười suy nghĩ và chép bài đối phó. Aicenty Butler áp dụng phương pháp gợi mở Socratic chuẩn Giáo Dục Phổ Thông Mới Nhất: tuyệt đối KHÔNG giải hộ bài, mà đặt ra các câu hỏi dẫn dắt từng bước để chính con tự tìm ra lời giải. Nếu con đòi chép bài, Quản gia sẽ cảnh báo kín ngay cho Ba Mẹ. Ngoài ra, Quản gia có cơ chế Báo cáo kín qua Zalo riêng của bố mẹ và Guardrail P0 bảo vệ tâm lý trẻ em (Hotline 111)."
+              "text": "ChatGPT hoặc Google chỉ quăng ra đáp án có sẵn, khiến con ỷ lại, lười suy nghĩ và chép bài đối phó. Aicenty Butler áp dụng phương pháp gợi mở Socratic chuẩn Giáo Dục Phổ Thông Mới Nhất: tuyệt đối KHÔNG giải hộ bài, mà đặt ra các câu hỏi dẫn dắt từng bước để chính con tự tìm ra lời giải. Nếu con đòi chép bài, Quản gia sẽ cảnh báo kín ngay cho Ba Mẹ. Ngoài ra, Quản gia có cơ chế Báo cáo kín qua Zalo riêng của bố mẹ và kết nối Hotline cho Ba Mẹ khi con gặp áp lực học đường."
             }
           },
           {
@@ -1000,16 +1000,29 @@
       padding-top: 16px;
     }
     .story-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
+      width: 48px !important;
+      height: 48px !important;
+      min-width: 48px !important;
+      min-height: 48px !important;
+      max-width: 48px !important;
+      max-height: 48px !important;
+      flex-shrink: 0 !important;
+      aspect-ratio: 1 / 1 !important;
+      border-radius: 50% !important;
       background: var(--slate);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-weight: 700;
+      font-size: 15px;
       color: var(--accent-bright);
-      border: 1px solid var(--accent-bright);
+      border: 1.5px solid var(--accent-bright);
+      box-shadow: 0 0 12px rgba(34, 211, 238, 0.2);
+      box-sizing: border-box !important;
+    }
+    .story-info {
+      min-width: 0;
+      flex: 1;
     }
     .story-info strong { display: block; font-size: 15px; color: var(--paper); }
     .story-info span { font-size: 13px; color: var(--mist); }
@@ -1124,11 +1137,13 @@
     }
     .form-checkbox input { margin-top: 3px; accent-color: var(--accent-bright); cursor: pointer; }
     .btn-submit {
+      font-family: inherit !important;
       width: 100%;
       height: 54px;
-      font-size: 16px;
-      font-weight: 800;
-      letter-spacing: 0.04em;
+      font-size: 15px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.02em !important;
+      text-transform: uppercase !important;
     }
     .form-guarantee {
       text-align: center;
@@ -1697,9 +1712,7 @@
         Gửi Những Bậc Làm Cha Mẹ Đang Âm Thầm <span class="highlight">Kiệt Sức</span> Giữa Cơm Áo Gạo Tiền...<br>
         Và Mỗi Tối Về Nhà Lại Phải "Đánh Vật" Trong Cuộc Chiến Bài Vở Cùng Con!
       </h1>
-      <p class="hero-subhead">
-        Giờ đây, bạn không còn phải đơn độc quán xuyến tổ ấm. Hãy sở hữu ngay <strong>Người Quản Gia Thời Hiện Đại mang tên riêng của gia đình bạn trên Zalo</strong> - Túc trực 24/7 nhận lệnh từ Ba Mẹ, tự động điều phối 24 AI Agent chuyên trách: từ kèm cặp 15 môn học Giáo Dục Phổ Thông Mới Nhất theo phương pháp Socratic, quản trị tài chính 50/30/20, chăm lo dinh dưỡng bữa cơm đến bảo vệ an toàn tâm lý con trẻ!
-      </p>
+
 
       <div style="margin-bottom: 32px; padding: 0 12px;">
         <a href="#dang-ky" class="btn-cta" style="font-size: clamp(13px, 3.2vw, 16px); padding: 14px 28px; line-height: 1.4;">
@@ -1741,7 +1754,15 @@
           </div>
 
           <p>
-            Và nỗi lo ấy không dừng lại ở điểm số. Bạn lo sợ con dán mắt vào màn hình điện thoại lướt TikTok đến khuya. Bạn sợ con bị bắt nạt, bị cô lập hay gặp những khủng hoảng tâm lý tuổi dậy thì mà con âm thầm chịu đựng, không bao giờ dám hé răng tâm sự với cha mẹ vì sợ bị phán xét.
+            Nhưng sự kiệt sức của bạn đâu chỉ dừng lại ở chiếc bàn học của con? Hãy nhìn vào cuốn sổ chi tiêu gia đình mỗi cuối tháng. Lương về chưa ấm tay đã vội vã chia năm xẻ bảy: tiền học phí, tiền chợ búa, hóa đơn điện nước, đối nội đối ngoại... Bạn tự hỏi: <em>"Tại sao hai vợ chồng cày cuốc cật lực từ sáng sớm đến đêm muộn mà trong tài khoản chẳng còn dư được bao nhiêu?"</em>. Những khoản chi lặt vặt không tên âm thầm bòn rút tài chính. Không có ai giúp bạn hoạch định ngân sách chuẩn 50/30/20, không ai cảnh báo khi gia đình chi tiêu vượt định mức. Và rồi, những cuộc cãi vã, bất đồng ngấm ngầm về tiền bạc giữa hai vợ chồng bắt đầu nảy sinh ngay bên mâm cơm gia đình...
+          </p>
+
+          <p>
+            Rồi đến hàng trăm đầu việc gia đình vụn vặt đè nặng lên vai mỗi ngày. Sáng vội vã đưa con đi học thì quên hạn đóng bảo hiểm xe, chiều đi làm về mệt rã rời lại phát hiện quên mua bình gas, quên lịch tái khám định kỳ của ông bà nội ngoại. Vợ cằn nhằn vì chồng hay quên, chồng bực bội vì vợ nhắc nhở quá nhiều. Con cái thì ỷ lại, đi học về vứt cặp một nơi, giày một nẻo, không chịu phụ giúp cha mẹ dù chỉ là quét cái nhà hay cắm nồi cơm. Bạn phải hò hét, nhắc nhở gãy cả lưỡi thì con mới miễn cưỡng nhấc chân, biến ngôi nhà từ nơi chốn bình yên thành một "chiến trường" ngột ngạt và căng thẳng tột độ.
+          </p>
+
+          <p>
+            Và nỗi lo ấy vẫn chưa dừng lại. Bạn lo sợ con dán mắt vào màn hình điện thoại lướt TikTok đến khuya. Bạn sợ con bị bắt nạt, bị cô lập hay gặp những khủng hoảng tâm lý tuổi dậy thì mà con âm thầm chịu đựng, không bao giờ dám hé răng tâm sự với cha mẹ vì sợ bị phán xét.
           </p>
 
           <div class="callout-epiphany">
@@ -1877,7 +1898,7 @@
             </div>
             <ul class="agent-block-list">
               <li><strong>Bác Phúc Cố vấn Tâm lý:</strong> Lắng nghe con tâm sự, giải tỏa áp lực học đường.</li>
-              <li><strong>Guardrail P0 Khủng hoảng:</strong> Kích hoạt Hotline 111 bảo vệ con khẩn cấp.</li>
+              <li><strong>Hỗ trợ khẩn cấp:</strong> Hotline cho Ba Mẹ đồng hành và bảo vệ con 24/7.</li>
               <li><strong>Kể chuyện ngủ ngon:</strong> Đọc sách nhân cách ru con ngủ ngon đúng giờ.</li>
               <li><strong>Điều phối viên Báo cáo Kín:</strong> Gửi thông tin tổng hợp bí mật riêng vào Zalo Ba Mẹ.</li>
             </ul>
@@ -2278,7 +2299,7 @@
 
           <!-- Turn 2 -->
           <div class="chat-bubble bubble-butler">
-            "Dạ kính thưa Mẹ Lan! Bác Phúc đã ghi nhận ạ. Bác Phúc đã kết nối ngay cùng <strong>Gia sư Toán Lớp 8</strong> để chuẩn bị sẵn 3 câu hỏi gợi mở Socratic bẻ nhỏ định lý tam giác đồng dạng cho cháu Khôi rồi ạ. Tối nay cháu chỉ cần chụp ảnh bài tập gửi vào đây, thầy cô AI sẽ kiên nhẫn hướng dẫn cháu từng bước để cháu tự làm được. Đúng 21h30, Quản gia sẽ gửi báo cáo tiến độ kín vào Zalo riêng của Ba Mẹ nhé ạ!"
+            "Dạ thưa Mẹ Lan! Bác Phúc đã ghi nhận ạ. Bác Phúc đã kết nối ngay cùng <strong>Gia sư Toán Lớp 8</strong> để chuẩn bị sẵn 3 câu hỏi gợi mở Socratic bẻ nhỏ định lý tam giác đồng dạng cho cháu Khôi rồi ạ. Tối nay cháu chỉ cần chụp ảnh bài tập gửi vào đây, thầy cô AI sẽ kiên nhẫn hướng dẫn cháu từng bước để cháu tự làm được. Đúng 21h30, Quản gia sẽ gửi báo cáo tiến độ kín vào Zalo riêng của Ba Mẹ nhé ạ!"
           </div>
 
           <!-- Turn 3 -->
@@ -2299,8 +2320,8 @@
   <section class="pillars-section" id="loi-ich">
     <div class="wrap">
       <div class="section-title-center">
-        <h2>5 Giá Trị Toàn Diện Giúp Gia Đình Bạn "Đổi Thay Vận Mệnh"</h2>
-        <p>Aicenty Butler chăm lo chu toàn từ việc học tập của con đến tài chính, sức khỏe và nếp sống gia đình chuẩn phong cách quý tộc Việt.</p>
+        <h2>5 Giá Trị Toàn Diện Giúp Gia Đình Bạn Tự Do và Hạnh Phúc Hơn Mỗi Ngày</h2>
+        <p>Giờ đây, bạn không còn phải đơn độc quán xuyến tổ ấm. Hãy sở hữu ngay Người Quản Gia Thời Hiện Đại mang tên riêng của gia đình bạn trên Zalo - Túc trực 24/7 nhận lệnh từ Ba Mẹ, tự động điều phối 24 AI Agent chuyên trách: từ kèm cặp 15 môn học Giáo Dục Phổ Thông Mới Nhất theo phương pháp Socratic, quản trị tài chính 50/30/20, lập kế hoạch chi tiêu, nhắc lịch công việc, báo cáo định kỳ theo yêu cầu, cảnh báo rủi ro, tìm kiếm thông tin, quản lý tài liệu, theo dõi tiến độ, lưu hồ sơ, chăm lo dinh dưỡng bữa cơm đến bảo vệ an toàn tâm lý con trẻ…!</p>
       </div>
 
       <div class="pillars-grid">
@@ -2323,7 +2344,7 @@
           </div>
           <h3>Bác Phúc - Cố Vấn Tâm Lý & Nuôi Dạy Con</h3>
           <p>
-            Chỗ dựa tinh thần ấm áp, lắng nghe con tâm sự những áp lực bạn bè, thầy cô mà con giấu bố mẹ. <strong>Tích hợp Guardrail P0 Khủng hoảng (Hotline 111)</strong>, cảnh báo sớm bạo lực học đường và khủng hoảng tâm lý.
+            Chỗ dựa tinh thần ấm áp, lắng nghe con tâm sự những áp lực bạn bè, thầy cô mà con giấu bố mẹ. <strong>Tích hợp Hotline cho Ba Mẹ</strong>, cảnh báo sớm bạo lực học đường và hỗ trợ giải tỏa áp lực tâm lý cho con.
           </p>
           <span class="pillar-tag">Bảo Vệ Trẻ Em & Hotline 111</span>
         </div>
@@ -2384,7 +2405,7 @@
     <div class="wrap">
       <div class="section-title-center">
         <h2>Đặt Bàn Cân: Aicenty Butler Có Thực Sự Vượt Trội?</h2>
-        <p>Xem lý do vì sao hàng ngàn gia đình đã từ bỏ gia sư truyền thống và chatbot thông thường để chọn Aicenty Butler.</p>
+        <p>Xem lý do vì sao hàng ngàn gia đình đang bắt đầu chuyển dịch từ gia sư truyền thống và chatbot thông thường để chọn Aicenty Butler.</p>
       </div>
 
       <div class="compare-table-wrap">
@@ -2445,7 +2466,7 @@
       <div class="stories-grid">
         <div class="story-card">
           <p class="story-quote">
-            "Trước đây, cứ đến 8h tối là nhà tôi như có chiến tranh. Con học lớp 8, toán hình chương trình mới tôi nhìn vào chịu chết. Cáu với con xong thì mình ân hận cả đêm. Từ ngày có Aicenty Butler trên Zalo, con tự chụp ảnh hỏi bài. Gia sư không giải hộ mà gợi ý từng câu hỏi nhỏ để cháu tự tìm ra cách giải. Cháu mừng rỡ khoe: 'Mẹ ơi con tự làm được bài này rồi!'. Bữa tối nhà tôi ấm cúng trở lại sau bao năm căng thẳng."
+            "Trước đây, cứ đến 8h tối là nhà tôi như có chiến tranh. Con học lớp 8, toán hình chương trình mới tôi nhìn vào chịu chết. Cáu với con xong thì mình ân hận cả đêm. Từ ngày có Aicenty Butler trên Zalo, con tự chụp ảnh hỏi bài. Gia sư không giải hộ mà gợi ý từng câu hỏi nhỏ để cháu tự tìm ra cách giải. Cháu mừng rỡ khoe: 'Mẹ ơi con tự làm được bài này rồi!'. Đặc biệt, Quản gia còn tự động lên thực đơn bữa tối 4 nhóm chất và nhắc lịch sinh hoạt, tiền điện nước, học phí chuẩn ngày. Bữa tối nhà tôi ấm cúng, thư thái trở lại sau bao năm căng thẳng."
           </p>
           <div class="story-author">
             <div class="story-avatar">MA</div>
@@ -2458,7 +2479,7 @@
 
         <div class="story-card">
           <p class="story-quote">
-            "Tôi bận đi công tác liên miên, nhiều lúc không biết con ở nhà học hành ra sao. Nhờ tính năng Báo Cáo Kín qua Zalo, mỗi tuần Quản gia đều tổng hợp chi tiết môn nào con tiến bộ, phần nào con còn lúng túng. Đặc biệt, có hôm con bị bạn bè trêu chọc ở trường, con đã tâm sự với Bác Phúc. Quản gia gửi cảnh báo kín cho tôi để tối về tôi kịp thời ôm con động viên. Thật sự biết ơn Aicenty Butler vô cùng!"
+            "Tôi bận đi công tác liên miên, nhiều lúc không biết việc học và việc nhà ở nhà ra sao. Nhờ tính năng Báo Cáo Kín qua Zalo, mỗi tuần Quản gia đều tổng hợp chi tiết môn nào con tiến bộ, phần nào con còn lúng túng. Quản gia còn hỗ trợ vợ chồng tôi quản lý chi tiêu theo quy tắc 50/30/20, tự động phân loại hóa đơn mua sắm và nhắc lịch bảo dưỡng xe, lịch khám định kỳ của ông bà hai bên. Đặc biệt, có hôm con bị bạn bè trêu chọc ở trường, con đã tâm sự với Bác Phúc. Quản gia gửi cảnh báo kín cho tôi để tối về tôi kịp thời ôm con động viên. Thật sự biết ơn Aicenty Butler vô cùng!"
           </p>
           <div class="story-author">
             <div class="story-avatar">TH</div>
@@ -2471,7 +2492,7 @@
 
         <div class="story-card">
           <p class="story-quote">
-            "Nhà tôi có 3 đứa con, nếu thuê gia sư kèm từng đứa chắc hết cả tháng lương. Dùng Aicenty Butler vừa rẻ lại kèm được cả 3 bạn từ lớp 3, lớp 7 đến lớp 11. Các con còn thi đua nhau làm việc nhà để được Quản gia thưởng Sao tích lũy. Chưa bao giờ thấy các con tự giác và vui vẻ học tập như bây giờ."
+            "Nhà tôi có 3 đứa con, nếu thuê gia sư kèm từng đứa chắc hết cả tháng lương. Dùng Aicenty Butler vừa rẻ lại kèm được cả 3 bạn từ lớp 3, lớp 7 đến lớp 11. Các con còn thi đua nhau làm việc nhà để được Quản gia thưởng Sao tích lũy. Chưa hết, Quản gia còn như một thư ký gia đình mẫn cán: tự động lưu trữ phiếu xét nghiệm, hồ sơ tiêm chủng của 3 bé và nhắc lịch khám răng định kỳ không bao giờ sót một ngày. Chưa bao giờ thấy cả nhà ngăn nắp, con cái tự giác và vợ chồng thảnh thơi như bây giờ."
           </p>
           <div class="story-author">
             <div class="story-avatar">TT</div>
@@ -2491,7 +2512,7 @@
       <div class="offer-badge">ĐẶC QUYỀN TRẢI NGHIỆM MIỄN PHÍ</div>
       <h2 class="offer-title">Trao Cho Con & Gia Đình Món Quà Tuyệt Vời Nhất Hôm Nay</h2>
       <p class="offer-sub">
-        Đăng ký trải nghiệm <strong>7 Ngày Hoàn Toàn Miễn Phí</strong> Quản Gia Thời Hiện Đại Cho Mọi Nhà (Trị giá 500.000 VNĐ). 
+        Đăng ký trải nghiệm <strong>7 Ngày Hoàn Toàn Miễn Phí</strong> Quản Gia Thời Hiện Đại Cho Mọi Nhà . 
         Không cần thẻ tín dụng, không ràng buộc, được Chuyên gia <strong>Butler Guru hỗ trợ 1-1</strong> bàn giao và đồng hành suốt 7 ngày!
       </p>
       <div style="font-size: 15px; color: var(--paper); margin-bottom: 24px;">
@@ -2507,7 +2528,7 @@
   <section class="form-section" id="dang-ky">
     <div class="wrap">
       <div class="form-container">
-        <h2>Đăng Ký Thuê & Sở Hữu Quản Gia Thời Hiện Đại</h2>
+        <h2>Kích Hoạt Ngay Quản Gia Thời Hiện Đại</h2>
         <p class="form-desc">Trải nghiệm 7 ngày Miễn Phí trọn vẹn toàn bộ công năng Quản gia & dàn 24 AI Agent chuyên trách phục vụ gia đình bạn trên Zalo.</p>
 
         <div id="form-alert" class="alert-box alert-error"></div>
@@ -2551,6 +2572,7 @@
           <div class="form-group">
             <label for="primary_concern">Công năng gia đình bạn mong muốn Quản Gia quán xuyến nhất <span class="req">*</span></label>
             <select id="primary_concern" name="primary_concern" class="form-control" required>
+              <option value="Tất cả" selected>Tất cả</option>
               <option value="Quán xuyến toàn diện (Học tập con cái, tài chính, dinh dưỡng, lịch trình)">Quán xuyến toàn diện (Học tập con cái, tài chính, dinh dưỡng, lịch trình)</option>
               <option value="Kèm cặp bài vở & lấy lại căn bản cho các con (Giáo dục phổ thông mới nhất)">Kèm cặp bài vở & lấy lại căn bản cho con (Giáo dục phổ thông mới nhất)</option>
               <option value="Quản lý chi tiêu, lập quỹ dự phòng & tối ưu dòng tiền gia đình">Quản lý chi tiêu, lập quỹ dự phòng & tối ưu dòng tiền gia đình</option>
@@ -2589,7 +2611,7 @@
   <section class="faq-section" id="faq">
     <div class="wrap">
       <div class="section-title-center">
-        <h2>Những Câu Hỏi Thường Gặp Của Phụ Huynh</h2>
+        <h2>Những Câu Hỏi Thường Gặp</h2>
         <p>Giải đáp minh bạch mọi thắc mắc trước khi gia đình bạn bắt đầu trải nghiệm.</p>
       </div>
 
@@ -2604,7 +2626,7 @@
         <details class="faq-item">
           <summary>Aicenty Butler khác gì so với việc cho con hỏi bài trên ChatGPT?</summary>
           <div class="faq-content">
-            ChatGPT là công cụ sinh ngữ tổng quát, khi con hỏi bài, nó sẽ giải sẵn toàn bộ đáp án. Điều này vô cùng nguy hiểm vì biến con bạn thành người học thụ động, lười tư duy và hình thành thói quen chép bài đối phó. Ngược lại, Aicenty Butler được lập trình theo <strong>Phương pháp Socratic chuẩn Giáo Dục Phổ Thông Mới Nhất</strong>: Quản gia tuyệt đối KHÔNG đưa đáp án ngay, mà đặt câu hỏi gợi mở, bẻ nhỏ bài toán để chính não bộ của con tự suy luận và tự giải. Ngoài ra, Quản gia có cơ chế báo cáo kín cho bố mẹ và bảo vệ tâm lý trẻ em (Hotline 111) mà ChatGPT hoàn toàn không có.
+            ChatGPT là công cụ sinh ngữ tổng quát, khi con hỏi bài, nó sẽ giải sẵn toàn bộ đáp án. Điều này vô cùng nguy hiểm vì biến con bạn thành người học thụ động, lười tư duy và hình thành thói quen chép bài đối phó. Ngược lại, Aicenty Butler được lập trình theo <strong>Phương pháp Socratic chuẩn Giáo Dục Phổ Thông Mới Nhất</strong>: Quản gia tuyệt đối KHÔNG đưa đáp án ngay, mà đặt câu hỏi gợi mở, bẻ nhỏ bài toán để chính não bộ của con tự suy luận và tự giải. Ngoài ra, Quản gia có cơ chế báo cáo kín cho bố mẹ và cảnh báo kín hỗ trợ tâm lý và kết nối Hotline cho Ba Mẹ khi con gặp khó khăn học đường mà ChatGPT hoàn toàn không có.
           </div>
         </details>
 
