@@ -10,8 +10,8 @@
     gtag('config', 'G-E46NPQ9KGN');
   </script>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kích Hoạt Sở Hữu Quản Gia Thời Hiện Đại Thành Công! | Aicenty Butler</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
+  <title>Kích Hoạt Sở Hữu Quản Gia Thành Công! | Aicenty Butler</title>
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#08080a">
   
@@ -22,133 +22,209 @@
   <style>
     :root {
       --carbon: #08080a;
-      --onyx: #0e1015;
-      --graphite: #181b24;
-      --slate: #242938;
+      --onyx: #0f1218;
+      --graphite: #181d28;
+      --slate: #232b3d;
       --steel: #64748b;
       --mist: #94a3b8;
       --silver: #cbd5e1;
       --paper: #f8fafc;
       --accent-bright: #22d3ee;
       --accent-deep: #0284c7;
-      --accent-glow: rgba(34, 211, 238, 0.2);
-      --purple-accent: #a855f7;
-      --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      --accent-glow: rgba(34, 211, 238, 0.25);
+      --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
-    *, *::before, *::after { box-sizing: border-box; }
+    
+    *, *::before, *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
     body {
       margin: 0;
       background: var(--carbon);
       color: var(--silver);
       font-family: var(--font-body);
-      font-size: 16px;
-      line-height: 1.7;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
-    .wrap { max-width: 860px; margin: 0 auto; padding: 48px 24px; }
+
+    /* HEADER */
     .site-header {
-      padding: 18px 0;
-      border-bottom: 1px solid var(--graphite);
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       text-align: center;
-      background: rgba(8,8,10,0.92);
+      background: rgba(8, 8, 10, 0.95);
+      backdrop-filter: blur(10px);
       width: 100%;
     }
     .brand-logo {
-      height: 38px;
+      height: 32px;
       width: auto;
-      max-width: 190px;
+      max-width: 160px;
       object-fit: contain;
       display: inline-block;
     }
-    @media (max-width: 600px) {
-      .site-header { padding: 12px 0; }
-      .brand-logo { height: 28px; max-width: 140px; }
+
+    /* MAIN WRAPPER */
+    .wrap {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 20px 14px 40px;
     }
-    
+
+    /* CARD CONTAINER */
     .ty-card {
       background: var(--onyx);
       border: 1px solid var(--slate);
       border-radius: 16px;
-      padding: 42px 36px;
-      margin-top: 32px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+      padding: 28px 20px 24px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
       text-align: center;
     }
+
+    /* SUCCESS ICON */
     .success-icon {
-      width: 76px;
-      height: 76px;
+      width: 58px;
+      height: 58px;
       border-radius: 50%;
       background: rgba(34, 211, 238, 0.12);
       border: 2px solid var(--accent-bright);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 24px;
+      margin: 0 auto 16px;
       color: var(--accent-bright);
-      box-shadow: 0 0 24px var(--accent-glow);
+      box-shadow: 0 0 20px var(--accent-glow);
     }
-    h1 {
-      font-size: clamp(24px, 3.8vw, 34px);
-      color: var(--paper);
-      margin-bottom: 14px;
-      line-height: 1.3;
-    }
-    p.lead {
-      font-size: 18px;
-      color: var(--mist);
-      margin-bottom: 32px;
-      line-height: 1.6;
-    }
-    
-    .butler-hero-box {
-      background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(34, 211, 238, 0.1));
-      border: 1px solid var(--purple-accent);
-      border-radius: 12px;
-      padding: 20px 24px;
-      margin-bottom: 32px;
-      text-align: left;
-    }
-    .butler-hero-box h3 {
-      color: var(--paper);
-      font-size: 18px;
-      margin-top: 0;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .butler-hero-box p {
-      margin: 0;
-      color: var(--silver);
-      font-size: 14px;
-      line-height: 1.6;
+    .success-icon svg {
+      width: 30px;
+      height: 30px;
     }
 
-    .steps-container {
-      text-align: left;
-      background: var(--carbon);
-      border: 1px solid var(--slate);
-      border-radius: 12px;
-      padding: 28px;
-      margin-bottom: 36px;
-    }
-    .steps-container h3 {
+    /* HEADINGS & SUBTITLES */
+    h1 {
+      font-size: 21px;
       color: var(--paper);
-      margin-top: 0;
-      margin-bottom: 20px;
-      font-size: 18px;
+      margin: 0 0 10px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+    .lead-text {
+      font-size: 14.5px;
+      color: var(--mist);
+      margin: 0 0 20px;
+      line-height: 1.55;
+    }
+    .lead-text strong {
+      color: var(--paper);
+    }
+
+    /* HERO CALLOUT BOX */
+    .callout-box {
+      background: rgba(34, 211, 238, 0.06);
+      border: 1px solid rgba(34, 211, 238, 0.25);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 22px;
+      text-align: left;
+      font-size: 13.5px;
+      color: var(--silver);
+      line-height: 1.5;
+    }
+    .callout-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent-bright);
+      margin: 0 0 4px;
       display: flex;
       align-items: center;
+      gap: 6px;
+    }
+
+    /* PRIMARY CTA BUTTON (ZALO) */
+    .btn-zalo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       gap: 10px;
+      width: 100%;
+      height: 52px;
+      background: linear-gradient(135deg, #0284c7, #0068ff);
+      color: #ffffff !important;
+      font-weight: 700;
+      font-size: 15px;
+      border-radius: 9999px;
+      text-decoration: none;
+      box-shadow: 0 4px 18px rgba(0, 104, 255, 0.4);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      margin: 0 0 12px;
+      outline: none;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.01em;
+    }
+    .btn-zalo:hover, .btn-zalo:active {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(0, 104, 255, 0.55);
+      color: #ffffff !important;
+    }
+    .btn-zalo svg {
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    /* HOTLINE */
+    .hotline-sub {
+      font-size: 13px;
+      color: var(--mist);
+      margin-bottom: 22px;
+    }
+    .hotline-sub strong {
+      color: var(--silver);
+    }
+    .hotline-sub a {
+      color: var(--accent-bright);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    /* STEPS SECTION */
+    .steps-card {
+      text-align: left;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 16px 14px;
+      margin-bottom: 22px;
+    }
+    .steps-card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--paper);
+      margin: 0 0 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .step-item {
       display: flex;
-      gap: 16px;
-      margin-bottom: 22px;
+      gap: 12px;
+      margin-bottom: 12px;
+      align-items: flex-start;
     }
-    .step-item:last-child { margin-bottom: 0; }
+    .step-item:last-child {
+      margin-bottom: 0;
+    }
     .step-num {
-      width: 32px;
-      height: 32px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       background: var(--accent-bright);
       color: #03131e;
@@ -157,232 +233,280 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      font-size: 15px;
+      font-size: 12.5px;
+      margin-top: 1px;
     }
-    .step-text strong { color: var(--paper); display: block; margin-bottom: 4px; font-size: 16px; }
-    .step-text p { color: var(--mist); margin: 0; font-size: 14px; line-height: 1.6; }
-
-    .btn-zalo {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      width: 100%;
-      max-width: 520px;
-      height: 58px;
-      background: #0068ff;
-      color: #ffffff;
-      font-weight: 800;
-      font-size: 17px;
-      border-radius: 9999px;
-      text-decoration: none;
-      box-shadow: 0 6px 24px rgba(0, 104, 255, 0.4);
-      transition: all .25s ease;
-      margin: 0 auto 16px;
+    .step-content {
+      font-size: 13.5px;
+      line-height: 1.45;
+      color: var(--silver);
     }
-    .btn-zalo:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(0, 104, 255, 0.6);
-      background: #0056d6;
-      color: #ffffff;
+    .step-content strong {
+      color: var(--paper);
+      display: block;
+      margin-bottom: 2px;
+      font-size: 13.5px;
     }
 
-    .community-buttons {
+    /* COMMUNITY BUTTONS GRID */
+    .community-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 26px;
+    }
+    .btn-community {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 16px;
-      margin-top: 24px;
-    }
-    .btn-secondary {
-      display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 12px 22px;
-      border-radius: 9999px;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 12px;
+      border-radius: 10px;
       background: var(--graphite);
       border: 1px solid var(--slate);
       color: var(--paper);
-      font-size: 14px;
+      font-size: 12.5px;
       font-weight: 600;
       text-decoration: none;
-      transition: all .2s ease;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      outline: none;
     }
-    .btn-secondary:hover {
+    .btn-community:hover, .btn-community:active {
       border-color: var(--accent-bright);
       color: var(--accent-bright);
+      background: rgba(34, 211, 238, 0.06);
     }
-
-    /* 7-DAY JOURNEY ROADMAP */
-    .journey-roadmap {
-      margin-top: 40px;
-      text-align: left;
-      border-top: 1px solid var(--slate);
-      padding-top: 32px;
-    }
-    .journey-roadmap h4 {
-      text-align: center;
-      color: var(--paper);
-      font-size: 18px;
-      margin-bottom: 24px;
-    }
-    .roadmap-list {
-      display: grid;
-      gap: 14px;
-    }
-    .roadmap-item {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 12px 16px;
-      background: var(--carbon);
-      border: 1px solid var(--graphite);
-      border-radius: 8px;
-      font-size: 14px;
-    }
-    .roadmap-day {
-      background: rgba(34, 211, 238, 0.15);
-      color: var(--accent-bright);
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-weight: 700;
-      font-size: 12px;
+    .btn-community svg {
+      width: 16px;
+      height: 16px;
       flex-shrink: 0;
     }
 
+    /* 7-DAY JOURNEY COMPACT */
+    .journey-section {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 20px;
+      text-align: left;
+    }
+    .journey-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--paper);
+      margin: 0 0 14px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    .journey-list {
+      display: grid;
+      gap: 8px;
+    }
+    .journey-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    .journey-tag {
+      background: rgba(34, 211, 238, 0.15);
+      color: var(--accent-bright);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 11px;
+      flex-shrink: 0;
+      letter-spacing: 0.02em;
+    }
+    .journey-desc {
+      color: var(--silver);
+    }
+    .journey-desc strong {
+      color: var(--paper);
+    }
+
+    /* FOOTER */
     footer {
       text-align: center;
-      margin-top: 48px;
+      margin-top: 28px;
       color: var(--steel);
-      font-size: 13px;
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+
+    /* MEDIA QUERIES FOR LARGER SCREENS */
+    @media (min-width: 601px) {
+      .wrap { padding: 36px 20px 48px; }
+      .ty-card { padding: 36px 32px; border-radius: 20px; }
+      h1 { font-size: 26px; }
+      .lead-text { font-size: 15.5px; }
+      .btn-zalo { height: 56px; font-size: 16px; }
+      .community-grid { gap: 14px; }
+      .btn-community { padding: 12px 18px; font-size: 13.5px; }
+      .journey-row { padding: 10px 14px; font-size: 13.5px; }
     }
   </style>
 </head>
 <body>
 
+  <!-- SITE HEADER -->
   <header class="site-header">
-    <a href="/"><img class="brand-logo" src="/assets/butler/aicenty-butler-logo.png" alt="Aicenty Butler"></a>
+    <a href="/butler" style="text-decoration: none;">
+      <img class="brand-logo" src="https://aicenty.com/assets/butler/aicenty-butler-logo.png" alt="Aicenty Butler">
+    </a>
   </header>
 
   <div class="wrap">
     <div class="ty-card">
+      
+      <!-- SUCCESS ICON -->
       <div class="success-icon">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
       </div>
 
-      <h1 id="user-greeting">Chúc Mừng Gia Đình Bạn Đã Đăng Ký Sở Hữu Quản Gia Thời Hiện Đại Thành Công!</h1>
-      <p class="lead">
-        Từ hôm nay, tổ ấm của bạn chính thức có một <strong>Người Quản Gia Riêng</strong> túc trực 24/7 để quán xuyến toàn diện: từ việc kèm cặp học tập từng con, quản trị tài chính gia đình, lên thực đơn dinh dưỡng, đến sắp xếp lịch trình và bảo vệ an toàn tâm lý cho con trẻ.
+      <!-- TITLE & LEAD -->
+      <h1 id="user-greeting">Chúc Mừng Gia Đình Đã Đăng Ký Quản Gia Thành Công!</h1>
+      <p class="lead-text">
+        Chuyên gia <strong>Butler Guru</strong> đã sẵn sàng bàn giao tài khoản Quản Gia Riêng vào Zalo phục vụ tổ ấm của bạn 24/7.
       </p>
 
-      <div class="butler-hero-box">
-        <h3>🎩 QUẢN GIA RIÊNG CỦA GIA ĐÌNH BẠN ĐÃ SẴN SÀNG NHẬN LỆNH</h3>
-        <p id="butler-name-display">
-          Quản gia sẽ được cấu hình theo tên gọi riêng của gia đình bạn, có tài khoản Zalo cá nhân riêng và kết nối sẵn sàng với <strong>dàn 24 AI Agent chuyên trách</strong> bên dưới để phục vụ Ba Mẹ 24/7.
-        </p>
+      <!-- HERO CALLOUT -->
+      <div class="callout-box">
+        <div class="callout-title">
+          <span>🎩</span> <span id="butler-name-title">QUẢN GIA RIÊNG SẴN SÀNG NHẬN LỆNH</span>
+        </div>
+        <div id="butler-name-display">
+          Được thiết lập theo tên gọi gia đình chọn, có Zalo riêng và điều phối <strong>24 AI Agent chuyên trách</strong> đồng hành cùng Ba Mẹ.
+        </div>
       </div>
 
-      <div class="steps-container">
-        <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg> 3 BƯỚC ĐỂ BÀN GIAO & KÍCH HOẠT QUẢN GIA NGAY BÂY GIỜ:</h3>
+      <!-- PRIMARY ACTION BUTTON (ZALO) -->
+      <a href="https://zalo.me/0981224739" class="btn-zalo" target="_blank" id="zalo-link" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.04 2 11.02c0 2.87 1.48 5.43 3.79 7.08l-.94 3.49c-.11.41.27.79.68.68l4.08-1.09c.77.21 1.57.32 2.39.32 5.52 0 10-4.04 10-9.02S17.52 2 12 2zm0 15.5c-.71 0-1.4-.09-2.06-.27-.26-.07-.54-.03-.76.11l-2.45.65.57-2.11c.07-.26.02-.54-.14-.76C5.9 13.79 5 12.48 5 11.02 5 7.42 8.14 4.5 12 4.5s7 2.92 7 6.52-3.14 6.48-7 6.48z"/>
+        </svg>
+        <span>NHẮN ZALO NHẬN BÀN GIAO QUẢN GIA ↗</span>
+      </a>
+
+      <!-- HOTLINE SUPPORT -->
+      <div class="hotline-sub">
+        Hotline / Zalo hỗ trợ: <a href="tel:0981224739">0981 224 739</a> • <a href="tel:0918852101">0918 852 101</a>
+      </div>
+
+      <!-- 3 COMPACT STEPS -->
+      <div class="steps-card">
+        <div class="steps-card-title">
+          <span>⚡</span> 3 BƯỚC BÀN GIAO & KÍCH HOẠT NHANH:
+        </div>
 
         <div class="step-item">
           <div class="step-num">1</div>
-          <div class="step-text">
-            <strong>Nhắn tin Zalo với Butler Guru để nhận Quản Gia & Danh xưng gia đình</strong>
-            <p>Bấm vào nút Zalo bên dưới để gặp Butler Guru. Guru sẽ bàn giao tài khoản Zalo Quản gia riêng của gia đình, kích hoạt tên gọi và cách xưng hô chuẩn gia phong cho nhà mình trong vòng 2 phút.</p>
+          <div class="step-content">
+            <strong>Nhắn tin Zalo với Butler Guru</strong>
+            Bấm nút phía trên để nhận tài khoản Zalo Quản gia và cài đặt danh xưng trong 2 phút.
           </div>
         </div>
 
         <div class="step-item">
           <div class="step-num">2</div>
-          <div class="step-text">
-            <strong>Tham gia Group Zalo Cộng Đồng Cha Mẹ Thông Thái</strong>
-            <p>Nơi giao lưu của hơn 1.200 gia đình hiện đại, chia sẻ tài liệu Giáo Dục Phổ Thông Mới Nhất, kinh nghiệm quản trị tài chính gia đình và bí quyết nuôi dạy con hạnh phúc.</p>
+          <div class="step-content">
+            <strong>Tham gia Group Zalo Cha Mẹ Thông Thái</strong>
+            Giao lưu cùng 1.200+ phụ huynh, nhận cẩm nang GDPT Mới và tài chính gia đình.
           </div>
         </div>
 
         <div class="step-item">
           <div class="step-num">3</div>
-          <div class="step-text">
+          <div class="step-content">
             <strong>Tham gia Group Facebook Aicenty Family</strong>
-            <p>Theo dõi các buổi chia sẻ định kỳ từ Chuyên gia Tâm lý Bác Phúc về cách thấu hiểu con cái tuổi dậy thì, phòng chống bạo lực học đường và gắn kết yêu thương.</p>
+            Theo dõi định kỳ các buổi chia sẻ tâm lý học đường cùng Chuyên gia Bác Phúc.
           </div>
         </div>
       </div>
 
-      <!-- MAIN CTA -->
-      <a href="https://zalo.me/0981224739" class="btn-zalo" target="_blank" id="zalo-link">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.04 2 11.02c0 2.87 1.48 5.43 3.79 7.08l-.94 3.49c-.11.41.27.79.68.68l4.08-1.09c.77.21 1.57.32 2.39.32 5.52 0 10-4.04 10-9.02S17.52 2 12 2zm0 15.5c-.71 0-1.4-.09-2.06-.27-.26-.07-.54-.03-.76.11l-2.45.65.57-2.11c.07-.26.02-.54-.14-.76C5.9 13.79 5 12.48 5 11.02 5 7.42 8.14 4.5 12 4.5s7 2.92 7 6.52-3.14 6.48-7 6.48z"/></svg>
-        NHẮN TIN ZALO VỚI BUTLER GURU ĐỂ NHẬN QUẢN GIA ↗
-      </a>
-
-      <div style="font-size: 13px; color: var(--mist); margin-bottom: 24px;">
-        Hotline / Zalo hỗ trợ trực tiếp: <strong>0981 224 739</strong> - <strong>0918 852 101</strong>
-      </div>
-
-      <div class="community-buttons">
-        <a href="https://zalo.me/g/kat8k9xbeiyykgpjwbb5" class="btn-secondary" target="_blank" rel="noopener">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Tham Gia Group Zalo Cộng Đồng
-          </a>
-        <a href="https://www.facebook.com/groups/aicenty.butler" rel="noopener" class="btn-secondary" target="_blank">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-          Tham Gia Group Facebook
+      <!-- COMMUNITY BUTTONS -->
+      <div class="community-grid">
+        <a href="https://zalo.me/g/kat8k9xbeiyykgpjwbb5" class="btn-community" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          Group Zalo Cha Mẹ
+        </a>
+        <a href="https://www.facebook.com/groups/aicenty.butler" class="btn-community" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+          </svg>
+          Group Facebook
         </a>
       </div>
 
-      <!-- 7-DAY JOURNEY ROADMAP -->
-      <div class="journey-roadmap">
-        <h4>LỘ TRÌNH 7 NGÀY ĐỒNG HÀNH TOÀN DIỆN CỦA QUẢN GIA</h4>
-        <div class="roadmap-list">
-          <div class="roadmap-item">
-            <span class="roadmap-day">NGÀY 1</span>
-            <span>Bàn giao Quản gia vào Zalo gia đình, thiết lập tên gọi, danh xưng và khảo sát nhu cầu tổ ấm.</span>
+      <!-- 7-DAY JOURNEY ROADMAP (SUPER COMPACT & SMOOTH) -->
+      <div class="journey-section">
+        <div class="journey-title">LỘ TRÌNH 7 NGÀY ĐỒNG HÀNH</div>
+        <div class="journey-list">
+          <div class="journey-row">
+            <span class="journey-tag">NGÀY 1</span>
+            <span class="journey-desc">Bàn giao Zalo Quản gia & Khảo sát nhu cầu tổ ấm.</span>
           </div>
-          <div class="roadmap-item">
-            <span class="roadmap-day">NGÀY 2</span>
-            <span>Trải nghiệm buổi hỏi bài đầu tiên cùng 15 Gia sư Socratic - Con tự giác giải bài khó, ba mẹ thảnh thơi.</span>
+          <div class="journey-row">
+            <span class="journey-tag">NGÀY 2</span>
+            <span class="journey-desc">Buổi hỏi bài đầu tiên cùng <strong>15 Gia sư Socratic</strong>.</span>
           </div>
-          <div class="roadmap-item">
-            <span class="roadmap-day">NGÀY 3</span>
-            <span>Nhận Báo Cáo Kín đầu tiên vào Zalo cha mẹ: Phân tích điểm mạnh, lỗ hổng kiến thức và tâm lý của con.</span>
+          <div class="journey-row">
+            <span class="journey-tag">NGÀY 3</span>
+            <span class="journey-desc">Nhận <strong>Báo Cáo Kín</strong> phân tích học tập & tâm lý con vào Zalo Ba Mẹ.</span>
           </div>
-          <div class="roadmap-item">
-            <span class="roadmap-day">NGÀY 4</span>
-            <span>Kích hoạt tính năng Quản lý chi tiêu gia đình 50/30/20 & Lên thực đơn dinh dưỡng 4 nhóm chất.</span>
+          <div class="journey-row">
+            <span class="journey-tag">NGÀY 4</span>
+            <span class="journey-desc">Quản lý chi tiêu gia đình 50/30/20 & Lên thực đơn dinh dưỡng.</span>
           </div>
-          <div class="roadmap-item">
-            <span class="roadmap-day">NGÀY 5</span>
-            <span>Thưởng Sao tích lũy (Gamification Stars) khích lệ con tự giác làm việc nhà và quản lý tài chính sớm.</span>
+          <div class="journey-row">
+            <span class="journey-tag">NGÀY 5</span>
+            <span class="journey-desc">Thưởng Sao tích lũy khích lệ con tự giác làm việc nhà.</span>
           </div>
-          <div class="roadmap-item">
-            <span class="roadmap-day">NGÀY 6</span>
-            <span>Trò chuyện tâm lý cùng Bác Phúc, giải tỏa áp lực thi cử và những băn khoăn kín đáo của con.</span>
+          <div class="journey-row">
+            <span class="journey-tag">NGÀY 6</span>
+            <span class="journey-desc">Trò chuyện tâm lý cùng <strong>Bác Phúc</strong>, giải tỏa áp lực học đường.</span>
           </div>
-          <div class="roadmap-item">
-            <span class="roadmap-day">NGÀY 7</span>
-            <span>Tổng kết 7 ngày chuyển hóa tổ ấm, tư vấn lộ trình đồng hành dài hạn kèm đặc quyền ưu đãi gia đình.</span>
+          <div class="journey-row">
+            <span class="journey-tag">NGÀY 7</span>
+            <span class="journey-desc">Tổng kết 7 ngày & Tư vấn lộ trình đồng hành dài hạn.</span>
           </div>
         </div>
       </div>
+
     </div>
 
+    <!-- FOOTER -->
     <footer>
-      © 2026 Aicenty Butler • CÔNG TY CỔ PHẦN THƯƠNG MẠI HNKT • Email: ai@aicenty.com
+      © 2026 Aicenty Butler • CÔNG TY CỔ PHẦN THƯƠNG MẠI HNKT<br>
+      Email: <a href="mailto:ai@aicenty.com" style="color:var(--mist); text-decoration:none;">ai@aicenty.com</a> • Hotline: 0981 224 739
     </footer>
   </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const parentName = sessionStorage.getItem('butler_lead_name');
-      const butlerName = sessionStorage.getItem('butler_lead_butler_name');
-      
-      if (parentName) {
-        document.getElementById('user-greeting').textContent = 'Chúc Mừng Gia Đình ' + parentName + ' Đã Đăng Ký Sở Hữu Quản Gia Thành Công!';
-      }
-      if (butlerName && butlerName !== 'Quản Gia Riêng Gia Đình') {
-        document.getElementById('butler-name-display').innerHTML = 'Quản gia mang tên <strong>' + butlerName + '</strong> sẽ được cài đặt riêng cho gia đình bạn, có Zalo cá nhân riêng và kết nối sẵn sàng với <strong>dàn 24 AI Agent chuyên trách</strong> để phục vụ Ba Mẹ 24/7.';
-      }
+      try {
+        const parentName = sessionStorage.getItem('butler_lead_name');
+        const butlerName = sessionStorage.getItem('butler_lead_butler_name');
+        
+        if (parentName) {
+          document.getElementById('user-greeting').textContent = 'Chúc Mừng Gia Đình ' + parentName + ' Đã Đăng Ký Thành Công!';
+        }
+        if (butlerName && butlerName !== 'Quản Gia Riêng Gia Đình') {
+          const el = document.getElementById('butler-name-display');
+          if (el) {
+            el.innerHTML = 'Quản gia <strong>' + butlerName + '</strong> sẽ được cài đặt riêng cho nhà mình, có Zalo riêng và điều phối <strong>24 AI Agent chuyên trách</strong> 24/7.';
+          }
+        }
+      } catch(e) {}
     });
   </script>
 </body>
