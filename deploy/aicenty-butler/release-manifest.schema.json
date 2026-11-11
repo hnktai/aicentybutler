@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Aicenty Butler release manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "product_version",
+    "build_revision",
+    "commit_sha",
+    "schema_version",
+    "protocol_version",
+    "build_time_utc",
+    "image_reference",
+    "image_id",
+    "binary_sha256"
+  ],
+  "properties": {
+    "product_version": {"type": "string", "minLength": 1},
+    "build_revision": {"type": "string", "minLength": 1},
+    "commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "schema_version": {"type": "integer", "minimum": 1},
+    "protocol_version": {"type": "integer", "minimum": 1},
+    "build_time_utc": {"type": "string", "format": "date-time"},
+    "image_reference": {"type": "string", "minLength": 1},
+    "image_id": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "binary_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

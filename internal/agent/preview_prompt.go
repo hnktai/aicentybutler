@@ -82,6 +82,9 @@ type PreviewResult struct {
 // (channel, peer kind, session context, credentials) are left at zero values —
 // BuildSystemPrompt already nil-checks every field.
 func BuildPreviewPrompt(ctx context.Context, ag *store.AgentData, mode PromptMode, userID string, deps PreviewDeps) PreviewResult {
+	if ag != nil && ag.TenantID != uuid.Nil {
+		ctx = store.WithTenantID(ctx, ag.TenantID)
+	}
 	slog.Debug("BuildPreviewPrompt called", "agent_id", ag.ID, "mode", mode, "user_id", userID, "mcp_lister_nil", deps.MCPLister == nil)
 	// --- Context files ---
 	var contextFiles []bootstrap.ContextFile

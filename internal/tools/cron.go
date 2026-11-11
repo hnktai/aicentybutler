@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -98,7 +101,10 @@ VALID ACTIONS AND EXACT PAYLOAD SHAPES:
 { "action": "runs", "jobId": "string" }
 
 SCHEDULE SCHEMA:
-- at: { "kind": "at", "atMs": <unix-milliseconds> }
+- at: { "kind": "at", "in_minutes": 5 } OR { "kind": "at", "delay": "5m" } OR { "kind": "at", "time": "YYYY-MM-DD HH:mm:ss", "tz": "Asia/Ho_Chi_Minh" }
+  * RELATIVE TIME (RECOMMENDED for reminders/delays): Use "in_minutes": 5 or "delay": "5m" (supports "5p", "5 phút", "1h", "30s"). No need to query datetime!
+  * ABSOLUTE TIME: Use "time" string (e.g. "2026-11-10 07:00:00") with "tz". Or "time": "HH:mm" for today/tomorrow.
+  * Fallback: { "kind": "at", "atMs": <unix-milliseconds> }
 - every: { "kind": "every", "everyMs": <interval-ms> }
 - cron: { "kind": "cron", "expr": "<5-field cron>", "tz": "<IANA timezone, e.g. Asia/Ho_Chi_Minh; omit for gateway default>" }
 
@@ -222,6 +228,205 @@ func (t *CronTool) handleList(ctx context.Context, args map[string]any, agentID,
 	return NewResult(string(data))
 }
 
+// parseDurationString parses standard and colloquial/Vietnamese duration strings.
+// Supports: "5m", "5min", "5p", "5 phút", "30s", "30 giây", "1h", "1 giờ", "1 tiếng", etc.
+func parseDurationString(raw string) (time.Duration, bool) {
+	s := strings.TrimSpace(strings.ToLower(raw))
+	if s == "" {
+		return 0, false
+	}
+	// Try standard Go time.ParseDuration first (e.g. "5m", "10s", "1h30m")
+	if d, err := time.ParseDuration(s); err == nil && d > 0 {
+		return d, true
+	}
+
+	// Clean common prefixes ("in ", "sau ", "trong ")
+	s = strings.TrimPrefix(s, "in ")
+	s = strings.TrimPrefix(s, "sau ")
+	s = strings.TrimPrefix(s, "trong ")
+	// Clean common Vietnamese suffixes (" nữa", " toi", " tới", " sau")
+	s = strings.TrimSuffix(s, " nữa")
+	s = strings.TrimSuffix(s, " toi")
+	s = strings.TrimSuffix(s, " tới")
+	s = strings.TrimSuffix(s, " sau")
+	s = strings.TrimSpace(s)
+	if d, err := time.ParseDuration(s); err == nil && d > 0 {
+		return d, true
+	}
+
+	// Minutes: 5m, 5p, 5phut, 5 phút, 5 min, 5 mins, 5 minutes
+	reMin := regexp.MustCompile(`^(\d+(?:\.\d+)?)\s*(p|phut|phút|min|mins|minutes|m)$`)
+	if m := reMin.FindStringSubmatch(s); len(m) == 3 {
+		if v, err := strconv.ParseFloat(m[1], 64); err == nil && v > 0 {
+			return time.Duration(v * float64(time.Minute)), true
+		}
+	}
+
+	// Seconds: 30s, 30 sec, 30 giay, 30 giây
+	reSec := regexp.MustCompile(`^(\d+(?:\.\d+)?)\s*(s|sec|secs|seconds|giay|giây)$`)
+	if m := reSec.FindStringSubmatch(s); len(m) == 3 {
+		if v, err := strconv.ParseFloat(m[1], 64); err == nil && v > 0 {
+			return time.Duration(v * float64(time.Second)), true
+		}
+	}
+
+	// Hours: 1h, 1 hr, 1 hour, 1 gio, 1 giờ, 1 tieng, 1 tiếng
+	reHr := regexp.MustCompile(`^(\d+(?:\.\d+)?)\s*(h|hr|hrs|hour|hours|gio|giờ|tieng|tiếng)$`)
+	if m := reHr.FindStringSubmatch(s); len(m) == 3 {
+		if v, err := strconv.ParseFloat(m[1], 64); err == nil && v > 0 {
+			return time.Duration(v * float64(time.Hour)), true
+		}
+	}
+
+	// Days: 1d, 1 day, 1 ngay, 1 ngày
+	reDay := regexp.MustCompile(`^(\d+(?:\.\d+)?)\s*(d|day|days|ngay|ngày)$`)
+	if m := reDay.FindStringSubmatch(s); len(m) == 3 {
+		if v, err := strconv.ParseFloat(m[1], 64); err == nil && v > 0 {
+			return time.Duration(v * 24 * float64(time.Hour)), true
+		}
+	}
+
+	return 0, false
+}
+
+// parseRelativeDuration extracts relative duration from numeric fields or string delay fields.
+func parseRelativeDuration(scheduleObj map[string]any) (time.Duration, bool) {
+	// Numeric minute fields
+	for _, k := range []string{"in_minutes", "inMinutes", "in_mins", "minutes"} {
+		if v, ok := numberFromMap(scheduleObj, k); ok && v > 0 {
+			return time.Duration(v * float64(time.Minute)), true
+		}
+	}
+	// Numeric second fields
+	for _, k := range []string{"in_seconds", "inSeconds", "seconds"} {
+		if v, ok := numberFromMap(scheduleObj, k); ok && v > 0 {
+			return time.Duration(v * float64(time.Second)), true
+		}
+	}
+	// Numeric hour fields
+	for _, k := range []string{"in_hours", "inHours", "hours"} {
+		if v, ok := numberFromMap(scheduleObj, k); ok && v > 0 {
+			return time.Duration(v * float64(time.Hour)), true
+		}
+	}
+
+	// String delay fields
+	for _, k := range []string{"delay", "in", "after"} {
+		if s, ok := scheduleObj[k].(string); ok && strings.TrimSpace(s) != "" {
+			if d, ok := parseDurationString(s); ok {
+				return d, true
+			}
+		}
+	}
+
+	// Also check if "time" or "at" was mistakenly given a relative expression like "5m", "5p", "in 5 minutes"
+	for _, k := range []string{"time", "at"} {
+		if s, ok := scheduleObj[k].(string); ok && strings.TrimSpace(s) != "" {
+			if d, ok := parseDurationString(s); ok {
+				return d, true
+			}
+		}
+	}
+
+	return 0, false
+}
+
+// parseAtSchedule extracts and validates the target timestamp in milliseconds for schedule.kind="at".
+// It supports relative durations (in_minutes: 5, delay: "5m"), human datetime strings, and atMs.
+func parseAtSchedule(scheduleObj map[string]any) (*int64, error) {
+	// 0. Relative duration support (in_minutes, delay, etc.)
+	if dur, ok := parseRelativeDuration(scheduleObj); ok {
+		ms := time.Now().Add(dur).UnixMilli()
+		return &ms, nil
+	}
+	// 1. Direct atMs support (numeric)
+	if v, ok := numberFromMap(scheduleObj, "atMs"); ok {
+		ms := int64(v)
+		if ms <= time.Now().UnixMilli() {
+			return nil, fmt.Errorf("job.schedule.atMs is in the past (%d). Use a future timestamp. Current time is %d ms", ms, time.Now().UnixMilli())
+		}
+		return &ms, nil
+	}
+
+	// 2. String datetime support
+	var rawTime string
+	for _, key := range []string{"time", "datetime", "at", "targetTime"} {
+		if s, ok := scheduleObj[key].(string); ok && strings.TrimSpace(s) != "" {
+			rawTime = strings.TrimSpace(s)
+			break
+		}
+	}
+
+	if rawTime == "" {
+		return nil, fmt.Errorf("job.schedule.time (e.g. 'YYYY-MM-DD HH:mm:ss' or 'HH:mm') or job.schedule.atMs is required for 'at' schedule")
+	}
+
+	// Timezone resolution (default Asia/Ho_Chi_Minh)
+	tzName := stringFromMap(scheduleObj, "tz")
+	if tzName == "" {
+		tzName = stringFromMap(scheduleObj, "timezone")
+	}
+	if tzName == "" {
+		tzName = "Asia/Ho_Chi_Minh"
+	}
+
+	loc, err := time.LoadLocation(tzName)
+	if err != nil {
+		loc = time.FixedZone("Asia/Ho_Chi_Minh", 7*3600)
+	}
+
+	now := time.Now().In(loc)
+	var targetTime time.Time
+	var parsed bool
+
+	formats := []string{
+		"2006-01-02 15:04:05",
+		"2006-01-02 15:04",
+		time.RFC3339,
+		"2006-01-02T15:04:05",
+		"2006-01-02T15:04",
+		"02/01/2006 15:04:05",
+		"02/01/2006 15:04",
+		"15:04:05",
+		"15:04",
+	}
+
+	for _, layout := range formats {
+		if layout == "15:04:05" || layout == "15:04" {
+			if t, err := time.ParseInLocation(layout, rawTime, loc); err == nil {
+				targetTime = time.Date(now.Year(), now.Month(), now.Day(), t.Hour(), t.Minute(), t.Second(), 0, loc)
+				if targetTime.Before(now) {
+					targetTime = targetTime.AddDate(0, 0, 1)
+				}
+				parsed = true
+				break
+			}
+		} else if strings.Contains(layout, "Z07:00") {
+			if t, err := time.Parse(layout, rawTime); err == nil {
+				targetTime = t.In(loc)
+				parsed = true
+				break
+			}
+		} else {
+			if t, err := time.ParseInLocation(layout, rawTime, loc); err == nil {
+				targetTime = t
+				parsed = true
+				break
+			}
+		}
+	}
+
+	if !parsed {
+		return nil, fmt.Errorf("unable to parse scheduled time %q (supported formats: 'YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD HH:mm', 'HH:mm')", rawTime)
+	}
+
+	ms := targetTime.UnixMilli()
+	if ms <= time.Now().UnixMilli() {
+		return nil, fmt.Errorf("scheduled time %s (%q) is in the past. Current time is %s", targetTime.Format("2006-01-02 15:04:05 MST"), rawTime, now.Format("2006-01-02 15:04:05 MST"))
+	}
+	return &ms, nil
+}
+
 func (t *CronTool) handleAdd(ctx context.Context, args map[string]any, agentID, userID string) *Result {
 	jobObj, ok := args["job"].(map[string]any)
 	if !ok {
@@ -234,8 +439,32 @@ func (t *CronTool) handleAdd(ctx context.Context, args map[string]any, agentID, 
 	}
 
 	scheduleObj, ok := jobObj["schedule"].(map[string]any)
-	if !ok {
-		return ErrorResult("job.schedule is required")
+	if !ok || scheduleObj == nil {
+		scheduleObj = make(map[string]any)
+	}
+
+	// Forward relative time fields from jobObj root if specified there
+	for _, k := range []string{"in_minutes", "inMinutes", "in_mins", "minutes", "delay", "in", "after", "in_seconds", "in_hours"} {
+		if val, exists := jobObj[k]; exists {
+			if _, inSched := scheduleObj[k]; !inSched {
+				scheduleObj[k] = val
+			}
+		}
+	}
+
+	// Auto-infer schedule kind if missing
+	if stringFromMap(scheduleObj, "kind") == "" {
+		if _, hasRel := parseRelativeDuration(scheduleObj); hasRel {
+			scheduleObj["kind"] = "at"
+		} else if _, hasAtMs := scheduleObj["atMs"]; hasAtMs {
+			scheduleObj["kind"] = "at"
+		} else if _, hasTime := scheduleObj["time"]; hasTime {
+			scheduleObj["kind"] = "at"
+		} else if _, hasEvery := scheduleObj["everyMs"]; hasEvery {
+			scheduleObj["kind"] = "every"
+		} else if _, hasExpr := scheduleObj["expr"]; hasExpr {
+			scheduleObj["kind"] = "cron"
+		}
 	}
 
 	// Optional deterministic command payload (runs a shell command, no LLM turn).
@@ -264,15 +493,11 @@ func (t *CronTool) handleAdd(ctx context.Context, args map[string]any, agentID, 
 
 	switch schedule.Kind {
 	case "at":
-		if v, ok := numberFromMap(scheduleObj, "atMs"); ok {
-			ms := int64(v)
-			if ms <= time.Now().UnixMilli() {
-				return ErrorResult(fmt.Sprintf("job.schedule.atMs is in the past (%d). Use a future Unix timestamp in milliseconds. Current time is %d ms", ms, time.Now().UnixMilli()))
-			}
-			schedule.AtMS = &ms
-		} else {
-			return ErrorResult("job.schedule.atMs is required for 'at' schedule")
+		ms, err := parseAtSchedule(scheduleObj)
+		if err != nil {
+			return ErrorResult(err.Error())
 		}
+		schedule.AtMS = ms
 	case "every":
 		if v, ok := numberFromMap(scheduleObj, "everyMs"); ok {
 			ms := int64(v)
@@ -444,10 +669,40 @@ func (t *CronTool) handleUpdate(ctx context.Context, args map[string]any, agentI
 		patch.ProviderID = pid
 	}
 
-	// Validate atMs not in the past when updating schedule
-	if patch.Schedule != nil && patch.Schedule.Kind == "at" && patch.Schedule.AtMS != nil {
+	// Support schedule relative fields (in_minutes, delay) or absolute time in patch
+	if scheduleObj, ok := patchObj["schedule"].(map[string]any); ok && scheduleObj != nil {
+		if stringFromMap(scheduleObj, "kind") == "" {
+			if _, hasRel := parseRelativeDuration(scheduleObj); hasRel {
+				scheduleObj["kind"] = "at"
+			}
+		}
+		if kind := stringFromMap(scheduleObj, "kind"); kind == "at" {
+			ms, err := parseAtSchedule(scheduleObj)
+			if err != nil {
+				return ErrorResult(err.Error())
+			}
+			if patch.Schedule == nil {
+				patch.Schedule = &store.CronSchedule{Kind: "at"}
+			}
+			patch.Schedule.AtMS = ms
+		}
+	} else if patch.Schedule != nil && patch.Schedule.Kind == "at" && patch.Schedule.AtMS != nil {
 		if *patch.Schedule.AtMS <= time.Now().UnixMilli() {
 			return ErrorResult(fmt.Sprintf("schedule.atMs is in the past (%d). Use the datetime tool to get current time, then set a future timestamp. Current time is %d ms", *patch.Schedule.AtMS, time.Now().UnixMilli()))
+		}
+	} else {
+		// Check if in_minutes or delay was provided at patchObj root
+		for _, k := range []string{"in_minutes", "inMinutes", "in_mins", "minutes", "delay", "in_seconds", "in_hours"} {
+			if val, exists := patchObj[k]; exists {
+				sched := map[string]any{k: val, "kind": "at"}
+				if ms, err := parseAtSchedule(sched); err == nil {
+					if patch.Schedule == nil {
+						patch.Schedule = &store.CronSchedule{Kind: "at"}
+					}
+					patch.Schedule.AtMS = ms
+					break
+				}
+			}
 		}
 	}
 
@@ -580,8 +835,31 @@ func stringFromMap(m map[string]any, key string) string {
 }
 
 func numberFromMap(m map[string]any, key string) (float64, bool) {
-	v, ok := m[key].(float64)
-	return v, ok
+	val, ok := m[key]
+	if !ok || val == nil {
+		return 0, false
+	}
+	switch v := val.(type) {
+	case float64:
+		return v, true
+	case float32:
+		return float64(v), true
+	case int:
+		return float64(v), true
+	case int64:
+		return float64(v), true
+	case int32:
+		return float64(v), true
+	case json.Number:
+		if f, err := v.Float64(); err == nil {
+			return f, true
+		}
+	case string:
+		if f, err := strconv.ParseFloat(strings.TrimSpace(v), 64); err == nil {
+			return f, true
+		}
+	}
+	return 0, false
 }
 
 // parseCronCommandSpec extracts an optional deterministic command payload from a

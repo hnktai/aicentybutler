@@ -39,6 +39,29 @@ func TestBuildPreviewPrompt_NilDeps(t *testing.T) {
 	}
 }
 
+type previewTenantAgentStore struct {
+	store.AgentStore
+	gotTenantID uuid.UUID
+}
+
+func (s *previewTenantAgentStore) GetAgentContextFiles(ctx context.Context, _ uuid.UUID) ([]store.AgentContextFileData, error) {
+	s.gotTenantID = store.TenantIDFromContext(ctx)
+	return nil, nil
+}
+
+func TestBuildPreviewPromptScopesStoreReadsToAgentTenant(t *testing.T) {
+	tenantID := uuid.Must(uuid.NewV7())
+	ag := baseAgent()
+	ag.TenantID = tenantID
+	stub := &previewTenantAgentStore{}
+
+	BuildPreviewPrompt(context.Background(), ag, PromptFull, "", PreviewDeps{AgentStore: stub})
+
+	if stub.gotTenantID != tenantID {
+		t.Fatalf("tenant id = %v, want %v", stub.gotTenantID, tenantID)
+	}
+}
+
 func TestBuildPreviewPrompt_SkillsInline(t *testing.T) {
 	r := BuildPreviewPrompt(context.Background(), baseAgent(), PromptFull, "", PreviewDeps{
 		SkillsLoader: &mockSkillsLoader{

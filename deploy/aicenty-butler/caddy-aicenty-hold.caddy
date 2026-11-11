@@ -1,0 +1,22 @@
+# Import these handlers near the top of the existing aicenty.com site block.
+@butlerLandingHold path /butler /butler/ /butler/index.html
+handle @butlerLandingHold {
+    root * /var/www/aicenty/public
+    rewrite * /butler/hold.html
+    file_server
+}
+
+@butlerCheckoutHold path /butler/payment /butler/payment/* /butler/payment.html /butler/purchase /butler/register
+handle @butlerCheckoutHold {
+    respond "Thanh toan Aicenty Butler dang tam dung de bao tri an toan. Vui long lien he cskh@aicenty.com." 503
+}
+
+@butlerWebhookHold path /api/sepay/webhook* /webhooks/sepay* /api/v1/billing/webhook/sepay*
+handle @butlerWebhookHold {
+    respond "Payment webhook temporarily unavailable" 503
+}
+
+@butlerMutationHold path /api/butler/onboarding-complete* /api/butler/family-member/add* /api/butler/dedicated-sim/register* /api/butler/payment-status*
+handle @butlerMutationHold {
+    respond "Butler operation unavailable" 403
+}
