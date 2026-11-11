@@ -116,3 +116,10 @@ ui/web/nginx.staging.conf
 **/debug-*.log
 /*.sql
 scripts/docker-patch-*.sql
+
+# Python/runtime artifacts
+__pycache__/
+*.py[cod]
+
+# Local Phase 1 candidate build output
+/candidate-output/

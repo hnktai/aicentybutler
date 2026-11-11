@@ -1,0 +1,54 @@
+butler.aicenty.com {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	handle /healthz* {
+		reverse_proxy 127.0.0.1:18896
+	}
+
+	handle /api/v1/internal/* {
+		respond "Internal endpoint unavailable" 403
+	}
+	handle /api/butler/* {
+		respond "Butler operation unavailable" 403
+	}
+	handle /api/sepay/webhook* {
+		respond "Payment webhook temporarily unavailable" 503
+	}
+	handle /api/v1/billing/webhook/sepay* {
+		respond "Payment webhook temporarily unavailable" 503
+	}
+	handle /webhook/sepay* {
+		respond "Payment webhook temporarily unavailable" 503
+	}
+	handle /webhooks/sepay* {
+		respond "Payment webhook temporarily unavailable" 503
+	}
+
+	@backend path /v1/* /ws* /health* /api/* /channels/*
+	handle @backend {
+		reverse_proxy 127.0.0.1:18895
+	}
+
+	handle /branding-assets/* {
+		uri strip_prefix /branding-assets
+		root * /var/www/aicenty/butler-branding
+		file_server
+	}
+	handle /assets/* {
+		reverse_proxy 127.0.0.1:18895
+	}
+	handle {
+		root * /var/www/aicenty/butler-branding
+		header Cache-Control "no-cache, no-store, must-revalidate"
+		rewrite * /index.html
+		file_server
+	}
+}

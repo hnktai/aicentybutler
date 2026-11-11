@@ -166,6 +166,10 @@ func NewManagedResolver(deps ResolverDeps) ResolverFunc {
 			return nil, fmt.Errorf("agent %s is inactive", agentKey)
 		}
 
+		if ag.TenantID != uuid.Nil {
+			ctx = store.WithTenantID(ctx, ag.TenantID)
+		}
+
 		// Resolve provider (tenant-aware: tries tenant-specific first, falls back to master)
 		provider, err := providerresolve.ResolveAgentProvider(deps.ProviderReg, ag)
 		if err != nil {

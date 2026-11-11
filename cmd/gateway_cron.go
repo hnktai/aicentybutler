@@ -234,9 +234,10 @@ func deliverCronOutput(msgBus *bus.MessageBus, job *store.CronJob, content strin
 			return
 		}
 		outMsg := bus.OutboundMessage{
-			Channel: job.DeliverChannel,
-			ChatID:  job.DeliverTo,
-			Content: content,
+			Channel:  job.DeliverChannel,
+			ChatID:   job.DeliverTo,
+			Content:  content,
+			TenantID: job.TenantID,
 		}
 		if peerKind == "group" {
 			outMsg.Metadata = map[string]string{"group_id": job.DeliverTo}

@@ -410,3 +410,28 @@ func TestCronTenantContext_LookupError_FallsBackToIDOnly(t *testing.T) {
 		t.Errorf("tenant id = %v, want %v (must still scope by id)", got, tid)
 	}
 }
+
+func TestDeliverCronOutputPreservesTenantScope(t *testing.T) {
+	msgBus := bus.New()
+	defer msgBus.Close()
+
+	tenantID := uuid.Must(uuid.NewV7())
+	deliverCronOutput(msgBus, &store.CronJob{
+		ID:             uuid.NewString(),
+		TenantID:       tenantID,
+		Name:           "tenant-reminder",
+		Deliver:        true,
+		DeliverChannel: "family-zalo",
+		DeliverTo:      "recipient-1",
+	}, "reminder", nil, "direct")
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	got, ok := msgBus.SubscribeOutbound(ctx)
+	if !ok {
+		t.Fatal("expected outbound cron delivery")
+	}
+	if got.TenantID != tenantID {
+		t.Fatalf("tenant id = %v, want %v", got.TenantID, tenantID)
+	}
+}
