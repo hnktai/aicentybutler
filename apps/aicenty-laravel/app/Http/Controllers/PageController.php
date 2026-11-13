@@ -7,10 +7,30 @@ use App\Models\PrivacyTerms;
 use App\Models\Setting;
 use App\Models\SettingTwo;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Support\Str;
 
 class PageController extends Controller
 {
+    public function index(): BinaryFileResponse
+    {
+        return response()->file(
+            public_path('__aicenty_home/index.html'),
+            ['Cache-Control' => 'no-cache, no-store, must-revalidate, max-age=0']
+        );
+    }
+
+    public function contact(): RedirectResponse
+    {
+        return redirect('/#contact');
+    }
+
+    public function show(string $slug)
+    {
+        return $this->pageContent($slug);
+    }
+
     public function pageContent($slug)
     {
         $page = Page::where('slug', $slug)->first();

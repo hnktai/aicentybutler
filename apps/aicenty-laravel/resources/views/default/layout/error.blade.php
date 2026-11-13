@@ -50,7 +50,7 @@
                 <x-button
                     class="w-full"
                     size="lg"
-                    href="{{ route('index') }}"
+                    href="{{ route('home') }}"
                 >
                     {{ __('Take me back to the homepage') }}
                 </x-button>
