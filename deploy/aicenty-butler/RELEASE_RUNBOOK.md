@@ -26,6 +26,24 @@
 4. Run required health and tenant checks.
 5. Switch the active release only after all gates pass.
 
+## Future-customer capability gate
+
+Before release, run the rollback-only Laravel verification in
+`laravel-patches/verify-standard-skill-provisioning.php` as the Laravel
+service user. It must prove that a synthetic `aicenty-master-butler` receives
+four stable grants and prompt pins, image generation remains enabled, and a
+dedicated Zalo channel receives the standard verified-customer policy.
+
+The release image must contain these non-empty paths:
+
+- `/app/bundled-skills/document-to-pdf/SKILL.md`
+- `/app/bundled-skills/images-to-pdf/SKILL.md`
+- `/app/bundled-skills/quangia-image-generation/SKILL.md`
+- `/app/bundled-skills/quangia-mobile-messaging/SKILL.md`
+
+Fail the release when the simulation does not roll back, when any standard
+skill is absent, or when the image/runtime revision cannot be traced to Git.
+
 ## Rollback
 
 Switch back to the previous immutable digest and its compatible configuration.

@@ -19,6 +19,10 @@ The step:
   messaging skills, referencing their canonical release-owned files;
 - upserts grants on `(skill_id, agent_id)` and pins the current standard
   version;
+- places all four skill slugs in `other_config.pinned_skills` so they are
+  inlined in the agent prompt, and explicitly enables image generation;
+- normalizes dedicated Zalo channel defaults and enables verified-customer
+  friend-request acceptance without overwriting credentials;
 - verifies that all four skills are present before returning.
 
 Apply only to the matching Laravel baseline:
@@ -30,9 +34,10 @@ php -l app/Services/ButlerAutomationService.php
 ```
 
 Run `verify-standard-skill-provisioning.php` as the Laravel service user. The
-verification creates a synthetic tenant and agent inside a database
-transaction, runs provisioning twice, repairs a deliberately stale pin, and
-rolls the transaction back. A passing run must end with
+verification creates a synthetic tenant, agent, and Zalo channel inside a
+database transaction, runs provisioning twice, repairs a deliberately stale
+pin, verifies prompt pins/tools/channel policy, and rolls the transaction back.
+A passing run must end with
 `"rollback_verified":true`.
 
 Before production deployment, take a transaction-safe PostgreSQL dump and copy

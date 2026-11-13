@@ -1,0 +1,7 @@
+interface:
+  display_name: "Quan Gia Image Generation"
+  short_description: "Create and deliver customer-requested AI images"
+  default_prompt: "Use $quangia-image-generation to create the requested image and deliver the generated file in the current chat."
+
+policy:
+  allow_implicit_invocation: true
