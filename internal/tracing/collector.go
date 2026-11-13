@@ -95,6 +95,7 @@ type Collector struct {
 	// traces that need aggregate updates on flush
 	dirtyTraces   map[uuid.UUID]struct{}
 	dirtyTracesMu sync.Mutex
+	traceStarts   sync.Map // trace UUID -> UTC start time, removed by FinishTrace
 
 	verbose  bool         // when true, LLM spans include full input messages
 	exporter SpanExporter // optional external exporter (nil = disabled)
@@ -204,7 +205,13 @@ func (c *Collector) Stop() {
 
 // CreateTrace synchronously creates a trace record.
 func (c *Collector) CreateTrace(ctx context.Context, trace *store.TraceData) error {
-	return c.store.CreateTrace(ctx, trace)
+	if err := c.store.CreateTrace(ctx, trace); err != nil {
+		return err
+	}
+	if !trace.StartTime.IsZero() {
+		c.traceStarts.Store(trace.ID, trace.StartTime.UTC())
+	}
+	return nil
 }
 
 // UpdateTrace synchronously updates a trace record.
@@ -276,6 +283,15 @@ func (c *Collector) FinishTrace(ctx context.Context, traceID uuid.UUID, status s
 	updates := map[string]any{
 		"status":   status,
 		"end_time": now,
+	}
+	if rawStart, ok := c.traceStarts.LoadAndDelete(traceID); ok {
+		if start, valid := rawStart.(time.Time); valid {
+			duration := now.Sub(start)
+			if duration < 0 {
+				duration = 0
+			}
+			updates["duration_ms"] = int(duration.Milliseconds())
+		}
 	}
 	if errMsg != "" {
 		updates["error"] = errMsg

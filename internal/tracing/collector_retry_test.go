@@ -24,6 +24,23 @@ type mockTracingStore struct {
 	failUntil   int // first N calls return errFakeDB; N+1 onwards succeed
 }
 
+type durationCaptureStore struct {
+	store.TracingStore
+	updates map[string]any
+}
+
+func (s *durationCaptureStore) CreateTrace(_ context.Context, trace *store.TraceData) error {
+	if trace.ID == uuid.Nil {
+		trace.ID = uuid.New()
+	}
+	return nil
+}
+
+func (s *durationCaptureStore) UpdateTrace(_ context.Context, _ uuid.UUID, updates map[string]any) error {
+	s.updates = updates
+	return nil
+}
+
 func (m *mockTracingStore) UpdateTrace(_ context.Context, _ uuid.UUID, _ map[string]any) error {
 	n := int(m.updateCalls.Add(1))
 	if n <= m.failUntil {
@@ -271,5 +288,27 @@ func TestFinishTrace_UsesRetry(t *testing.T) {
 
 	if ms.updateCalls.Load() != 1 {
 		t.Fatalf("expected 1 UpdateTrace call, got %d", ms.updateCalls.Load())
+	}
+}
+
+func TestFinishTrace_PersistsDurationFromCreateTime(t *testing.T) {
+	ts := &durationCaptureStore{}
+	c := newTestCollector(ts)
+	trace := &store.TraceData{ID: uuid.New(), StartTime: time.Now().Add(-1500 * time.Millisecond)}
+
+	if err := c.CreateTrace(context.Background(), trace); err != nil {
+		t.Fatalf("CreateTrace: %v", err)
+	}
+	c.FinishTrace(context.Background(), trace.ID, "completed", "", "")
+
+	duration, ok := ts.updates["duration_ms"].(int)
+	if !ok {
+		t.Fatalf("duration_ms missing or wrong type: %#v", ts.updates["duration_ms"])
+	}
+	if duration < 1400 || duration > 3000 {
+		t.Fatalf("duration_ms = %d, want approximately 1500", duration)
+	}
+	if _, ok := c.traceStarts.Load(trace.ID); ok {
+		t.Fatal("trace start retained after FinishTrace")
 	}
 }
