@@ -1,0 +1,7 @@
+interface:
+  display_name: "Quangia Mobile Messaging"
+  short_description: "Write personal, skimmable Quangia messages"
+  default_prompt: "Use $quangia-mobile-messaging to write a concise, personalized message that is easy to scan on a phone."
+
+policy:
+  allow_implicit_invocation: true

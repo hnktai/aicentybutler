@@ -1,0 +1,7 @@
+ARG GOCLAW_BASE=aicenty-butler-runtime:document-to-pdf-1.0.3
+FROM ${GOCLAW_BASE}
+
+COPY --chown=goclaw:goclaw skills/quangia-image-generation/ /app/bundled-skills/quangia-image-generation/
+COPY --chown=goclaw:goclaw skills/quangia-mobile-messaging/ /app/bundled-skills/quangia-mobile-messaging/
+
+LABEL com.aicenty.butler.feature.future-customer-standard="1.0.4"

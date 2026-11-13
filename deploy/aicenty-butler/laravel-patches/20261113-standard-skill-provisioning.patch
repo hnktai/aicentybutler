@@ -1,5 +1,5 @@
 diff --git a/app/Services/ButlerAutomationService.php b/app/Services/ButlerAutomationService.php
-index d2d04288..c34abac5 100644
+index d2d04288..8516b404 100644
 --- a/app/Services/ButlerAutomationService.php
 +++ b/app/Services/ButlerAutomationService.php
 @@ -11,6 +11,15 @@ use Illuminate\Support\Str;
@@ -54,7 +54,51 @@ index d2d04288..c34abac5 100644
          // 2b. Đồng bộ SOUL.md cho Quản Gia riêng
          if ($newMasterButlerId) {
              $customSoul = "# SOUL.md - Bản Sắc & Quy Tắc Quản Gia AI Aicenty\n\n"
-@@ -2502,6 +2526,141 @@ class ButlerAutomationService
+@@ -2124,6 +2148,22 @@ class ButlerAutomationService
+             ->where('name', $channelName)
+             ->first();
+ 
++        $existingChannelConfig = $existingChannel
++            ? (is_string($existingChannel->config)
++                ? (json_decode($existingChannel->config, true) ?: [])
++                : (array) $existingChannel->config)
++            : [];
++        $standardChannelConfig = array_merge([
++            'dm_policy' => 'open',
++            'group_policy' => 'open',
++            'require_mention' => true,
++            'history_limit' => 50,
++        ], $existingChannelConfig, [
++            'phone' => $cleanPhone,
++            'dedicated' => true,
++            'auto_accept_verified_friend_requests' => true,
++        ]);
++
+         if (!$existingChannel) {
+             $db->table('channel_instances')->insert([
+                 'id'           => (string) Str::uuid(),
+@@ -2132,13 +2172,19 @@ class ButlerAutomationService
+                 'display_name' => "Zalo Quản Gia Riêng ({$cleanPhone})",
+                 'channel_type' => 'zalo_personal',
+                 'agent_id'     => $tenantButler->id,
+-                'config'       => json_encode(['phone' => $cleanPhone, 'dedicated' => true], JSON_UNESCAPED_UNICODE),
++                'config'       => json_encode($standardChannelConfig, JSON_UNESCAPED_UNICODE),
+                 'enabled'      => true,
+                 'created_by'   => 'system',
+                 'created_at'   => now(),
+                 'updated_at'   => now(),
+             ]);
+             Log::info("[ButlerAutomation] Created channel_instance {$channelName} for Tenant {$tenantId}");
++        } else {
++            $db->table('channel_instances')->where('id', $existingChannel->id)->update([
++                'agent_id' => $tenantButler->id,
++                'config' => json_encode($standardChannelConfig, JSON_UNESCAPED_UNICODE),
++                'updated_at' => now(),
++            ]);
+         }
+ 
+         // 3. Thu thập danh sách User IDs của gia đình
+@@ -2502,6 +2548,175 @@ class ButlerAutomationService
              : '01a1ac58-1bf3-7000-a68c-c6d36beaa62b';
      }
  
@@ -169,6 +213,31 @@ index d2d04288..c34abac5 100644
 +                ['pinned_version', 'granted_by', 'tenant_id', 'can_manage']
 +            );
 +
++            $otherConfigRaw = $db->table('agents')
++                ->where('id', $agentId)
++                ->where('tenant_id', $tenantId)
++                ->lockForUpdate()
++                ->value('other_config');
++            $otherConfig = is_string($otherConfigRaw)
++                ? (json_decode($otherConfigRaw, true) ?: [])
++                : (array) $otherConfigRaw;
++            $existingPinned = is_array($otherConfig['pinned_skills'] ?? null)
++                ? $otherConfig['pinned_skills']
++                : [];
++            $otherConfig['pinned_skills'] = array_slice(array_values(array_unique(array_merge(
++                self::STANDARD_BUTLER_SKILL_SLUGS,
++                array_map('strval', $existingPinned)
++            ))), 0, 10);
++            $otherConfig['allow_image_generation'] = true;
++            $otherConfig['standard_capabilities_version'] = '2026-11-13';
++            $db->table('agents')
++                ->where('id', $agentId)
++                ->where('tenant_id', $tenantId)
++                ->update([
++                    'other_config' => json_encode($otherConfig, JSON_UNESCAPED_UNICODE),
++                    'updated_at' => $now,
++                ]);
++
 +            $verified = $db->table('skill_agent_grants as grant')
 +                ->join('skills as skill', 'skill.id', '=', 'grant.skill_id')
 +                ->where('grant.agent_id', $agentId)
@@ -180,6 +249,15 @@ index d2d04288..c34abac5 100644
 +                throw new \RuntimeException(
 +                    "Provisioning standard skills không đầy đủ cho agent {$agentId}: {$verified}/"
 +                    . count(self::STANDARD_BUTLER_SKILL_SLUGS)
++                );
++            }
++            $missingPinned = array_diff(
++                self::STANDARD_BUTLER_SKILL_SLUGS,
++                $otherConfig['pinned_skills']
++            );
++            if ($missingPinned !== []) {
++                throw new \RuntimeException(
++                    'Pinned skill prompt configuration không đầy đủ: ' . implode(', ', $missingPinned)
 +                );
 +            }
 +
