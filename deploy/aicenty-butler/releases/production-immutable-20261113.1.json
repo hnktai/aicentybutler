@@ -1,0 +1,29 @@
+{
+  "product_version": "production-immutable-20261113.1",
+  "source_commit": "5fdc119dc9f10cf887f930b08fd1b56b2f819e02",
+  "protocol_version": 3,
+  "schema_version": 99,
+  "engine": {
+    "image": "ghcr.io/hnktai/aicentybutler-runtime@sha256:1011aa1d81e93a90fe35107c16bdc11acb803095533d9a61f628a3d2e2278583",
+    "binary_sha256": "b1a97527698993acc98ae5ccc6fa6a8ed753e7a2d0a0034f69b27847e2504f0b"
+  },
+  "document_renderer": {
+    "image": "ghcr.io/hnktai/aicenty-document-renderer@sha256:c2d245516aea6db714b28cd9b099a3bf37eba81d09c4facdc21069ac183def6b"
+  },
+  "standard_skills": [
+    "document-to-pdf",
+    "images-to-pdf",
+    "quangia-image-generation",
+    "quangia-mobile-messaging"
+  ],
+  "verification": {
+    "go_relevant_packages": "pass",
+    "php_lint_files": 2663,
+    "composer_validate": "pass_with_upstream_constraint_warnings",
+    "isolated_canary": "pass",
+    "canary_schema_version": 99,
+    "canary_standard_skill_count": 4,
+    "canary_text_pdf": "pass",
+    "canary_images_pdf": "pass"
+  }
+}
