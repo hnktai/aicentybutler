@@ -218,6 +218,11 @@ func (c *Channel) handleTextMessage(msg *zaloMessage) {
 	if content == "" {
 		content = "[empty message]"
 	}
+	senderName := msg.From.Username
+	if senderName == "" {
+		senderName = senderID
+	}
+	content = fmt.Sprintf("[From: %s (UID: %s)]\n%s", senderName, senderID, content)
 
 	slog.Debug("zalo text message received",
 		"sender_id", senderID,
@@ -254,6 +259,11 @@ func (c *Channel) handleImageMessage(msg *zaloMessage) {
 	if content == "" {
 		content = "[image]"
 	}
+	senderName := msg.From.Username
+	if senderName == "" {
+		senderName = senderID
+	}
+	content = fmt.Sprintf("[From: %s (UID: %s)]\n%s", senderName, senderID, content)
 
 	// Download photo from Zalo CDN to local temp file (CDN URLs are auth-restricted/expiring)
 	var media []string

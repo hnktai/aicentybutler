@@ -28,6 +28,13 @@ const maxHistoryKeys = 1000
 const DefaultGroupHistoryLimit = 200
 
 const (
+	// GroupWelcomeMarkerV1 is persisted with group history so a channel sends
+	// its first-use guidance exactly once, including across gateway restarts.
+	GroupWelcomeMarkerV1          = "[[goclaw:internal:group-welcome:v1]]"
+	internalHistoryMarkerSenderID = "__goclaw_internal__"
+)
+
+const (
 	flushInterval        = 3 * time.Second  // periodic flush interval
 	flushBatchMax        = 20               // flush when buffer reaches this size
 	compactSweepInterval = 10 * time.Minute // periodic compaction sweep for post-restart safety
@@ -194,6 +201,87 @@ func (ph *PendingHistory) tenantCtx() context.Context {
 	return ctx
 }
 
+func containsHistoryMarker(entries []HistoryEntry, marker string) bool {
+	for _, entry := range entries {
+		if entry.SenderID == internalHistoryMarkerSenderID && entry.Body == marker {
+			return true
+		}
+	}
+	return false
+}
+
+// HasMarker checks RAM, pending persistence, and the consumed archive. Markers
+// survive Clear(), which archives pending rows after the bot replies.
+func (ph *PendingHistory) HasMarker(historyKey, marker string) bool {
+	if ph == nil || historyKey == "" || marker == "" {
+		return false
+	}
+	if containsHistoryMarker(ph.GetEntries(historyKey), marker) {
+		return true
+	}
+	if ph.store == nil || ph.channelName == "" {
+		return false
+	}
+
+	ctx, cancel := context.WithTimeout(ph.tenantCtx(), 10*time.Second)
+	defer cancel()
+	archived, err := ph.store.ListArchivedByKey(ctx, ph.channelName, historyKey, time.Time{}, 1000)
+	if err != nil {
+		slog.Warn("pending_history.marker_archive_lookup_failed",
+			"channel", ph.channelName, "key", historyKey, "error", err)
+		return false
+	}
+	for _, message := range archived {
+		if message.SenderID == internalHistoryMarkerSenderID && message.Body == marker {
+			return true
+		}
+	}
+	return false
+}
+
+// RecordMarker writes an internal marker synchronously before adding it to RAM.
+// Synchronous persistence prevents duplicate first-use messages after restart.
+func (ph *PendingHistory) RecordMarker(historyKey, marker string) error {
+	if ph == nil || historyKey == "" || marker == "" {
+		return nil
+	}
+	now := time.Now()
+	entry := HistoryEntry{
+		Sender:    "system",
+		SenderID:  internalHistoryMarkerSenderID,
+		Body:      marker,
+		Timestamp: now,
+		MessageID: marker,
+	}
+
+	var persistErr error
+	if ph.store != nil && ph.channelName != "" {
+		ctx, cancel := context.WithTimeout(ph.tenantCtx(), 10*time.Second)
+		persistErr = ph.store.AppendBatch(ctx, []store.PendingMessage{{
+			ChannelName:   ph.channelName,
+			HistoryKey:    historyKey,
+			Sender:        entry.Sender,
+			SenderID:      entry.SenderID,
+			Body:          entry.Body,
+			PlatformMsgID: entry.MessageID,
+			CreatedAt:     now,
+			UpdatedAt:     now,
+		}})
+		cancel()
+	}
+
+	ph.mu.Lock()
+	existing := ph.entries[historyKey]
+	if !containsHistoryMarker(existing, marker) {
+		ph.entries[historyKey] = append(existing, entry)
+		ph.removeFromOrder(historyKey)
+		ph.order = append(ph.order, historyKey)
+		ph.evictOldKeys()
+	}
+	ph.mu.Unlock()
+	return persistErr
+}
+
 // Record adds a message to the pending history for a group.
 // If limit ≤ 0, recording is disabled.
 func (ph *PendingHistory) Record(historyKey string, entry HistoryEntry, limit int) {
@@ -307,6 +395,9 @@ func (ph *PendingHistory) BuildContext(historyKey, currentMessage string, limit 
 
 	var lines []string
 	for _, e := range entriesCopy {
+		if e.SenderID == internalHistoryMarkerSenderID {
+			continue
+		}
 		ts := ""
 		if !e.Timestamp.IsZero() {
 			ts = fmt.Sprintf(" [%s]", e.Timestamp.Format("15:04"))

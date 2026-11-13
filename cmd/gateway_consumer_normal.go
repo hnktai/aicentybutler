@@ -46,12 +46,11 @@ func processNormalMessage(
 	agentLoop, err := deps.Agents.Get(ctx, agentID)
 	if err != nil {
 		slog.Warn("inbound: agent not found", "agent", agentID, "channel", msg.Channel, "error", err)
-		errContent := formatAgentError(err)
+		ct := ""
 		if deps.ChannelMgr != nil {
-			if ct := deps.ChannelMgr.ChannelTypeForName(msg.Channel); isExternalChannel(ct) {
-				errContent = ""
-			}
+			ct = deps.ChannelMgr.ChannelTypeForName(msg.Channel)
 		}
+		errContent, _ := formatExternalChannelError(ct, msg.Channel, msg.ChatID, msg.Metadata, err)
 		deps.MsgBus.PublishOutbound(bus.OutboundMessage{
 			Channel:  msg.Channel,
 			ChatID:   msg.ChatID,
@@ -381,7 +380,7 @@ func processNormalMessage(
 		if loop, ok := agentLoop.(*agent.Loop); ok && loop.Provider() != nil {
 			locale := msg.Metadata["locale"]
 			if locale == "" {
-				locale = "en"
+				locale = "vi"
 			}
 			classifyCtx := ctx
 			if uid := loop.UUID(); uid != uuid.Nil {
@@ -555,14 +554,13 @@ func processNormalMessage(
 				return
 			}
 			slog.Error("inbound: agent run failed", "error", outcome.Err, "channel", channel)
-			// Suppress technical error text on public-facing channels (FB, Telegram, etc.)
-			// Empty Content still triggers placeholder/typing cleanup downstream.
-			errContent := formatAgentError(outcome.Err)
+			ct := ""
 			if deps.ChannelMgr != nil {
-				if ct := deps.ChannelMgr.ChannelTypeForName(channel); isExternalChannel(ct) {
-					slog.Info("inbound: suppressed error for external channel", "channel", channel, "type", ct)
-					errContent = ""
-				}
+				ct = deps.ChannelMgr.ChannelTypeForName(channel)
+			}
+			errContent, suppressed := formatExternalChannelError(ct, channel, chatID, meta, outcome.Err)
+			if suppressed && errContent == "" {
+				slog.Info("inbound: suppressed error for external channel", "channel", channel, "type", ct)
 			}
 			deps.MsgBus.PublishOutbound(bus.OutboundMessage{
 				Channel:  channel,
@@ -573,6 +571,28 @@ func processNormalMessage(
 				AgentID:  agentUUID,
 			})
 			return
+		}
+
+		// If the run was terminated by the loop detector, treat it as an error/failure
+		// so external channels (especially Zalo) receive the friendly fallback reply.
+		if outcome.Result != nil && outcome.Result.LoopKilled {
+			slog.Warn("inbound: run was killed by loop detector", "channel", channel, "session", session, "content", outcome.Result.Content)
+			ct := ""
+			if deps.ChannelMgr != nil {
+				ct = deps.ChannelMgr.ChannelTypeForName(channel)
+			}
+			errContent, suppressed := formatExternalChannelError(ct, channel, chatID, meta, fmt.Errorf("%s", outcome.Result.Content))
+			if suppressed {
+				deps.MsgBus.PublishOutbound(bus.OutboundMessage{
+					Channel:  channel,
+					ChatID:   chatID,
+					Content:  errContent,
+					Metadata: meta,
+					TenantID: tenantID,
+					AgentID:  agentUUID,
+				})
+				return
+			}
 		}
 
 		// Suppress silent text only when the result has no media. A tool or
@@ -588,10 +608,19 @@ func processNormalMessage(
 				"chat_id", chatID,
 				"session", session,
 			)
+			fallbackContent := ""
+			ct := ""
+			if deps.ChannelMgr != nil {
+				ct = deps.ChannelMgr.ChannelTypeForName(channel)
+			}
+			// If it's Zalo and the LLM produced empty output with no media, don't leave customer in silence
+			if isZaloChannel(ct, channel) && len(outcome.Result.Media) == 0 {
+				fallbackContent, _ = formatExternalChannelError(ct, channel, chatID, meta, fmt.Errorf("empty reply from agent"))
+			}
 			deps.MsgBus.PublishOutbound(bus.OutboundMessage{
 				Channel:  channel,
 				ChatID:   chatID,
-				Content:  "",
+				Content:  fallbackContent,
 				Metadata: meta,
 				TenantID: tenantID,
 				AgentID:  agentUUID,

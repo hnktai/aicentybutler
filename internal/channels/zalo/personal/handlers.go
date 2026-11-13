@@ -43,7 +43,15 @@ func (c *Channel) handleDM(msg protocol.UserMessage) {
 	media = append(media, quoteMedia...)
 	content := replycontext.Compose(c.buildReplyContext(threadID, msg.Data.Quote), body)
 	if content == "" {
-		return
+		if isSticker(msg.Data.Content) {
+			content = "[Khách hàng gửi một nhãn dán / sticker cảm xúc]"
+		} else if text := msg.Data.Content.AttachmentText(); text != "" {
+			content = text
+		} else if len(msg.Data.Content.Raw) > 0 {
+			content = "[Khách hàng gửi một nhãn dán / sticker cảm xúc]"
+		} else {
+			return
+		}
 	}
 	// The quote wrapper text above is just the "[Quoted image]" placeholder —
 	// append a real <media:image> tag so the model has a path to reference
@@ -53,10 +61,11 @@ func (c *Channel) handleDM(msg protocol.UserMessage) {
 	}
 
 	// Annotate with sender display name so the agent knows who is messaging.
-	senderName := msg.Data.DName
-	if senderName != "" {
-		content = fmt.Sprintf("[From: %s]\n%s", senderName, content)
+	senderName := channels.SanitizeDisplayName(msg.Data.DName)
+	if senderName == "" {
+		senderName = senderID
 	}
+	content = fmt.Sprintf("[From: %s (UID: %s)]\n%s", senderName, senderID, content)
 	c.rememberReplyContext(threadID, displayNameOrID(senderName, senderID), msg.Data, cacheBodyForContent(msg.Data.Content))
 
 	slog.Debug("zalo_personal DM received",
@@ -70,7 +79,7 @@ func (c *Channel) handleDM(msg protocol.UserMessage) {
 
 	// Collect contact for DM messages.
 	if cc := c.ContactCollector(); cc != nil {
-		cc.EnsureContact(ctx, c.Type(), c.Name(), senderID, senderID, senderName, "", "direct", "user", "", "")
+		cc.EnsureContact(ctx, c.Type(), c.Name(), senderID, senderID, senderName, "", "direct", "user", senderID, "direct")
 	}
 
 	metadata := map[string]string{
@@ -92,7 +101,7 @@ func (c *Channel) handleGroupMessage(msg protocol.GroupMessage) {
 		return
 	}
 
-	senderName := msg.Data.DName
+	senderName := channels.SanitizeDisplayName(msg.Data.DName)
 	if senderName == "" {
 		senderName = senderID
 	}
@@ -104,7 +113,15 @@ func (c *Channel) handleGroupMessage(msg protocol.GroupMessage) {
 	media = append(media, quoteMedia...)
 	content := replycontext.Compose(c.buildReplyContext(threadID, msg.Data.Quote), body)
 	if content == "" {
-		return
+		if isSticker(msg.Data.Content) {
+			content = "[Khách hàng gửi một nhãn dán / sticker cảm xúc]"
+		} else if text := msg.Data.Content.AttachmentText(); text != "" {
+			content = text
+		} else if len(msg.Data.Content.Raw) > 0 {
+			content = "[Khách hàng gửi một nhãn dán / sticker cảm xúc]"
+		} else {
+			return
+		}
 	}
 	// The quote wrapper text above is just the "[Quoted image]" placeholder —
 	// append a real <media:image> tag so the model has a path to reference
@@ -119,7 +136,7 @@ func (c *Channel) handleGroupMessage(msg protocol.GroupMessage) {
 		wasMentioned := c.checkBotMentioned(msg.Data.Mentions)
 		if !wasMentioned {
 			c.GroupHistory().Record(threadID, channels.HistoryEntry{
-				Sender:    senderName,
+				Sender:    fmt.Sprintf("%s (UID: %s)", senderName, senderID),
 				SenderID:  senderID,
 				Body:      content,
 				Media:     media,
@@ -129,7 +146,7 @@ func (c *Channel) handleGroupMessage(msg protocol.GroupMessage) {
 
 			// Collect contact even when bot is not mentioned (cache prevents DB spam).
 			if cc := c.ContactCollector(); cc != nil {
-				cc.EnsureContact(ctx, c.Type(), c.Name(), senderID, senderID, senderName, "", "group", "user", "", "")
+				cc.EnsureContact(ctx, c.Type(), c.Name(), senderID, senderID, senderName, "", "group", "user", threadID, "group")
 			}
 
 			slog.Debug("zalo_personal group message recorded (no mention)",
@@ -146,8 +163,8 @@ func (c *Channel) handleGroupMessage(msg protocol.GroupMessage) {
 		"preview", channels.Truncate(content, 50),
 	)
 
-	// Step 3: flush pending history + annotate current message with sender name.
-	annotated := fmt.Sprintf("[From: %s]\n%s", senderName, content)
+	// Step 3: flush pending history + annotate current message with sender name and UID.
+	annotated := fmt.Sprintf("[From: %s (UID: %s)]\n%s", senderName, senderID, content)
 	finalContent := annotated
 	if c.HistoryLimit() > 0 {
 		finalContent = c.GroupHistory().BuildContext(threadID, annotated, c.HistoryLimit())
@@ -162,7 +179,7 @@ func (c *Channel) handleGroupMessage(msg protocol.GroupMessage) {
 
 	// Collect contact for group-mentioned messages.
 	if cc := c.ContactCollector(); cc != nil {
-		cc.EnsureContact(ctx, c.Type(), c.Name(), senderID, senderID, senderName, "", "group", "user", "", "")
+		cc.EnsureContact(ctx, c.Type(), c.Name(), senderID, senderID, senderName, "", "group", "user", threadID, "group")
 	}
 
 	metadata := map[string]string{

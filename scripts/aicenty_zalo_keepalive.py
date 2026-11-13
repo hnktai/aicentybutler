@@ -12,7 +12,11 @@ from butler_runtime_health import channel_statuses
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] [ZaloKeepAlive] %(message)s'
+    format='%(asctime)s [%(levelname)s] [ZaloKeepAlive] %(message)s',
+    handlers=[
+        logging.FileHandler('/var/log/aicenty_zalo_keepalive.log'),
+        logging.StreamHandler()
+    ]
 )
 
 DB_CONFIG = {

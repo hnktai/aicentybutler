@@ -209,15 +209,16 @@ type ZaloConfig struct {
 }
 
 type ZaloPersonalConfig struct {
-	Enabled         bool                `json:"enabled"`
-	AllowFrom       FlexibleStringSlice `json:"allow_from"`
-	DMPolicy        string              `json:"dm_policy,omitempty"`        // "pairing" (default), "allowlist", "open", "disabled"
-	GroupPolicy     string              `json:"group_policy,omitempty"`     // "open" (default), "allowlist", "disabled"
-	RequireMention  *bool               `json:"require_mention,omitempty"`  // require @bot mention in groups (default true)
-	HistoryLimit    int                 `json:"history_limit,omitempty"`    // max pending group messages for context (default 50, 0=disabled)
-	CredentialsPath string              `json:"credentials_path,omitempty"` // path to saved cookies JSON
-	BlockReply      *bool               `json:"block_reply,omitempty"`      // override gateway block_reply (nil = inherit)
-	ChatBehavior    *ChatBehaviorConfig `json:"chat_behavior,omitempty"`    // override gateway chat behavior (nil = inherit)
+	Enabled                          bool                `json:"enabled"`
+	AllowFrom                        FlexibleStringSlice `json:"allow_from"`
+	DMPolicy                         string              `json:"dm_policy,omitempty"`        // "pairing" (default), "allowlist", "open", "disabled"
+	GroupPolicy                      string              `json:"group_policy,omitempty"`     // "open" (default), "allowlist", "disabled"
+	RequireMention                   *bool               `json:"require_mention,omitempty"`  // require @bot mention in groups (default true)
+	HistoryLimit                     int                 `json:"history_limit,omitempty"`    // max pending group messages for context (default 50, 0=disabled)
+	CredentialsPath                  string              `json:"credentials_path,omitempty"` // path to saved cookies JSON
+	AutoAcceptVerifiedFriendRequests bool                `json:"auto_accept_verified_friend_requests,omitempty"`
+	BlockReply                       *bool               `json:"block_reply,omitempty"`   // override gateway block_reply (nil = inherit)
+	ChatBehavior                     *ChatBehaviorConfig `json:"chat_behavior,omitempty"` // override gateway chat behavior (nil = inherit)
 }
 
 type FeishuConfig struct {

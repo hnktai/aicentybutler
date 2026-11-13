@@ -2,7 +2,6 @@ package channels
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"strings"
 	"time"
@@ -391,20 +390,9 @@ func (m *Manager) HandleAgentEvent(eventType, runID string, payload any) {
 		return
 	}
 
-	// Handle LLM retry: update placeholder to notify user
+	// Handle LLM retry: disabled noisy placeholder for instant messaging channels
 	if eventType == protocol.AgentEventRunRetrying {
-		attempt := extractPayloadString(payload, "attempt")
-		maxAttempts := extractPayloadString(payload, "maxAttempts")
-		retryMsg := fmt.Sprintf("Provider busy, retrying... (%s/%s)", attempt, maxAttempts)
-		m.bus.PublishOutbound(bus.OutboundMessage{
-			Channel:  rc.ChannelName,
-			ChatID:   rc.ChatID,
-			Content:  retryMsg,
-			TenantID: rc.TenantID,
-			Metadata: map[string]string{
-				"placeholder_update": "true",
-			},
-		})
+		// Silent internal retry without spamming chat
 	}
 
 	// Forward to ReactionChannel

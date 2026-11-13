@@ -103,7 +103,11 @@ func makeCronJobHandler(sched *scheduler.Scheduler, msgBus *bus.MessageBus, cfg 
 			extraPrompt = fmt.Sprintf(
 				"[Cron Job]\nThis is scheduled job \"%s\" (ID: %s).\n"+
 					"Requester: user %s on channel \"%s\" (chat %s).\n"+
-					"Your response will be automatically delivered to that chat — just produce the content directly.",
+					"QUY TẮC BẢN SẮC & XƯNG HÔ:\n"+
+					"- BẮT BUỘC đọc file USER.md trong ngữ cảnh để lấy đúng Tên Quản Gia riêng (ví dụ: Bà 5, Chú Man, Cậu Hùng, Bác 7...) và tên Gia chủ.\n"+
+					"- TUYỆT ĐỐI xưng đúng Tên Quản Gia riêng theo USER.md. CẤM tự ý xưng là Bác Phúc nếu USER.md không yêu cầu Bác Phúc.\n"+
+					"- Nội dung input là lời nhắc hẹn đã được lên lịch. Hãy phát lời nhắc này chuẩn mực và đúng bản sắc Quản Gia trong USER.md.\n"+
+					"- Your response will be automatically delivered to that chat — just produce the content directly.",
 				job.Name, job.ID, job.UserID, job.DeliverChannel, job.DeliverTo,
 			)
 		} else {
@@ -243,6 +247,13 @@ func deliverCronOutput(msgBus *bus.MessageBus, job *store.CronJob, content strin
 			outMsg.Metadata = map[string]string{"group_id": job.DeliverTo}
 		}
 		appendMediaToOutbound(&outMsg, media)
+		slog.Info("cron: delivering outbound reminder message",
+			"job_id", job.ID,
+			"job_name", job.Name,
+			"channel", job.DeliverChannel,
+			"to", job.DeliverTo,
+			"content_len", len(content),
+		)
 		msgBus.PublishOutbound(outMsg)
 		return
 	}

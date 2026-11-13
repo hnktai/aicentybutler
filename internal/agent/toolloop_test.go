@@ -493,9 +493,9 @@ func TestReadOnlyStreak_ExactBoundaryRatio(t *testing.T) {
 		t.Fatalf("expected unique=6, got %d", s.readOnlyUnique)
 	}
 	level, _ := s.detectReadOnlyStreak()
-	// ratio=0.6, NOT > 0.6, so stuck mode. Streak=10 >= warning=8 → warning.
-	if level != "warning" {
-		t.Fatalf("exact 0.6 ratio should be stuck mode → warning at 10, got %q", level)
+	// ratio=0.6, NOT > 0.6, so stuck mode. Streak=10 >= critical=4 → critical.
+	if level != "critical" {
+		t.Fatalf("exact 0.6 ratio should be stuck mode → critical at 10, got %q", level)
 	}
 }
 
@@ -527,8 +527,8 @@ func TestReadOnlyStreak_Critical(t *testing.T) {
 
 func TestReadOnlyStreak_ResetByMutation(t *testing.T) {
 	var s toolLoopState
-	// 7 read-only calls → below warning
-	for range 7 {
+	// (readOnlyStreakWarning - 1) read-only calls → below warning
+	for range readOnlyStreakWarning - 1 {
 		s.recordMutation("read_file", nil)
 	}
 	// 1 edit resets streak
@@ -536,37 +536,35 @@ func TestReadOnlyStreak_ResetByMutation(t *testing.T) {
 	if s.readOnlyStreak != 0 {
 		t.Fatalf("expected streak 0 after edit, got %d", s.readOnlyStreak)
 	}
-	// 7 more reads → streak = 7, still below warning
-	for range 7 {
+	// more reads → still below warning
+	for range readOnlyStreakWarning - 1 {
 		s.recordMutation("read_file", nil)
 	}
 	level, _ := s.detectReadOnlyStreak()
 	if level != "" {
-		t.Fatalf("expected no detection at streak 7, got %q", level)
+		t.Fatalf("expected no detection at streak %d, got %q", readOnlyStreakWarning-1, level)
 	}
 }
 
 func TestReadOnlyStreak_ExecNeutral(t *testing.T) {
 	var s toolLoopState
-	// 5 reads → streak = 5
-	for range 5 {
+	// (readOnlyStreakWarning - 1) reads
+	for range readOnlyStreakWarning - 1 {
 		s.recordMutation("read_file", nil)
 	}
 	// exec does not reset or increment
 	s.recordMutation("exec", nil)
-	if s.readOnlyStreak != 5 {
-		t.Fatalf("expected streak 5 after exec, got %d", s.readOnlyStreak)
+	if s.readOnlyStreak != (readOnlyStreakWarning - 1) {
+		t.Fatalf("expected streak %d after exec, got %d", readOnlyStreakWarning-1, s.readOnlyStreak)
 	}
-	// 5 more reads → streak = 10
-	for range 5 {
-		s.recordMutation("list_files", nil)
-	}
-	if s.readOnlyStreak != 10 {
-		t.Fatalf("expected streak 10, got %d", s.readOnlyStreak)
+	// 1 more read of same tool → streak = warning (unique=1, stuck mode → warning)
+	s.recordMutation("read_file", nil)
+	if s.readOnlyStreak != readOnlyStreakWarning {
+		t.Fatalf("expected streak %d, got %d", readOnlyStreakWarning, s.readOnlyStreak)
 	}
 	level, _ := s.detectReadOnlyStreak()
 	if level != "warning" {
-		t.Fatalf("expected warning at streak 10, got %q", level)
+		t.Fatalf("expected warning at streak %d, got %q", readOnlyStreakWarning, level)
 	}
 }
 

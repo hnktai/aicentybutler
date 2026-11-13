@@ -47,6 +47,7 @@ func NewPGStores(cfg store.StoreConfig) (*store.Stores, error) {
 		KnowledgeGraph:         NewPGKnowledgeGraphStore(db),
 		Contacts:               NewPGContactStore(db),
 		Activity:               NewPGActivityStore(db),
+		ZaloFriendVerification: NewPGZaloFriendVerificationStore(db),
 		Snapshots:              NewPGSnapshotStore(db),
 		UsageEvents:            NewPGUsageEventStore(db),
 		BrowserCookies:         NewPGBrowserCookieStore(db, cfg.EncryptionKey),

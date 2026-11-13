@@ -9,6 +9,10 @@ func SanitizeDisplayName(name string) string {
 	name = strings.ReplaceAll(name, "\n", " ")
 	name = strings.ReplaceAll(name, "\r", " ")
 	name = strings.ReplaceAll(name, "#", "")
+	name = strings.ReplaceAll(name, "[", "")
+	name = strings.ReplaceAll(name, "]", "")
+	name = strings.ReplaceAll(name, "(", "")
+	name = strings.ReplaceAll(name, ")", "")
 	name = strings.TrimSpace(name)
 	if len([]rune(name)) > 100 {
 		name = string([]rune(name)[:100])
