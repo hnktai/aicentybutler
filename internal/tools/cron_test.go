@@ -11,6 +11,7 @@ import (
 
 type testCronStore struct {
 	jobs      map[string]*store.CronJob
+	addCnt    int
 	updateCnt int
 	runCnt    int
 	lastForce bool
@@ -27,6 +28,7 @@ func newTestCronStore(job *store.CronJob) *testCronStore {
 }
 
 func (s *testCronStore) AddJob(_ context.Context, name string, sched store.CronSchedule, msg string, _ bool, _ string, _ string, _ string, _ string) (*store.CronJob, error) {
+	s.addCnt++
 	j := &store.CronJob{
 		ID:       "mock-job-id",
 		Name:     name,
@@ -60,6 +62,9 @@ func (s *testCronStore) UpdateJob(_ context.Context, jobID string, patch store.C
 	job := s.jobs[jobID]
 	if patch.Message != "" {
 		job.Payload.Message = patch.Message
+	}
+	if patch.Schedule != nil {
+		job.Schedule = store.MergeCronSchedule(job.Schedule, patch.Schedule)
 	}
 	return job, nil
 }
@@ -259,6 +264,153 @@ func TestParseAtSchedule_Formats(t *testing.T) {
 	}
 	if *ms5 != int64(futureMs) {
 		t.Fatalf("expected %d, got %d", int64(futureMs), *ms5)
+	}
+}
+
+func TestValidateAtScheduleWeekday_IncidentRegression(t *testing.T) {
+	loc, err := time.LoadLocation("Asia/Ho_Chi_Minh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	schedule := map[string]any{
+		"tz":              "Asia/Ho_Chi_Minh",
+		"expectedWeekday": 5,
+	}
+	message := "Sáng thứ 6 nhắc lịch Circle TS Capital"
+
+	friday := time.Date(2026, 11, 13, 7, 0, 0, 0, loc)
+	calendar, err := validateAtScheduleWeekday(schedule, message, friday.UnixMilli())
+	if err != nil {
+		t.Fatalf("13/11/2026 should be accepted as Friday: %v", err)
+	}
+	if calendar.Date != "2026-11-13" || calendar.Weekday != "Friday" || calendar.ISOWeekday != 5 {
+		t.Fatalf("unexpected authoritative calendar: %#v", calendar)
+	}
+
+	saturday := time.Date(2026, 11, 14, 7, 0, 0, 0, loc)
+	_, err = validateAtScheduleWeekday(schedule, message, saturday.UnixMilli())
+	if err == nil || !strings.Contains(err.Error(), "weekday mismatch") || !strings.Contains(err.Error(), "Saturday") {
+		t.Fatalf("14/11/2026 must be rejected for a Friday reminder, got: %v", err)
+	}
+}
+
+func TestCronToolAddRejectsWeekdayDateMismatchBeforeWrite(t *testing.T) {
+	loc, err := time.LoadLocation("Asia/Ho_Chi_Minh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	target := time.Now().In(loc).Add(48 * time.Hour).Truncate(time.Second)
+	for target.Weekday() != time.Saturday {
+		target = target.AddDate(0, 0, 1)
+	}
+
+	cronStore := newTestCronStore(nil)
+	tool := NewCronTool(cronStore)
+	result := tool.handleAdd(context.Background(), map[string]any{
+		"action": "add",
+		"job": map[string]any{
+			"name":    "friday-reminder",
+			"message": "Sáng thứ 6 nhắc tôi tham gia cuộc họp",
+			"schedule": map[string]any{
+				"kind":            "at",
+				"time":            target.Format("2006-01-02 15:04:05"),
+				"tz":              "Asia/Ho_Chi_Minh",
+				"expectedWeekday": 5,
+			},
+		},
+	}, "agent-1", "user-1")
+
+	if !result.IsError || !strings.Contains(result.ForLLM, "weekday mismatch") {
+		t.Fatalf("expected weekday mismatch, got %#v", result)
+	}
+	if cronStore.addCnt != 0 {
+		t.Fatalf("AddJob called %d times; mismatched schedule must not be persisted", cronStore.addCnt)
+	}
+}
+
+func TestCronToolAddReturnsAuthoritativeLocalCalendar(t *testing.T) {
+	loc, err := time.LoadLocation("Asia/Ho_Chi_Minh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	target := time.Now().In(loc).Add(48 * time.Hour).Truncate(time.Second)
+	for target.Weekday() != time.Friday {
+		target = target.AddDate(0, 0, 1)
+	}
+
+	cronStore := newTestCronStore(nil)
+	tool := NewCronTool(cronStore)
+	result := tool.handleAdd(context.Background(), map[string]any{
+		"action": "add",
+		"job": map[string]any{
+			"name":    "friday-reminder",
+			"message": "Sáng thứ 6 nhắc tôi tham gia cuộc họp",
+			"schedule": map[string]any{
+				"kind":            "at",
+				"time":            target.Format("2006-01-02 15:04:05"),
+				"tz":              "Asia/Ho_Chi_Minh",
+				"expectedWeekday": 5,
+			},
+		},
+	}, "agent-1", "user-1")
+
+	if result.IsError {
+		t.Fatalf("matching Friday schedule failed: %s", result.ForLLM)
+	}
+	for _, want := range []string{
+		`"scheduledLocal"`,
+		`"weekday": "Friday"`,
+		`"isoWeekday": 5`,
+		`"timezone": "Asia/Ho_Chi_Minh"`,
+	} {
+		if !strings.Contains(result.ForLLM, want) {
+			t.Fatalf("result missing %s: %s", want, result.ForLLM)
+		}
+	}
+	if cronStore.addCnt != 1 {
+		t.Fatalf("AddJob called %d times, want 1", cronStore.addCnt)
+	}
+	if got := cronStore.jobs["mock-job-id"].Schedule.TZ; got != "Asia/Ho_Chi_Minh" {
+		t.Fatalf("persisted timezone = %q, want Asia/Ho_Chi_Minh", got)
+	}
+}
+
+func TestCronToolUpdateRejectsMessageWeekdayMismatchBeforeWrite(t *testing.T) {
+	loc, err := time.LoadLocation("Asia/Ho_Chi_Minh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	target := time.Now().In(loc).Add(48 * time.Hour).Truncate(time.Second)
+	for target.Weekday() != time.Saturday {
+		target = target.AddDate(0, 0, 1)
+	}
+	atMS := target.UnixMilli()
+	cronStore := newTestCronStore(&store.CronJob{
+		ID:      "job-1",
+		AgentID: "agent-1",
+		UserID:  "user-1",
+		Name:    "meeting-reminder",
+		Schedule: store.CronSchedule{
+			Kind: "at",
+			AtMS: &atMS,
+			TZ:   "Asia/Ho_Chi_Minh",
+		},
+		Payload: store.CronPayload{Message: "Nhắc cuộc họp cuối tuần"},
+	})
+	tool := NewCronTool(cronStore)
+	result := tool.handleUpdate(context.Background(), map[string]any{
+		"action": "update",
+		"jobId":  "job-1",
+		"patch": map[string]any{
+			"message": "Sáng thứ 6 nhắc tôi tham gia cuộc họp",
+		},
+	}, "agent-1", "user-1")
+
+	if !result.IsError || !strings.Contains(result.ForLLM, "weekday mismatch") {
+		t.Fatalf("expected weekday mismatch, got %#v", result)
+	}
+	if cronStore.updateCnt != 0 {
+		t.Fatalf("UpdateJob called %d times; mismatched update must not be persisted", cronStore.updateCnt)
 	}
 }
 

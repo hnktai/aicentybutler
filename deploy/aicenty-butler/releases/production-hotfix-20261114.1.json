@@ -1,0 +1,25 @@
+{
+  "product_version": "production-hotfix-20261114.1",
+  "source_commit": "179d4c1541d84dbe32a0aaa77b012b727ff2d80f",
+  "build_time_utc": "2026-11-13T20:29:48Z",
+  "protocol_version": 3,
+  "schema_version": 99,
+  "engine": {
+    "image": "ghcr.io/hnktai/aicentybutler-runtime@sha256:faafcee963d025f6598828c1eefc74c9269b01b73aa745754923efe579ceee19",
+    "image_id": "sha256:faafcee963d025f6598828c1eefc74c9269b01b73aa745754923efe579ceee19",
+    "binary_sha256": "348c472d7144fd39c7759e215a0313d0353f4884a9e6c28c7d6c863e1d34eb79"
+  },
+  "incident": {
+    "id": "weekday-reminder-20261114",
+    "control": "Reject one-shot reminder dates whose computed weekday conflicts with expectedWeekday or the reminder text",
+    "customer_account_tested": false
+  },
+  "verification": {
+    "cron_race_tests": "pass",
+    "go_vet_internal_tools": "pass",
+    "isolated_canary": "pass",
+    "canary_schema_version": 99,
+    "production_bad_job_disabled": true,
+    "production_enabled_weekday_mismatches": 0
+  }
+}
