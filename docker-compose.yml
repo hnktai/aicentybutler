@@ -50,6 +50,11 @@ services:
     pids_limit: 200
     mem_limit: 2g
     cpus: 2.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - aicenty_internal_net
       - document_render
@@ -83,6 +88,11 @@ services:
     pids_limit: 200
     mem_limit: 2g
     cpus: 1.5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - document_render
     healthcheck:
@@ -112,6 +122,11 @@ services:
     pids_limit: 200
     mem_limit: 2g
     cpus: 1.5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     networks:
       - document_render
       - web_egress
@@ -126,6 +141,11 @@ services:
     image: pgvector/pgvector:pg16
     container_name: aicenty-butler-postgres
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
     environment:
       POSTGRES_DB: aicenty_butler_db
       POSTGRES_USER: aicenty_user
@@ -159,6 +179,11 @@ services:
     image: redis:7-alpine
     container_name: aicenty-butler-redis
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     command: redis-server --requirepass ${REDIS_PASSWORD} --appendonly yes --appendfsync everysec --maxmemory 512mb --maxmemory-policy volatile-lru
     ports:
       - "127.0.0.1:6380:6379"
