@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aicenty | Từ Thử AI đến Tin tưởng AI</title>
+  <meta name="description" content="Chúng tôi giúp doanh nghiệp xác định, xây dựng và ứng dụng AI thực sự tạo ra giá trị.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="aicenty-logo.png" as="image" type="image/png" fetchpriority="high">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --obsidian: #08080a;
+      --onyx: #040406;
+      --carbon: #121317;
+      --graphite: #1c1d22;
+      --slate: #2e3038;
+      --ash: #5e616e;
+      --steel: #777a88;
+      --fog: #9194a1;
+      --mist: #acafb9;
+      --silver: #c7c9d1;
+      --bone: #e2e3e9;
+      --paper: #fff;
+      --accent: #1712ff;
+      --accent-bright: #22d3ee;
+      --accent-soft: #5b8cff;
+      --headline: "Montserrat", Inter, ui-sans-serif, system-ui, sans-serif;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --max: 1216px;
+      --section: 82px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--obsidian); color: var(--bone); font-family: var(--sans); font-size: 16px; line-height: 1.5; }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; }
+    .wrap { width: min(var(--max), calc(100% - 48px)); margin: 0 auto; }
+    .eyebrow { color: var(--accent-bright); font-size: 13px; font-weight: 600; letter-spacing: .08em; line-height: 1; text-transform: uppercase; }
+    .serif { font-family: var(--headline); font-weight: 700; letter-spacing: -.02em; }
+    .muted { color: var(--fog); }
+    .hairline { border-top: 1px solid var(--graphite); }
+
+    .site-header { position: fixed; inset: 0 0 auto; z-index: 20; background: rgba(8,8,10,.9); border-bottom: 1px solid var(--graphite); backdrop-filter: blur(14px); }
+    .nav { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--paper); font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
+    .brand-logo { width: 172px; height: auto; display: block; }
+    .nav-links { display: flex; align-items: center; gap: 26px; color: var(--fog); font-size: 14px; }
+    .nav-links a { padding: 7px 0; }
+    .nav-links a:hover, .nav-links a:focus-visible { color: var(--paper); }
+    .nav-dropdown { position: relative; }
+    .nav-dropdown-toggle { display: inline-flex; align-items: center; gap: 8px; padding: 7px 0; border: 0; background: transparent; color: var(--fog); cursor: pointer; font: inherit; white-space: nowrap; }
+    .nav-dropdown-toggle::after { content: ""; width: 6px; height: 6px; margin-top: -3px; border-right: 1px solid var(--steel); border-bottom: 1px solid var(--steel); transform: rotate(45deg); transition: transform .2s, border-color .2s; }
+    .nav-dropdown.open .nav-dropdown-toggle, .nav-dropdown-toggle:hover, .nav-dropdown-toggle:focus-visible { color: var(--paper); }
+    .nav-dropdown.open .nav-dropdown-toggle::after, .nav-dropdown:hover .nav-dropdown-toggle::after, .nav-dropdown:focus-within .nav-dropdown-toggle::after { border-color: var(--accent-bright); transform: rotate(225deg); }
+    .nav-submenu { position: absolute; top: calc(100% + 10px); left: 50%; display: none; min-width: 230px; padding: 8px; background: var(--carbon); border: 1px solid var(--graphite); border-radius: 8px; transform: translateX(-50%); }
+    .nav-submenu::before { content: ""; position: absolute; top: -11px; left: 0; right: 0; height: 11px; }
+    .nav-dropdown.open .nav-submenu, .nav-dropdown:hover .nav-submenu, .nav-dropdown:focus-within .nav-submenu { display: grid; gap: 2px; }
+    .nav-submenu a { display: block; padding: 10px 12px; border-radius: 5px; color: var(--silver); white-space: nowrap; }
+    .nav-submenu a:hover, .nav-submenu a:focus-visible { background: var(--graphite); color: var(--paper); }
+    .nav-actions { display: flex; align-items: center; gap: 10px; }
+    .pill { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 9px 18px; border: 1px solid var(--paper); border-radius: 9999px; color: var(--paper); font-size: 14px; font-weight: 500; transition: background .2s, color .2s; }
+    .pill:hover, .pill:focus-visible { background: var(--paper); color: var(--onyx); }
+    .pill.ghost { border-color: var(--steel); color: var(--bone); }
+    .pill.ghost:hover, .pill.ghost:focus-visible { border-color: var(--paper); background: transparent; color: var(--paper); }
+    .nav-toggle { display: none; border: 0; background: transparent; color: var(--paper); font-size: 24px; }
+
+    .hero { min-height: 760px; padding: 190px 0 105px; display: grid; align-items: center; }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, .85fr); align-items: center; gap: 72px; }
+    .hero h1 { max-width: 720px; margin: 20px 0 28px; color: var(--paper); font-size: clamp(40px, 5.5vw, 68px); line-height: 1.06; }
+    .hero-copy { max-width: 580px; color: var(--mist); font-size: 20px; line-height: 1.42; }
+    .hero-copy strong { color: var(--bone); font-weight: 500; }
+    .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 34px; }
+    .hero-note { margin-top: 18px; color: var(--ash); font-size: 13px; }
+    .ledger { position: relative; min-height: 380px; padding: 26px; background: var(--onyx); border: 1px solid var(--graphite); border-radius: 10px; overflow: hidden; }
+    .ledger::after { content: ""; position: absolute; width: 260px; height: 260px; right: -90px; bottom: -120px; border: 1px solid rgba(23,18,255,.34); border-radius: 50%; }
+    .ledger-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 22px; border-bottom: 1px solid var(--graphite); }
+    .ledger-label { color: var(--fog); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+    .ledger-status { color: var(--accent-bright); font-size: 12px; }
+    .ledger-value { margin: 38px 0 10px; color: var(--paper); font-size: clamp(34px, 5vw, 52px); letter-spacing: -.04em; }
+    .ledger-caption { color: var(--fog); font-size: 14px; }
+    .ledger-rule { height: 1px; margin: 34px 0 24px; background: linear-gradient(90deg, var(--accent), transparent); }
+    .ledger-list { display: grid; gap: 14px; }
+    .ledger-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; color: var(--silver); font-size: 14px; }
+    .ledger-row span:last-child { color: var(--paper); }
+    .signal { display: inline-block; width: 7px; height: 7px; margin-right: 8px; border-radius: 50%; background: var(--accent-bright); }
+
+    .letter-section { padding: 72px 0 82px; background: var(--carbon); border-top: 1px solid var(--graphite); border-bottom: 1px solid var(--graphite); }
+    .letter-layout { display: grid; grid-template-columns: .42fr 1.08fr; gap: 90px; align-items: start; }
+    .letter-aside { position: sticky; top: 118px; }
+    .letter-aside h2 { max-width: 350px; margin: 0 0 22px; color: var(--paper); font-size: clamp(34px, 4vw, 48px); line-height: 1.08; }
+    .letter-aside p { max-width: 300px; margin: 0; color: var(--fog); font-size: 14px; }
+    .letter-body { max-width: 770px; }
+    .letter-body p { margin: 0 0 28px; color: var(--bone); font-size: 19px; line-height: 1.58; }
+    .letter-body p.lead { padding-left: 24px; border-left: 2px solid var(--accent); color: var(--paper); font-size: clamp(22px, 3vw, 30px); line-height: 1.38; }
+    .letter-body strong { color: var(--paper); font-weight: 800; }
+    .letter-body .letter-emphasis { margin: 32px 0; padding: 22px 0; border-top: 1px solid var(--slate); border-bottom: 1px solid var(--slate); color: var(--accent-bright); font-family: var(--headline); font-size: clamp(22px, 2.5vw, 32px); font-weight: 700; letter-spacing: -.02em; line-height: 1.22; }
+    .letter-body .letter-warning { color: var(--mist); }
+    .letter-equation { display: grid; gap: 10px; margin: 32px 0 40px; }
+    .letter-equation p { margin: 0; padding: 16px 18px; background: var(--onyx); border-left: 3px solid var(--accent); color: var(--paper); font-size: 18px; }
+    .letter-equation p:nth-child(2) { border-left-color: var(--steel); color: var(--mist); }
+    .letter-equation p:nth-child(3) { border-left-color: var(--accent-bright); }
+    .letter-steps { display: grid; gap: 0; margin: 24px 0 42px; border-top: 1px solid var(--slate); }
+    .letter-step { display: flex; align-items: center; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--graphite); color: var(--silver); font-size: 18px; }
+    .letter-step strong { color: var(--paper); }
+    .letter-step .step-mark { width: 30px; flex: 0 0 30px; color: var(--accent-bright); font-size: 13px; font-weight: 700; text-align: center; }
+    .letter-final { margin: 0 !important; padding: 22px 0 0; color: var(--paper) !important; font-family: var(--headline); font-size: clamp(22px, 2.5vw, 32px) !important; font-weight: 700; letter-spacing: -.02em; line-height: 1.26 !important; }
+
+    section { scroll-margin-top: 90px; }
+    .letter-section, .section, .contact, footer { content-visibility: auto; contain-intrinsic-size: 800px; }
+    .section { padding: var(--section) 0; }
+    .section-head { max-width: 760px; margin-bottom: 42px; }
+    .section-head.center { margin-right: auto; margin-left: auto; text-align: center; }
+    .section-head h2 { margin: 14px 0 18px; color: var(--paper); font-size: clamp(36px, 4.5vw, 52px); line-height: 1.1; }
+    .section-head p { margin: 0; color: var(--mist); font-size: 18px; }
+    .intro-grid { display: grid; grid-template-columns: 1.08fr .92fr; gap: 72px; align-items: start; }
+    .intro-grid p { margin: 0 0 20px; color: var(--bone); font-size: 20px; line-height: 1.5; }
+    .intro-grid p.muted { color: var(--mist); font-size: 18px; }
+    .manifesto { padding: 26px 0 0 28px; border-left: 1px solid var(--accent); }
+    .manifesto p { color: var(--paper); font-family: var(--headline); font-weight: 700; letter-spacing: -.02em; font-size: clamp(24px, 3vw, 34px); line-height: 1.2; }
+    .manifesto p:last-child { margin-bottom: 0; color: var(--accent-bright); }
+
+    .flow { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--slate); border-bottom: 1px solid var(--slate); }
+    .flow-item { min-height: 150px; padding: 24px 18px 22px 0; border-right: 1px solid var(--graphite); }
+    .flow-item + .flow-item { padding-left: 18px; }
+    .flow-item:last-child { border-right: 0; }
+    .flow-number { color: var(--accent-bright); font-size: 13px; }
+    .flow-item p { margin: 16px 0 0; color: var(--bone); font-size: 16px; }
+
+    .stage { display: grid; grid-template-columns: .7fr 1.3fr; gap: 56px; padding: 56px 0; border-top: 1px solid var(--graphite); }
+    .stage:last-child { border-bottom: 1px solid var(--graphite); }
+    .stage-index { color: var(--accent-bright); font-size: 13px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+    .stage h3 { margin: 14px 0 16px; color: var(--paper); font-size: clamp(30px, 3.5vw, 42px); line-height: 1.1; }
+    .stage-intro { margin: 0; color: var(--mist); font-size: 18px; }
+    .work-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; }
+    .work-item { padding: 0 0 24px; }
+    .work-item h4 { margin: 0 0 8px; color: var(--paper); font-size: 16px; font-weight: 600; line-height: 1.35; }
+    .work-item h4::before { content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 10px 3px 0; border: 1px solid var(--accent-bright); border-radius: 50%; }
+    .work-item p { margin: 0; color: var(--fog); font-size: 15px; }
+
+    .stories-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .story-card { min-height: 100%; display: flex; flex-direction: column; padding: 28px; background: var(--onyx); border: 1px solid var(--graphite); border-radius: 10px; }
+    .story-card::before { content: "“"; color: var(--accent-bright); font-family: var(--headline); font-weight: 800; font-size: 54px; line-height: .7; }
+    .story-quote { flex: 1; margin: 20px 0 30px; color: var(--bone); font-size: 17px; line-height: 1.58; }
+    .story-meta { padding-top: 18px; border-top: 1px solid var(--graphite); }
+    .story-name { margin: 0 0 5px; color: var(--paper); font-size: 16px; font-weight: 600; }
+    .story-company { margin: 0; color: var(--fog); font-size: 14px; line-height: 1.5; }
+    .story-company a { color: var(--accent-bright); }
+    .story-company a:hover { color: var(--paper); }
+
+    .faq-list { border-top: 1px solid var(--slate); }
+    .faq { border-bottom: 1px solid var(--graphite); }
+    .faq summary { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 25px 0; color: var(--paper); cursor: pointer; list-style: none; font-size: 18px; font-weight: 500; }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::after { content: "+"; color: var(--accent-bright); font-size: 24px; font-weight: 300; }
+    .faq[open] summary::after { content: "−"; }
+    .faq p { max-width: 840px; margin: -4px 44px 26px 0; color: var(--mist); font-size: 16px; }
+
+    .contact { padding: 74px 0; border-top: 1px solid var(--graphite); text-align: center; }
+    .contact h2 { max-width: 720px; margin: 0 auto 26px; color: var(--paper); font-size: clamp(36px, 4.5vw, 52px); line-height: 1.1; }
+    .contact-details { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; margin-top: 32px; color: var(--mist); font-size: 15px; }
+    .contact-details a:hover { color: var(--accent-bright); }
+    .contact-grid { display: grid; grid-template-columns: .85fr 1.15fr; gap: 88px; align-items: start; text-align: left; }
+    .contact-copy h2 { max-width: 540px; margin: 14px 0 22px; color: var(--paper); font-size: clamp(38px, 4.8vw, 56px); line-height: 1.08; }
+    .contact-copy > p { max-width: 470px; margin: 0; color: var(--mist); font-size: 18px; line-height: 1.5; }
+    .contact-copy .contact-details { justify-content: flex-start; margin-top: 34px; font-size: 14px; line-height: 1.5; }
+    .contact-form { display: grid; gap: 18px; padding: 28px; background: var(--onyx); border: 1px solid var(--graphite); border-radius: 10px; }
+    .contact-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .field { display: grid; gap: 8px; }
+    .field label { color: var(--silver); font-size: 13px; font-weight: 500; }
+    .field input, .field select, .field textarea { width: 100%; border: 1px solid var(--slate); border-radius: 6px; background-color: var(--carbon); color: var(--paper); color-scheme: dark; font: inherit; font-size: 15px; outline: none; padding: 12px 14px; transition: border-color .2s, background .2s; }
+    .field input { min-height: 46px; }
+    .field textarea { min-height: 132px; resize: vertical; }
+    .field input::placeholder, .field textarea::placeholder { color: var(--steel); }
+    .field select:invalid { color: var(--steel); }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent-bright); background: var(--onyx); }
+    .field select { appearance: none; padding-right: 42px; background-image: linear-gradient(45deg, transparent 50%, var(--accent-bright) 50%), linear-gradient(135deg, var(--accent-bright) 50%, transparent 50%); background-position: calc(100% - 20px) 20px, calc(100% - 15px) 20px; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; }
+    .field input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(79%) sepia(80%) saturate(1200%) hue-rotate(145deg) brightness(100%); cursor: pointer; }
+    .consent { display: flex; align-items: flex-start; gap: 10px; color: var(--fog); font-size: 13px; line-height: 1.5; }
+    .consent input { width: 17px; height: 17px; flex: 0 0 auto; margin-top: 2px; accent-color: var(--accent); }
+    .consent label { cursor: pointer; }
+    .form-submit { justify-self: start; border: 1px solid var(--paper); background: var(--paper); color: var(--onyx); cursor: pointer; }
+    .form-message { display: none; margin: 0; padding: 14px 16px; border: 1px solid rgba(34,211,238,.5); border-radius: 6px; background: rgba(23,18,255,.12); color: var(--bone); font-size: 14px; line-height: 1.5; }
+    .form-message.visible { display: block; }
+    footer { padding: 54px 0 34px; background: var(--onyx); border-top: 1px solid var(--graphite); }
+    .footer-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 40px; }
+    .footer-title { margin: 0 0 14px; color: var(--paper); font-size: 15px; font-weight: 600; }
+    .footer-copy { max-width: 360px; margin: 0; color: var(--fog); font-size: 14px; }
+    .footer-meta { margin-top: 32px; color: var(--ash); font-size: 12px; }
+    .footer-links { display: grid; gap: 9px; color: var(--fog); font-size: 14px; }
+    .footer-links a:hover { color: var(--paper); }
+    .copyright { display: flex; justify-content: space-between; gap: 20px; margin-top: 54px; padding-top: 20px; border-top: 1px solid var(--graphite); color: var(--ash); font-size: 12px; }
+
+    @media (max-width: 900px) {
+      .nav-links { display: none; position: absolute; top: 72px; left: 24px; right: 24px; padding: 18px; background: var(--carbon); border: 1px solid var(--graphite); border-radius: 10px; }
+      .nav-links.open { display: grid; gap: 2px; }
+      .nav-dropdown { display: grid; }
+      .nav-dropdown-toggle { justify-content: flex-start; width: 100%; padding: 10px 0; }
+      .nav-submenu { position: static; min-width: 0; margin: 0 0 4px 12px; padding: 4px 0 4px 12px; border-width: 0 0 0 1px; border-radius: 0; }
+      .nav-submenu a { padding: 8px 10px; font-size: 13px; }
+      .nav-dropdown:hover .nav-submenu, .nav-dropdown:focus-within .nav-submenu { display: none; }
+      .nav-dropdown.open .nav-submenu { display: grid; }
+      .nav-dropdown:hover .nav-dropdown-toggle::after, .nav-dropdown:focus-within .nav-dropdown-toggle::after { border-color: var(--steel); transform: rotate(45deg); }
+      .nav-dropdown.open .nav-dropdown-toggle::after { border-color: var(--accent-bright); transform: rotate(225deg); }
+      .nav-toggle { display: block; }
+      .hero-grid, .intro-grid, .stage { grid-template-columns: 1fr; gap: 42px; }
+      .letter-layout { grid-template-columns: 1fr; gap: 44px; }
+      .letter-aside { position: static; }
+      .hero { min-height: auto; padding-top: 145px; }
+      .flow { grid-template-columns: repeat(2, 1fr); }
+      .flow-item:nth-child(2) { border-right: 0; }
+      .flow-item:nth-child(n+3) { border-top: 1px solid var(--graphite); }
+      .flow-item:nth-child(5) { grid-column: span 2; border-right: 0; }
+    }
+    @media (max-width: 600px) {
+      .wrap { width: min(var(--max), calc(100% - 32px)); }
+      .nav { min-height: 64px; }
+      .nav-links { top: 64px; left: 16px; right: 16px; }
+      .nav-actions .ghost { display: none; }
+      .hero { padding: 126px 0 72px; }
+      .hero h1 { font-size: clamp(38px, 11vw, 54px); }
+      .hero-copy, .intro-grid p { font-size: 18px; }
+      .letter-section { padding: 64px 0; }
+      .letter-body p { font-size: 17px; }
+      .letter-body p.lead { padding-left: 18px; }
+      .letter-step { align-items: flex-start; font-size: 16px; }
+      .ledger { min-height: 340px; }
+      .section { padding: 60px 0; }
+      .section-head { margin-bottom: 36px; }
+      .section-head h2, .contact h2 { font-size: 34px; }
+      .flow { grid-template-columns: 1fr; }
+      .flow-item, .flow-item + .flow-item { min-height: auto; padding: 20px 0; border-right: 0; }
+      .flow-item:nth-child(n+2) { border-top: 1px solid var(--graphite); }
+      .flow-item:nth-child(5) { grid-column: auto; }
+      .work-list { grid-template-columns: 1fr; }
+      .stories-grid { grid-template-columns: 1fr; }
+      .contact-grid { grid-template-columns: 1fr; gap: 42px; }
+      .contact { padding: 60px 0; }
+      .stage { padding: 40px 0; }
+      .faq summary { font-size: 16px; }
+      .contact-form-grid { grid-template-columns: 1fr; }
+      .contact-form { padding: 20px; }
+      .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+      .copyright { display: grid; gap: 8px; margin-top: 36px; }
+      .nav { gap: 8px; }
+      .brand-logo { width: 132px; }
+      .nav-actions { gap: 6px; }
+      .nav-actions .pill { max-width: 160px; padding: 8px 10px; font-size: 12px; line-height: 1.2; white-space: normal; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav wrap" aria-label="Điều hướng chính">
+      <a class="brand" href="#top" aria-label="Aicenty trang chủ"><img class="brand-logo" src="aicenty-logo.png" alt="AICENTY" fetchpriority="high"></a>
+      <div class="nav-links" id="nav-links">
+        <a href="#gioi-thieu">Giới thiệu</a>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle" type="button" aria-expanded="false" aria-controls="solutions-menu">Giải Pháp</button>
+          <div class="nav-submenu" id="solutions-menu">
+            <a href="https://aicenty.com/login">Phần Mềm Aicenty AI</a>
+            <a href="#lien-he">Hệ Thống Agentic AI</a>
+          </div>
+        </div>
+        <a href="#xac-dinh">Phương pháp</a>
+        <a href="#cau-chuyen">Câu chuyện thành công</a>
+        <a href="#lien-he">Liên hệ</a>
+        <a href="#faq">FAQs</a>
+      </div>
+      <div class="nav-actions">
+        <a class="pill" href="#lien-he">Trao đổi với chúng tôi</a>
+        <button class="nav-toggle" type="button" aria-controls="nav-links" aria-expanded="false" aria-label="Mở menu">☰</button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-grid wrap">
+        <div>
+          <div class="eyebrow">… Từ việc Thử AI đến Tin tưởng AI.</div>
+          <h1 class="serif">Chúng tôi không chỉ nói về AI. Chúng tôi triển khai nó.</h1>
+          <p class="hero-copy">Chúng tôi giúp doanh nghiệp <strong>xác định các cơ hội AI thực sự có thể chuyển đổi hoạt động kinh doanh</strong>, sau đó xây dựng, triển khai và đào tạo đội ngũ của bạn sử dụng nó.</p>
+          <div class="hero-actions"><a class="pill" href="#lien-he">Trao đổi với chúng tôi</a></div>
+        </div>
+        <div class="ledger" aria-label="Quy trình Aicenty">
+          <div class="ledger-top"><span class="ledger-label">Aicenty / Operating model</span><span class="ledger-status"><span class="signal"></span>Ứng dụng</span></div>
+          <div class="ledger-value serif">3 giai đoạn</div>
+          <div class="ledger-caption">Xác định · Phát triển · Ứng dụng</div>
+          <div class="ledger-rule"></div>
+          <div class="ledger-list">
+            <div class="ledger-row"><span>Thu thập dữ liệu nội bộ</span><span>01</span></div>
+            <div class="ledger-row"><span>Chuyển dữ liệu thành cơ hội</span><span>02</span></div>
+            <div class="ledger-row"><span>Chuyển cơ hội thành ma trận ưu tiên</span><span>03</span></div>
+            <div class="ledger-row"><span>Chuyển lộ trình thành ROI tài chính</span><span>04</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="letter-section" id="la-thu">
+      <div class="wrap letter-layout">
+        <aside class="letter-aside">
+          <h2 class="serif">Đừng chạy theo công cụ AI.</h2>
+          <p>Hãy bắt đầu từ bài toán gốc rễ của doanh nghiệp.</p>
+        </aside>
+        <div class="letter-body">
+          <p class="lead">Hầu hết các tổ chức đều biết họ cần một chiến lược AI thông minh. Nhưng rất ít tổ chức biết cách xây dựng một chiến lược <strong>KHÔN NGOAN</strong> dựa trên hoạt động thực tế, được xác thực bởi những người làm việc trực tiếp, và thực tế về những gì có thể đạt được.</p>
+          <p>Đó chính là điều tạo nên sự khác biệt giữa chuyển đổi AI thực sự và suy nghĩ hão huyền.</p>
+          <p>Bạn nghe nhiều về AI. Bạn biết nó đang thay đổi mọi thứ. Nhưng bạn không biết bắt đầu từ đâu cho doanh nghiệp của mình. Hoặc bạn đã thử - mua một vài tool, cho nhân viên dùng ChatGPT - nhưng không thấy thay đổi gì rõ rệt. Hoặc bạn thấy đối thủ đang làm gì đó với AI và bạn lo lắng mình sẽ bị bỏ lại phía sau.</p>
+          <p>Dù lý do là gì, tôi muốn nói thẳng với bạn:</p>
+          <p class="letter-emphasis">AI không phải là phép màu.<br>AI không phải là con đường tắt.</p>
+          <p><strong>AI chính là HẠ TẦNG MỚI - NGUỒN ĐIỆN MỚI của Internet.</strong><br><strong>AI chính là HỆ TƯ DUY MỚI - CHIẾN LƯỢC MỚI cho doanh nhân thời đại số.</strong></p>
+          <p class="letter-warning">Hàng vạn công cụ AI sẽ được tạo ra và sẽ có rất nhiều xác chết Tool AI sẽ trôi vào bờ. Đừng chạy theo công cụ AI nữa, bạn sẽ quá tải và bị kiệt sức.</p>
+          <p><strong>PHẢI HIỂU RÕ BẢN CHẤT VÀ QUAY VỀ LẠI BÀI TOÁN GỐC RỄ CỦA DOANH NGHIỆP.</strong></p>
+          <div class="letter-equation">
+            <p><strong>Công cụ đúng + bài toán đúng = Kết quả khổng lồ.</strong></p>
+            <p><strong>Công cụ đúng + bài toán SAI = Phí tiền.</strong></p>
+            <p><strong>Aicenty giúp bạn tìm ra BÀI TOÁN ĐÚNG VÀ TẬP TRUNG VÀO BẢN CHẤT CỐT LÕI.</strong></p>
+          </div>
+          <p>Hiện nay có một thực trạng lặp đi lặp lại:</p>
+          <div class="letter-steps" aria-label="Chuỗi thất bại thường gặp khi áp dụng AI">
+            <div class="letter-step"><span class="step-mark">01</span><strong>Chủ Doanh nghiệp nghe về AI</strong></div>
+            <div class="letter-step"><span class="step-mark">↓</span><strong>Mua tool / thuê vendor</strong></div>
+            <div class="letter-step"><span class="step-mark">↓</span><strong>Triển khai</strong></div>
+            <div class="letter-step"><span class="step-mark">↓</span><strong>Thất bại.</strong></div>
+          </div>
+          <p>Tại sao? <strong>Vì họ BỎ QUA BƯỚC QUAN TRỌNG NHẤT:</strong></p>
+          <p class="letter-final"><strong>Đó là hiểu rõ vấn đề thực sự của doanh nghiệp trước khi bắt tay áp dụng AI.</strong></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="gioi-thieu">
+      <div class="wrap">
+        <div class="section-head"><div class="eyebrow">Giới thiệu Aicenty</div><h2 class="serif">AI thực sự tạo ra thay đổi rõ rệt.</h2></div>
+        <div class="intro-grid">
+          <div>
+            <p>Đó là lý do chúng tôi xây dựng <strong>Aicenty</strong>. AI thực sự tạo ra thay đổi rõ rệt. <strong>Aicenty</strong> xác định điều gì đáng để xây dựng, xây dựng nó cho bạn, rồi đào tạo đội ngũ của bạn để nó thực sự phát huy hiệu quả. Đừng trả tiền để thử nghiệm. Hãy trả tiền cho kết quả.</p>
+            <p class="muted">Mỗi ngày của chúng tôi xoay quanh ba điều : Chúng tôi giúp bạn <strong>xác định, xây dựng và ứng dụng AI</strong> thực sự tạo ra giá trị.</p>
+          </div>
+          <div class="manifesto"><p>AI đã ở đây.<br>Phần lớn sẽ chỉ phản ứng.<br>Số ít có kế hoạch sẽ dẫn đầu.</p><p>Chúng tôi xây dựng cho số ít đó.</p></div>
+        </div>
+        <div class="flow" style="margin-top:52px">
+          <div class="flow-item"><div class="flow-number">01</div><p>Thu thập dữ liệu nội bộ</p></div>
+          <div class="flow-item"><div class="flow-number">02</div><p>Chuyển dữ liệu thành cơ hội</p></div>
+          <div class="flow-item"><div class="flow-number">03</div><p>Chuyển cơ hội thành ma trận ưu tiên</p></div>
+          <div class="flow-item"><div class="flow-number">04</div><p>Chuyển ma trận thành lộ trình</p></div>
+          <div class="flow-item"><div class="flow-number">05</div><p>Chuyển lộ trình thành ROI tài chính</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="xac-dinh">
+      <div class="wrap"><div class="section-head"><div class="eyebrow">01 / Xác định</div><h2 class="serif">Quyết định điều gì thực sự đáng để xây dựng.</h2><p>Trước khi bắt đầu, chúng tôi đảm bảo sự đồng thuận. Chúng tôi dành thời gian hiểu cách công việc thực sự diễn ra trong tổ chức của bạn — nơi thời gian bị lãng phí, quyết định bị chậm lại và công việc thủ công chồng chất. Sau đó, chúng tôi thu hẹp lại còn một số ít cơ hội có thể tạo ra tác động thực tế, đo lường được.</p><p style="margin-top:16px">Giai đoạn này đảm bảo bạn không đoán mò — và không lãng phí thời gian xây sai thứ.</p></div>
+        <div class="stage"><div><div class="stage-index">Chúng tôi làm gì</div><h3 class="serif">Từ dữ liệu đến ưu tiên.</h3></div><div class="work-list">
+          <article class="work-item"><h4>Workshop Đồng thuận Đồng Lòng cùng Ban Lãnh đạo để thống nhất định hướng</h4><p>Giúp ban lãnh đạo thống nhất về ưu tiên, ràng buộc và định nghĩa rõ thành công là gì.</p></article>
+          <article class="work-item"><h4>Phỏng vấn Nhân viên &amp; Các bên liên quan</h4><p>Trao đổi với những người trực tiếp làm việc để phát hiện điểm nghẽn, sự kém hiệu quả và cơ hội tiềm ẩn.</p></article>
+          <article class="work-item"><h4>Mô hình ROI &amp; Thiết kế Business Case</h4><p>Kiểm chứng ý tưởng từ sớm và chỉ tập trung vào những gì xứng đáng để đầu tư.</p></article>
+          <article class="work-item"><h4>Bản đồ Ưu tiên</h4><p>Xếp hạng cơ hội theo mức độ tác động và công sức để mọi người biết nên bắt đầu từ đâu.</p></article>
+          <article class="work-item"><h4>Báo cáo Sẵn sàng AI &amp; Chẩn đoán</h4><p>Cái nhìn rõ ràng về những gì bạn sẵn sàng triển khai ngay, những gì cần cải thiện và những gì nên chờ.</p></article>
+        </div></div>
+      </div>
+    </section>
+
+    <section class="section" id="phat-trien">
+      <div class="wrap"><div class="section-head"><div class="eyebrow">02 / Phát triển</div><h2 class="serif">Xây đúng ngay từ đầu để hoạt động hiệu quả ngay ngày đầu tiên.</h2><p>Khi ưu tiên đã rõ ràng, chúng tôi bước vào triển khai. Đây là lúc chiến lược trở thành hiện thực. Chúng tôi thiết kế và xây dựng hệ thống AI tích hợp mượt mà vào công cụ và quy trình hiện có của bạn — được thiết kế cho độ tin cậy, bảo mật và ứng dụng thực tế.</p><p style="margin-top:16px">Không demo mong manh. Không dự án thử nghiệm nửa vời.</p></div>
+        <div class="stage"><div><div class="stage-index">Chúng tôi làm gì</div><h3 class="serif">Từ chiến lược đến hệ thống vận hành.</h3></div><div class="work-list">
+          <article class="work-item"><h4>Phạm vi &amp; Kiến trúc Kỹ thuật</h4><p>Chuyển ưu tiên thành kế hoạch xây dựng rõ ràng — xác định phạm vi, luồng dữ liệu, tích hợp và tiêu chí thành công ngay từ đầu.</p></article>
+          <article class="work-item"><h4>Tích hợp Dữ liệu &amp; Hệ thống</h4><p>Nhúng AI vào hệ thống hiện tại để phù hợp tự nhiên với cách công việc đang diễn ra.</p></article>
+          <article class="work-item"><h4>Từ Proof of Concept đến Hệ thống Vận hành</h4><p>Xây nhanh, thử nghiệm trong quy trình thực tế, sau đó hoàn thiện thành hệ thống sẵn sàng triển khai.</p></article>
+          <article class="work-item"><h4>Thiết kế Bảo mật, Quản trị &amp; Độ tin cậy</h4><p>Thiết lập kiểm soát truy cập, giám sát và cơ chế bảo vệ để hệ thống an toàn, có thể kiểm toán và đáng tin cậy.</p></article>
+          <article class="work-item"><h4>Tối ưu Hiệu suất</h4><p>Cải thiện độ chính xác, tốc độ và hiệu quả chi phí trước khi triển khai rộng rãi.</p></article>
+        </div></div>
+      </div>
+    </section>
+
+    <section class="section" id="ung-dung">
+      <div class="wrap"><div class="section-head"><div class="eyebrow">03 / Ứng dụng</div><h2 class="serif">Biến AI thành một phần thực sự của công việc hằng ngày.</h2><p>Xây dựng hệ thống AI xong không phải là thành công. Ứng dụng mới là thành công.</p><p style="margin-top:16px">Ở giai đoạn này, chúng tôi làm việc sát cánh với đội ngũ của bạn để đảm bảo hệ thống mới được hiểu rõ, tin tưởng và sử dụng mỗi ngày. Mục tiêu không phải là “bàn giao” — mà là quyền làm chủ.</p></div>
+        <div class="stage"><div><div class="stage-index">Chúng tôi làm gì</div><h3 class="serif">Từ triển khai đến quyền làm chủ.</h3></div><div class="work-list">
+          <article class="work-item"><h4>Triển khai Thử nghiệm &amp; Mở rộng Có kiểm soát</h4><p>Giới thiệu hệ thống một cách có chủ đích, thu thập phản hồi và tinh chỉnh trước khi mở rộng.</p></article>
+          <article class="work-item"><h4>Đào tạo Ứng dụng AI</h4><p>Huấn luyện thực hành để đội ngũ biết khi nào và cách sử dụng hệ thống đã xây dựng.</p></article>
+          <article class="work-item"><h4>Hỗ trợ Tích hợp vào Quy trình</h4><p>Đưa AI vào thói quen làm việc hiện tại mà không làm chậm ai.</p></article>
+          <article class="work-item"><h4>Theo dõi Hiệu suất &amp; Tối ưu Liên tục</h4><p>Đo lường tác động, cải tiến liên tục và củng cố kết quả đạt được.</p></article>
+        </div></div>
+      </div>
+    </section>
+
+    <section class="section" id="cau-chuyen">
+      <div class="wrap">
+        <div class="section-head center"><div class="eyebrow">Câu chuyện thành công</div><h2 class="serif">Cảm nhận từ khách hàng thực tế</h2></div>
+        <div class="stories-grid">
+          <article class="story-card">
+            <blockquote class="story-quote">Làm việc với Aicenty Team mang lại cảm giác rất an tâm vì luôn có người đồng hành giải quyết vấn đề. AI Automation được triển khai rất chuẩn đi từ kiểm toán AI để ra use case phải ưu tiên, rất hiệu quả và đúng nhu cầu doanh nghiệp mà chúng tôi đang gặp.</blockquote>
+            <div class="story-meta"><p class="story-name">Cẩm Vân</p><p class="story-company">Giám Đốc Công Ty TNHH May Mặc Kén Việt<br><a href="https://kenviet.vn" target="_blank" rel="noopener">kenviet.vn</a></p></div>
+          </article>
+          <article class="story-card">
+            <blockquote class="story-quote">Điều khác biệt ở Aicenty Team không nằm ở công nghệ AI, mà ở cách họ giúp đội ngũ chúng tôi tự tin làm chủ công nghệ đó. Từ đào tạo, triển khai đến vận hành đều được hướng dẫn rất sát sao và thực tế.</blockquote>
+            <div class="story-meta"><p class="story-name">Jack Chiang</p><p class="story-company">Giám Đốc Công Ty TNHH Xuất Nhập Khẩu Cheng Chiao<br>- <a href="https://chengchiao.com" target="_blank" rel="noopener">chengchiao.com</a></p></div>
+          </article>
+          <article class="story-card">
+            <blockquote class="story-quote">Không chỉ cung cấp giải pháp, các bạn còn đồng hành để tối ưu từng quy trình. Chuyên môn AI rất vững và phản hồi hỗ trợ luôn nhanh chóng.</blockquote>
+            <div class="story-meta"><p class="story-name">Kim Su</p><p class="story-company">Founder, ElevateY LLC — <a href="https://elevatey.co" target="_blank" rel="noopener">elevatey.co</a></p></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="faq">
+      <div class="wrap"><div class="section-head center"><div class="eyebrow">FAQs</div><h2 class="serif">Bạn có thắc mắc, hãy xem các câu hỏi thường gặp</h2></div><div class="faq-list">
+        <details class="faq"><summary>Aicenty khác gì so với các công ty AI khác?</summary><p>Chúng tôi ưu tiên chuyên môn về quy trình làm việc trước, chuyên môn về AI sau. Chúng tôi bắt đầu bằng việc hiểu cách đội ngũ của bạn thực sự làm việc, sau đó tái hình dung điều có thể với AI — mà không ép buộc bất kỳ công cụ hay nền tảng nào.<br><br>Chúng tôi không phụ thuộc công cụ, không phụ thuộc ngành, nhưng ám ảnh với kết quả.</p></details>
+        <details class="faq"><summary>Làm sao biết chúng tôi đã sẵn sàng cho AI?</summary><p>Bạn sẵn sàng nếu đang có các điểm đau rõ ràng, công việc lặp lại hoặc dữ liệu chưa được khai thác làm chậm tiến độ. Chúng tôi sẽ giúp bạn xác định điều gì nên tự động hóa — và điều gì không.</p></details>
+        <details class="faq"><summary>Sau khi bàn giao thì sao?</summary><p>Chúng tôi không bàn giao rồi biến mất. Chúng tôi đào tạo đội ngũ của bạn, theo dõi việc sử dụng và tinh chỉnh cho đến khi hệ thống vận hành trơn tru mà không cần chúng tôi.</p></details>
+        <details class="faq"><summary>Dự án này sẽ tốn bao nhiêu thời gian nội bộ?</summary><p>Chúng tôi hiểu bạn thuê chúng tôi để giảm tải cho đội ngũ. Vì vậy, chúng tôi giữ sự tham gia của đội ngũ ở mức tập trung và hiệu quả — đủ để nắm những điều quan trọng, phần còn lại chúng tôi xử lý.</p></details>
+        <details class="faq"><summary>Bao lâu thì thấy kết quả thực sự?</summary><p>Thông thường bạn sẽ có bản pilot hoạt động trong vài tuần, không phải vài tháng. Chúng tôi làm nhanh, thử sớm và chỉ mở rộng khi đã được chứng minh hiệu quả.</p></details>
+        <details class="faq"><summary>Chúng tôi không có dữ liệu sạch hoặc đội kỹ thuật lớn — vẫn làm được không?</summary><p>Câu hỏi này quá chung để trả lời cụ thể. Nếu bạn đang ở tình huống này, hãy trao đổi với chúng tôi.<br><br>Tóm lại: Chúng tôi làm việc với những gì bạn có, thiết kế dựa trên hệ thống hiện tại và đảm nhận phần kỹ thuật để đội ngũ của bạn tập trung vào công việc chính.</p></details>
+        <details class="faq"><summary>Chúng tôi đã từng thử AI nhưng không thành công. Tại sao lần này sẽ khác?</summary><p>Phần lớn thất bại vì bắt đầu sai use case hoặc dừng lại ở mức prototype.<br><br>Chúng tôi chỉ tập trung vào những gì đáng để xây dựng và đồng hành đến giai đoạn ứng dụng — để hệ thống thực sự được triển khai và tạo ra kết quả.</p></details>
+      </div></div>
+    </section>
+
+    <section class="contact" id="lien-he">
+      <div class="wrap contact-grid">
+        <div class="contact-copy">
+          <div class="eyebrow">Liên hệ ngay</div>
+          <h2 class="serif">Bắt đầu hành trình với Aicenty</h2>
+          <p>Chia sẻ bài toán doanh nghiệp đang gặp. Đội ngũ Aicenty sẽ cùng bạn xác định cơ hội AI phù hợp và tư vấn bước tiếp theo.</p>
+          <div class="contact-details"><span>Điện thoại <a href="tel:+84918852101">0918 852 101</a> - <a href="tel:+84981224739">0981 224 739</a></span><span>Email : <a href="mailto:ai@aicenty.com">ai@aicenty.com</a></span><span>Địa chỉ 229/3/24B Lê Quang Định, Phường Gia Định, TPHCM</span></div>
+        </div>
+        <form class="contact-form" id="contact-form">
+          <div class="contact-form-grid">
+            <div class="field"><label for="contact-name">Họ và tên</label><input id="contact-name" name="name" type="text" autocomplete="name" placeholder="Nhập họ và tên" required></div>
+            <div class="field"><label for="contact-email">Email</label><input id="contact-email" name="email" type="email" autocomplete="email" placeholder="ten@congty.vn" required></div>
+            <div class="field"><label for="contact-phone">Số điện thoại</label><input id="contact-phone" name="phone" type="tel" autocomplete="tel" placeholder="0912 345 678" required></div>
+            <div class="field"><label for="contact-title">Chức danh</label><input id="contact-title" name="title" type="text" autocomplete="organization-title" placeholder="Ví dụ: Giám đốc" required></div>
+            <div class="field"><label for="contact-date">Ngày muốn trao đổi</label><input id="contact-date" name="date" type="date" required></div>
+            <div class="field"><label for="contact-time">Khung giờ mong muốn</label><select id="contact-time" name="time" required><option value="" selected disabled>Chọn khung giờ</option><option>08:00 - 09:00</option><option>09:00 - 10:00</option><option>10:00 - 11:00</option><option>14:00 - 15:00</option><option>15:00 - 16:00</option><option>16:00 - 17:00</option></select></div>
+          </div>
+          <div class="field"><label for="contact-problem">Mô tả vấn đề doanh nghiệp đang gặp</label><textarea id="contact-problem" name="problem" placeholder="Mô tả ngắn về quy trình, điểm nghẽn hoặc cơ hội bạn muốn cải thiện" required></textarea></div>
+          <div class="consent"><input id="contact-consent" name="consent" type="checkbox" required><label for="contact-consent">Tôi đồng ý để Aicenty dùng thông tin trên để liên hệ và tư vấn cho tôi về chương trình, theo Chính sách bảo vệ dữ liệu cá nhân.)</label></div>
+          <button class="pill form-submit" type="submit">Giữ chỗ buổi AI Growth Call 30 phút</button>
+          <p class="form-message" id="form-message" role="status" aria-live="polite" tabindex="-1">Chúng tôi đã nhận được yêu cầu của bạn, đội ngũ Aicenty sẽ gọi lại trong vòng 24h tới. Xin cảm ơn</p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="wrap"><div class="footer-grid"><div><div class="brand"><img class="brand-logo" src="aicenty-logo.png" alt="AICENTY" loading="lazy"></div><p class="footer-copy" style="margin-top:18px">Chúng tôi giúp doanh nghiệp xác định, xây dựng và ứng dụng AI thực sự tạo ra giá trị.</p><p class="footer-meta">Mã số thuế 0318799440</p></div><div><h2 class="footer-title">Thông tin</h2><div class="footer-links"><a href="#gioi-thieu">Giới thiệu Aicenty</a><a href="#xac-dinh">Phương pháp</a><a href="#cau-chuyen">Câu chuyện thành công</a><a href="#lien-he">Liên hệ</a></div></div><div><h2 class="footer-title">Liên hệ</h2><div class="footer-links"><span>Điện thoại 0918 852 101 - 0981 224 739</span><a href="mailto:ai@aicenty.com">Email : ai@aicenty.com</a><span>Địa chỉ 229/3/24B Lê Quang Định, Phường Gia Định, TPHCM</span></div></div></div><div class="copyright"><span>CÔNG TY CỔ PHẦN THƯƠNG MẠI HNKT</span><span>© Aicenty</span></div></div></footer>
+  <script>
+    const toggle = document.querySelector('.nav-toggle');
+    const links = document.querySelector('#nav-links');
+    toggle?.addEventListener('click', () => {
+      const open = links.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+    links?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
+      links.classList.remove('open');
+      toggle?.setAttribute('aria-expanded', 'false');
+      document.querySelectorAll('.nav-dropdown.open').forEach((dropdown) => {
+        dropdown.classList.remove('open');
+        dropdown.querySelector('.nav-dropdown-toggle')?.setAttribute('aria-expanded', 'false');
+      });
+    }));
+    document.querySelectorAll('.nav-dropdown-toggle').forEach((button) => button.addEventListener('click', () => {
+      const dropdown = button.closest('.nav-dropdown');
+      const open = dropdown.classList.toggle('open');
+      button.setAttribute('aria-expanded', String(open));
+    }));
+    const contactForm = document.querySelector('#contact-form');
+    const formMessage = document.querySelector('#form-message');
+    const contactDate = document.querySelector('#contact-date');
+    if (contactDate) {
+      const today = new Date();
+      const localToday = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+      contactDate.min = localToday;
+    }
+    contactForm?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (!contactForm.checkValidity()) {
+        contactForm.reportValidity();
+        return;
+      }
+      contactForm.reset();
+      formMessage?.classList.add('visible');
+      formMessage?.focus?.();
+    });
+  </script>
+</body>
+</html>

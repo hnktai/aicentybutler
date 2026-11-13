@@ -1,0 +1,258 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Một AI hữu ích phải biết lúc nào cần dừng lại hỏi người | Aicenty</title><meta name="description" content="Agent đáng tin cần giới hạn hành động và đường chuyển cho người xử lý. Người mới có thể thiết kế ba mức: tự làm, trình duyệt, dừng lại."><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"><meta name="theme-color" content="#08080a"><meta name="author" content="Lê Quang Cường - CAIO & Co-Founder Aicenty">
+<link rel="canonical" href="https://aicenty.com/news/khi-nao-ai-phai-dung-lai-hoi-nguoi"><link rel="alternate" hreflang="vi-VN" href="https://aicenty.com/news/khi-nao-ai-phai-dung-lai-hoi-nguoi"><link rel="alternate" hreflang="x-default" href="https://aicenty.com/news/khi-nao-ai-phai-dung-lai-hoi-nguoi"><link rel="icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:type" content="article"><meta property="og:site_name" content="Aicenty"><meta property="og:locale" content="vi_VN"><meta property="og:title" content="Một AI hữu ích phải biết lúc nào cần dừng lại hỏi người | Aicenty"><meta property="og:description" content="Agent đáng tin cần giới hạn hành động và đường chuyển cho người xử lý. Người mới có thể thiết kế ba mức: tự làm, trình duyệt, dừng lại."><meta property="og:url" content="https://aicenty.com/news/khi-nao-ai-phai-dung-lai-hoi-nguoi">
+<meta property="og:image" content="https://aicenty.com/assets/news/khi-nao-ai-phai-dung-lai-hoi-nguoi-guide300.jpg"><meta property="og:image:secure_url" content="https://aicenty.com/assets/news/khi-nao-ai-phai-dung-lai-hoi-nguoi-guide300.jpg"><meta property="og:image:type" content="image/jpeg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Một AI hữu ích phải biết lúc nào cần dừng lại hỏi người | Aicenty">
+<link rel="image_src" href="https://aicenty.com/assets/news/khi-nao-ai-phai-dung-lai-hoi-nguoi-guide300.jpg">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Một AI hữu ích phải biết lúc nào cần dừng lại hỏi người | Aicenty"><meta name="twitter:description" content="Agent đáng tin cần giới hạn hành động và đường chuyển cho người xử lý. Người mới có thể thiết kế ba mức: tự làm, trình duyệt, dừng lại."><meta name="twitter:image" content="https://aicenty.com/assets/news/khi-nao-ai-phai-dung-lai-hoi-nguoi-guide300.jpg"><meta name="twitter:image:alt" content="Một AI hữu ích phải biết lúc nào cần dừng lại hỏi người | Aicenty"><meta property="article:published_time" content="2026-10-24T14:15:00+07:00"><meta property="article:modified_time" content="2026-10-24T14:15:00+07:00"><meta property="article:section" content="Agentic AI">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/assets/news/news.css?v=20261024-guide300"><link rel="preload" as="image" href="/aicenty-logo.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": [
+        "Organization",
+        "ProfessionalService"
+      ],
+      "@id": "https://aicenty.com/#organization",
+      "name": "Aicenty",
+      "url": "https://aicenty.com/",
+      "logo": "https://aicenty.com/aicenty-logo.png",
+      "image": "https://aicenty.com/aicenty-home-og.png",
+      "email": "ai@aicenty.com",
+      "telephone": [
+        "+84918852101",
+        "+84981224739"
+      ],
+      "taxID": "0318799440",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "229/3/24B Lê Quang Định, Phường Gia Định",
+        "addressLocality": "Thành phố Hồ Chí Minh",
+        "addressCountry": "VN"
+      },
+      "areaServed": {
+        "@type": "Country",
+        "name": "Việt Nam"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "tư vấn",
+        "telephone": "+84918852101",
+        "email": "ai@aicenty.com",
+        "availableLanguage": "Vietnamese"
+      },
+      "sameAs": [
+        "https://facebook.com/aicenty",
+        "https://youtube.com/@aicenty"
+      ],
+      "legalName": "CÔNG TY CỔ PHẦN THƯƠNG MẠI HNKT",
+      "alternateName": [
+        "Aicenty AI",
+        "CÔNG TY CỔ PHẦN THƯƠNG MẠI HNKT - AICENTY"
+      ],
+      "founder": [
+        {
+          "@type": "Person",
+          "name": "Nguyễn Thanh Hùng",
+          "jobTitle": "CEO & Founder",
+          "email": "hnkt@hnkt.vn",
+          "worksFor": {
+            "@id": "https://aicenty.com/#organization"
+          }
+        },
+        {
+          "@type": "Person",
+          "name": "Lê Quang Cường",
+          "jobTitle": "CAIO & Co-Founder",
+          "email": "striverle@gmail.com",
+          "worksFor": {
+            "@id": "https://aicenty.com/#organization"
+          }
+        }
+      ],
+      "parentOrganization": {
+        "@type": "Organization",
+        "name": "HNKT Trading JSC",
+        "legalName": "CÔNG TY CỔ PHẦN THƯƠNG MẠI HNKT",
+        "url": "https://hnkt.vn"
+      },
+      "knowsAbout": [
+        "Trí tuệ nhân tạo (AI)",
+        "Agentic AI",
+        "Doanh nghiệp một người (OPC)",
+        "Tự động hóa doanh nghiệp",
+        "Chuẩn hóa quy trình SOP"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://aicenty.com/#website",
+      "url": "https://aicenty.com/",
+      "name": "Aicenty",
+      "inLanguage": "vi-VN",
+      "publisher": {
+        "@id": "https://aicenty.com/#organization"
+      }
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://aicenty.com/news/khi-nao-ai-phai-dung-lai-hoi-nguoi#webpage",
+      "url": "https://aicenty.com/news/khi-nao-ai-phai-dung-lai-hoi-nguoi",
+      "name": "Một AI hữu ích phải biết lúc nào cần dừng lại hỏi người",
+      "description": "Agent đáng tin cần giới hạn hành động và đường chuyển cho người xử lý. Người mới có thể thiết kế ba mức: tự làm, trình duyệt, dừng lại.",
+      "inLanguage": "vi-VN",
+      "dateModified": "2026-10-27T16:00:00+07:00",
+      "isPartOf": {
+        "@id": "https://aicenty.com/#website"
+      },
+      "mainEntity": {
+        "@id": "https://aicenty.com/news/khi-nao-ai-phai-dung-lai-hoi-nguoi#article"
+      },
+      "breadcrumb": {
+        "@id": "https://aicenty.com/news/khi-nao-ai-phai-dung-lai-hoi-nguoi#breadcrumb"
+      },
+      "speakable": {
+        "@type": "SpeakableSpecification",
+        "cssSelector": [
+          ".article-header h1",
+          ".article-summary",
+          ".article-hook",
+          ".owner-takeaway"
+        ]
+      }
+    },
+    {
+      "@type": "BlogPosting",
+      "@id": "https://aicenty.com/news/khi-nao-ai-phai-dung-lai-hoi-nguoi#article",
+      "url": "https://aicenty.com/news/khi-nao-ai-phai-dung-lai-hoi-nguoi",
+      "headline": "Một AI hữu ích phải biết lúc nào cần dừng lại hỏi người",
+      "description": "Agent đáng tin cần giới hạn hành động và đường chuyển cho người xử lý. Người mới có thể thiết kế ba mức: tự làm, trình duyệt, dừng lại.",
+      "image": {
+        "@type": "ImageObject",
+        "url": "https://aicenty.com/assets/news/khi-nao-ai-phai-dung-lai-hoi-nguoi-guide300.jpg",
+        "width": 1200,
+        "height": 630
+      },
+      "datePublished": "2026-10-24T14:15:00+07:00",
+      "dateModified": "2026-10-27T16:00:00+07:00",
+      "inLanguage": "vi-VN",
+      "author": {
+        "@type": "Person",
+        "name": "Lê Quang Cường",
+        "jobTitle": "CAIO & Co-Founder",
+        "worksFor": {
+          "@id": "https://aicenty.com/#organization"
+        }
+      },
+      "publisher": {
+        "@id": "https://aicenty.com/#organization"
+      },
+      "mainEntityOfPage": {
+        "@id": "https://aicenty.com/news/khi-nao-ai-phai-dung-lai-hoi-nguoi#webpage"
+      },
+      "isPartOf": {
+        "@id": "https://aicenty.com/news#blog"
+      },
+      "articleSection": "Agentic AI",
+      "articleBody": "AI nên dừng khi thiếu thông tin, gặp yêu cầu ngoài quy định hoặc sắp làm việc khó thu hồi. Khả năng hỏi đúng lúc giúp doanh nghiệp tránh lỗi. Trả lời tự tin chưa đủ để được giao việc.\n\nKhách mua hàng đã quá hạn nhưng nói sản phẩm có lỗi. Nếu AI chỉ nhìn ngày mua, nó có thể từ chối máy móc. Nếu cố làm khách vui, nó có thể hứa hoàn tiền ngoài thẩm quyền.\n\nCách xử lý phù hợp là ghi nhận thông tin, hỏi bằng chứng cần thiết và chuyển người chịu trách nhiệm. Khách được tiếp nhận, doanh nghiệp vẫn giữ quyền quyết định.\n\nĐược tự làm: trả lời thông tin đã duyệt, ghi nhận yêu cầu, tổng hợp dữ liệu. Các bước này cần có nguồn rõ ràng.\n\nPhải trình duyệt: giảm giá, hẹn tiến độ, gửi báo giá hoặc sửa thông tin khách. Người duyệt thấy nội dung trước khi xác nhận.\n\nPhải dừng lại: không tìm thấy chính sách, yêu cầu mâu thuẫn, dữ liệu nhạy cảm hoặc thao tác vượt quyền được cấp.\n\nĐừng chỉ ghi trong hướng dẫn rằng “hãy hỏi quản lý”. Cần xác định người nào nhận, nhận ở đâu và làm gì nếu chưa có phản hồi.\n\nHãy thử bằng một yêu cầu ngoài quy định. Kiểm tra người phụ trách có nhận được đủ thông tin để xử lý tiếp, hay phải hỏi khách lại từ đầu.\n\nThông báo hợp tác Barclays ngày 01/10/2026 nhấn mạnh quản trị và giám sát con người. Với doanh nghiệp nhỏ, nguyên tắc này bắt đầu bằng việc phân quyền rõ. Bạn có thể tăng phạm vi cho AI sau khi thấy nó xử lý ổn định, thay vì trao toàn quyền rồi tìm cách sửa hậu quả.",
+      "wordCount": 300,
+      "citation": {
+        "@type": "CreativeWork",
+        "name": "Barclays scales Claude to upgrade operations and improve client experience ",
+        "url": "https://www.anthropic.com/news/barclays-scales-claude",
+        "datePublished": "2026-10-01",
+        "publisher": {
+          "@type": "Organization",
+          "name": "Anthropic"
+        }
+      },
+      "editor": {
+        "@type": "Person",
+        "name": "Nguyễn Thanh Hùng",
+        "jobTitle": "CEO & Founder Aicenty"
+      },
+      "speakable": {
+        "@type": "SpeakableSpecification",
+        "cssSelector": [
+          ".article-header h1",
+          ".article-summary",
+          ".article-hook",
+          ".owner-takeaway"
+        ]
+      },
+      "about": [
+        {
+          "@type": "Thing",
+          "name": "Agentic AI"
+        },
+        {
+          "@type": "Thing",
+          "name": "AI Agent cho doanh nghiệp"
+        }
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://aicenty.com/news/khi-nao-ai-phai-dung-lai-hoi-nguoi#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Trang chủ",
+          "item": "https://aicenty.com/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Tin tức",
+          "item": "https://aicenty.com/news"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Một AI hữu ích phải biết lúc nào cần dừng lại hỏi người",
+          "item": "https://aicenty.com/news/khi-nao-ai-phai-dung-lai-hoi-nguoi"
+        }
+      ]
+    }
+  ]
+}
+</script>  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-E46NPQ9KGN"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-E46NPQ9KGN');
+  </script></head><body class="news-site"><a class="skip-link" href="#main-content">Đến nội dung chính</a><header class="site-header">
+    <nav class="nav wrap" aria-label="Điều hướng chính">
+      <a class="brand" href="/" aria-label="Aicenty trang chủ"><img class="brand-logo" width="531" height="80" src="/aicenty-logo.png" alt="AICENTY" fetchpriority="high"></a>
+      <div class="nav-links" id="nav-links">
+        <a href="https://aicenty.com/#gioi-thieu">Giới thiệu</a>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle" type="button" aria-expanded="false" aria-controls="solutions-menu">Giải Pháp</button>
+          <div class="nav-submenu" id="solutions-menu">
+            <a href="https://aicenty.com/ai/">Phần Mềm Aicenty AI</a>
+            <a href="https://aicenty.com/#agentic-ai">Hệ Thống Agentic AI</a>
+            <a href="/opc">Doanh nghiệp một người</a>
+            <a href="/butler">Quản Gia Gia Đình (Aicenty Butler)</a>
+          </div>
+        </div>
+        <a href="https://aicenty.com/#xac-dinh">Phương pháp</a>
+        <a href="/news">Tin tức</a>
+        <a href="/partner">Đối tác</a>
+        <a href="/news" aria-current="page">Tin tức</a>
+        <a href="https://aicenty.com/#cau-chuyen">Câu chuyện thành công</a>
+        <a href="https://aicenty.com/#lien-he">Liên hệ</a>
+        <a href="https://aicenty.com/#faq">FAQs</a>
+      </div>
+      <div class="nav-actions">
+        <a class="pill" href="https://aicenty.com/#lien-he">Trao đổi với chúng tôi</a>
+        <button class="nav-toggle" type="button" aria-controls="nav-links" aria-expanded="false" aria-label="Mở menu">☰</button>
+      </div>
+    </nav>
+  </header><main id="main-content" class="article-shell"><div class="wrap"><nav class="breadcrumbs" aria-label="Đường dẫn"><a href="/">Trang chủ</a><span aria-hidden="true">/</span><a href="/news">Tin tức</a><span aria-hidden="true">/</span><a href="/news#agentic-ai">Agentic AI</a></nav><div class="article-layout"><article style="--category:#b5a0ff"><header class="article-header"><div class="eyebrow" style="color:#b5a0ff">Agentic AI / Quyền quyết định và điểm dừng</div><h1>Một AI hữu ích phải biết lúc nào cần dừng lại hỏi người</h1><p class="article-summary" itemprop="abstract">Agent đáng tin cần giới hạn hành động và đường chuyển cho người xử lý. Người mới có thể thiết kế ba mức: tự làm, trình duyệt, dừng lại.</p><div class="article-meta"><span class="article-author">Tác giả: Aicenty Team</span><span>Đăng <time datetime="2026-10-24T14:15:00+07:00">24/10/2026</time></span><span>3 phút đọc</span><span>Cập nhật 24/10/2026</span></div></header><figure class="article-cover"><picture><source srcset="/assets/news/khi-nao-ai-phai-dung-lai-hoi-nguoi-guide300.webp 640w, /assets/news/khi-nao-ai-phai-dung-lai-hoi-nguoi-guide300-1200.webp 1200w" sizes="(max-width:600px) calc(100vw - 32px), (max-width:800px) calc(100vw - 48px), (max-width:1100px) calc(100vw - 330px), 800px" type="image/webp"><img src="/assets/news/khi-nao-ai-phai-dung-lai-hoi-nguoi-guide300.jpg" width="1200" height="630" alt="Một AI hữu ích phải biết lúc nào cần dừng lại hỏi người" decoding="async" fetchpriority="high"></picture></figure><div class="article-body"><p class="article-hook">AI nên dừng khi thiếu thông tin, gặp yêu cầu ngoài quy định hoặc sắp làm việc khó thu hồi. Khả năng hỏi đúng lúc giúp doanh nghiệp tránh lỗi. Trả lời tự tin chưa đủ để được giao việc.</p><h2 id="goc-nhin-1">Hãy nghĩ tới một yêu cầu đổi trả</h2><p>Khách mua hàng đã quá hạn nhưng nói sản phẩm có lỗi. Nếu AI chỉ nhìn ngày mua, nó có thể từ chối máy móc. Nếu cố làm khách vui, nó có thể hứa hoàn tiền ngoài thẩm quyền.</p><p>Cách xử lý phù hợp là ghi nhận thông tin, hỏi bằng chứng cần thiết và chuyển người chịu trách nhiệm. Khách được tiếp nhận, doanh nghiệp vẫn giữ quyền quyết định.</p><h2 id="goc-nhin-2">Chia quyền thành ba mức</h2><ol class="action-steps"><li><strong>Được tự làm:</strong> trả lời thông tin đã duyệt, ghi nhận yêu cầu, tổng hợp dữ liệu. Các bước này cần có nguồn rõ ràng.</li><li><strong>Phải trình duyệt:</strong> giảm giá, hẹn tiến độ, gửi báo giá hoặc sửa thông tin khách. Người duyệt thấy nội dung trước khi xác nhận.</li><li><strong>Phải dừng lại:</strong> không tìm thấy chính sách, yêu cầu mâu thuẫn, dữ liệu nhạy cảm hoặc thao tác vượt quyền được cấp.</li></ol><h2 id="goc-nhin-3">Đường chuyển cho người phải chạy được</h2><p>Đừng chỉ ghi trong hướng dẫn rằng “hãy hỏi quản lý”. Cần xác định người nào nhận, nhận ở đâu và làm gì nếu chưa có phản hồi.</p><p>Hãy thử bằng một yêu cầu ngoài quy định. Kiểm tra người phụ trách có nhận được đủ thông tin để xử lý tiếp, hay phải hỏi khách lại từ đầu.</p><p class="owner-takeaway"><span class="owner-takeaway-label">Điểm người chủ cần giữ</span>Thông báo hợp tác Barclays ngày 01/10/2026 nhấn mạnh quản trị và giám sát con người. Với doanh nghiệp nhỏ, nguyên tắc này bắt đầu bằng việc phân quyền rõ. Bạn có thể tăng phạm vi cho AI sau khi thấy nó xử lý ổn định, thay vì trao toàn quyền rồi tìm cách sửa hậu quả.</p></div><div class="article-action"><a href="https://aicenty.com/#lien-he">Trao đổi với Aicenty để xác định những điểm AI cần xin duyệt trong quy trình của bạn. <span aria-hidden="true">↗</span></a></div><section class="source-block" id="nguon"><h2>Nguồn kiểm chứng</h2><a href="https://www.anthropic.com/news/barclays-scales-claude" target="_blank" rel="noopener noreferrer">Barclays scales Claude to upgrade operations and improve client experience  ↗</a><p>Anthropic · Công bố <time datetime="2026-10-01">01/10/2026</time> · Đối chiếu ngày 24/10/2026.</p><p>Phần phân tích và gợi ý triển khai là góc nhìn của Aicenty. Các tình huống kinh doanh dùng để minh họa, không phải báo cáo kết quả khách hàng. Kiểm tra thông báo gốc về tính năng và điều kiện sử dụng trước khi áp dụng.</p></section></article><aside class="article-aside"><h2>Trong bài này</h2><a href="#goc-nhin-1">Hãy nghĩ tới một yêu cầu đổi trả</a><a href="#goc-nhin-2">Chia quyền thành ba mức</a><a href="#goc-nhin-3">Đường chuyển cho người phải chạy được</a><a href="#nguon">Nguồn kiểm chứng</a><a href="/news#agentic-ai">Xem chuyên mục Agentic AI</a><a class="aside-cta" href="https://aicenty.com/#lien-he">Tư vấn ứng dụng AI ↗</a></aside></div><section class="related"><h2 class="serif">Đọc tiếp cùng chủ đề</h2><div class="article-grid"><article class="news-card" data-search="Giao việc cho AI: viết rõ kết quả thay vì săn câu lệnh thần kỳ Một bản giao việc tốt cho AI cần bối cảnh, dữ liệu, kết quả và giới hạn. Mẫu giới thiệu sản phẩm giúp người mới áp dụng ngay mà không cần thuật ngữ. Agentic AI Viết bản giao việc dễ hiểu" style="--category:#b5a0ff"><a class="card-media" href="/news/cach-giao-viec-cho-ai-nguoi-moi" tabindex="-1" aria-hidden="true"><img src="/assets/news/cach-giao-viec-cho-ai-nguoi-moi-guide300.webp" alt="" width="640" height="336" loading="lazy" decoding="async"></a><div class="card-copy"><div class="card-meta"><span>Viết bản giao việc dễ hiểu</span><time datetime="2026-10-24">24/10/2026</time></div><h3><a href="/news/cach-giao-viec-cho-ai-nguoi-moi">Giao việc cho AI: viết rõ kết quả thay vì săn câu lệnh thần kỳ</a></h3><p>Một bản giao việc tốt cho AI cần bối cảnh, dữ liệu, kết quả và giới hạn. Mẫu giới thiệu sản phẩm giúp người mới áp dụng ngay mà không cần thuật ngữ.</p><div class="card-bottom"><span>Hướng dẫn ứng dụng</span><a href="/news/cach-giao-viec-cho-ai-nguoi-moi" aria-label="Đọc bài: Giao việc cho AI: viết rõ kết quả thay vì săn câu lệnh thần kỳ">Đọc bài <span aria-hidden="true">↗</span></a></div></div></article><article class="news-card" data-search="Thử AI trong bảy ngày: đo việc xong, đừng chỉ đo câu trả lời hay Một thử nghiệm bảy ngày giúp kiểm tra AI trên công việc nhỏ. So thời gian, độ đúng và công sức sửa trước khi quyết định đầu tư tiếp. Agentic AI Thử nhỏ, đo rõ" style="--category:#b5a0ff"><a class="card-media" href="/news/thu-ai-agent-trong-bay-ngay" tabindex="-1" aria-hidden="true"><img src="/assets/news/thu-ai-agent-trong-bay-ngay-guide300.webp" alt="" width="640" height="336" loading="lazy" decoding="async"></a><div class="card-copy"><div class="card-meta"><span>Thử nhỏ, đo rõ</span><time datetime="2026-10-24">24/10/2026</time></div><h3><a href="/news/thu-ai-agent-trong-bay-ngay">Thử AI trong bảy ngày: đo việc xong, đừng chỉ đo câu trả lời hay</a></h3><p>Một thử nghiệm bảy ngày giúp kiểm tra AI trên công việc nhỏ. So thời gian, độ đúng và công sức sửa trước khi quyết định đầu tư tiếp.</p><div class="card-bottom"><span>Hướng dẫn ứng dụng</span><a href="/news/thu-ai-agent-trong-bay-ngay" aria-label="Đọc bài: Thử AI trong bảy ngày: đo việc xong, đừng chỉ đo câu trả lời hay">Đọc bài <span aria-hidden="true">↗</span></a></div></div></article></div></section></div></main><footer><div class="wrap"><div class="footer-grid"><div><div class="brand"><img class="brand-logo" width="531" height="80" src="/aicenty-logo.png" alt="AICENTY" loading="lazy"></div><p class="footer-copy" style="margin-top:18px">Chúng tôi giúp doanh nghiệp xác định, xây dựng và ứng dụng AI thực sự tạo ra giá trị.</p><p class="footer-meta">Mã số thuế 0318799440</p></div><div><h2 class="footer-title">Thông tin</h2><div class="footer-links"><a href="https://aicenty.com/#gioi-thieu">Giới thiệu Aicenty</a><a href="https://aicenty.com/#xac-dinh">Phương pháp</a><a href="https://aicenty.com/#agentic-ai">Hệ Thống Agentic AI</a><a href="/opc">Doanh nghiệp một người</a>
+            <a href="/butler">Quản Gia Gia Đình (Aicenty Butler)</a><a href="/news">Tin tức AI</a><a href="/partner">Chương trình Đối tác</a><a href="/news">Tin tức AI</a><a href="https://aicenty.com/#cau-chuyen">Câu chuyện thành công</a><a href="https://aicenty.com/#lien-he">Liên hệ</a></div></div><div><h2 class="footer-title">Liên hệ</h2><div class="footer-links"><span>Điện thoại 0918 852 101 - 0981 224 739</span><a href="mailto:ai@aicenty.com">Email : ai@aicenty.com</a><span>Địa chỉ 229/3/24B Lê Quang Định, Phường Gia Định, TPHCM</span></div></div></div><div class="copyright"><span>CÔNG TY CỔ PHẦN THƯƠNG MẠI HNKT</span><span>© Aicenty</span></div></div></footer><script src="/assets/news/news.js?v=20261024" defer></script></body></html>
