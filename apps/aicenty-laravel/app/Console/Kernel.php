@@ -48,6 +48,10 @@ class Kernel extends ConsoleKernel
             ->everyMinute()
             ->withoutOverlapping(5);
 
+        $schedule->command('butler:reconcile-lifecycle-anomalies')
+            ->hourly()
+            ->withoutOverlapping(15);
+
         // Quản Gia AI: Tách bạch kênh & khung giờ (Asia/Ho_Chi_Minh)
         // 1. Zalo Quản Gia: Chỉ chào Sáng (07:00) & Tối (21:30)
         $schedule->command('butler:send-drip-nurturing --type=morning')
