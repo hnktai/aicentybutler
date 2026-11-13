@@ -12,6 +12,7 @@ import (
 
 	"github.com/nextlevelbuilder/goclaw/internal/channels"
 	"github.com/nextlevelbuilder/goclaw/internal/store"
+	"github.com/nextlevelbuilder/goclaw/internal/systemmessages"
 )
 
 func (c *Channel) handleAppMention(ev *slackevents.AppMentionEvent) {
@@ -76,7 +77,7 @@ func (c *Channel) handleAppMention(ev *slackevents.AppMentionEvent) {
 
 	_, placeholderTS, err := c.api.PostMessage(channelID, placeholderOpts...)
 	if err == nil {
-		c.placeholders.Store(localKey, placeholderTS)
+		c.placeholders.Store(threadPlaceholderKey(localKey, replyThreadTS), placeholderTS)
 	}
 
 	annotated := fmt.Sprintf("[From: %s]\n%s", displayName, content)
@@ -92,13 +93,13 @@ func (c *Channel) handleAppMention(ev *slackevents.AppMentionEvent) {
 		"channel_id":      channelID,
 		"is_dm":           "false",
 		"local_key":       localKey,
-		"placeholder_key": localKey,
+		"placeholder_key": threadPlaceholderKey(localKey, replyThreadTS),
 	}
 	if replyThreadTS != "" {
 		metadata["message_thread_id"] = replyThreadTS
 	}
 
-	c.HandleMessage(senderID, channelID, finalContent, nil, metadata, "group")
+	c.HandleAuthorizedMessage(senderID, channelID, finalContent, nil, metadata, "group")
 
 	// Record thread participation
 	if replyThreadTS != "" {
@@ -181,12 +182,16 @@ func (c *Channel) sendPairingReply(ctx context.Context, senderID, channelID stri
 	// Instead, direct admin to CLI or web UI where pending codes are listed.
 	var msg string
 	if strings.HasPrefix(senderID, "group:") {
-		msg = fmt.Sprintf("This channel is not authorized to use this bot.\n\n"+
-			"An admin can approve via CLI:\n  goclaw pairing approve %s\n\n"+
-			"Or approve via the GoClaw web UI (Pairing section).", code)
+		msg = c.SystemMessage("", systemmessages.KeyPairingGroupPrivateRequired, systemmessages.Vars{
+			"platform": "Slack",
+			"code":     code,
+		})
 	} else {
-		msg = fmt.Sprintf("GoClaw: access not configured.\n\nYour Slack user ID: %s\n\nPairing code: %s\n\nAsk the bot owner to approve with:\n  goclaw pairing approve %s",
-			senderID, code, code)
+		msg = c.SystemMessage("", systemmessages.KeyPairingAccountRequired, systemmessages.Vars{
+			"platform":  "Slack",
+			"sender_id": senderID,
+			"code":      code,
+		})
 	}
 	if _, _, err := c.api.PostMessage(channelID, slackapi.MsgOptionText(msg, false)); err != nil {
 		slog.Warn("slack: failed to send pairing reply",

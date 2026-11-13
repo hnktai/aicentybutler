@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"math/big"
 	"strconv"
 	"strings"
@@ -43,12 +44,18 @@ ON CONFLICT (model_id) DO UPDATE SET
 	web_search_price = EXCLUDED.web_search_price,
 	synced_at = EXCLUDED.synced_at,
 	updated_at = now()`
-	for _, e := range entries {
+	upserted := 0
+	for i, e := range entries {
 		if strings.TrimSpace(e.ModelID) == "" {
 			continue
 		}
 		if err := validateUsagePricingFields(e.Pricing); err != nil {
-			return 0, err
+			// Skip the entry but keep the rest of the catalog: one malformed
+			// price must not abort the whole sync (Issue #1605). The model ID
+			// and position are logged so the offending upstream row is findable.
+			slog.Warn("usage_pricing.catalog_entry_skipped",
+				"model", e.ModelID, "index", i, "total", len(entries), "error", err)
+			continue
 		}
 		if len(e.RawPricing) == 0 {
 			e.RawPricing = json.RawMessage(`{}`)
@@ -63,10 +70,11 @@ ON CONFLICT (model_id) DO UPDATE SET
 			priceVal(e.Pricing.Reasoning), priceVal(e.Pricing.Request),
 			priceVal(e.Pricing.Image), priceVal(e.Pricing.WebSearch), e.SyncedAt,
 		); err != nil {
-			return 0, err
+			return 0, fmt.Errorf("upsert pricing catalog entry %d/%d (model %s): %w", i+1, len(entries), e.ModelID, err)
 		}
+		upserted++
 	}
-	return len(entries), nil
+	return upserted, nil
 }
 
 func (s *PGUsageCapStore) ListPricingCatalog(ctx context.Context, q store.UsagePricingQuery) ([]store.UsagePricingCatalogEntry, error) {
@@ -216,6 +224,9 @@ func usagePricingModelCandidates(providerName, providerType, modelID string) []s
 	for _, prefix := range openRouterProviderPrefixes(providerName, providerType) {
 		out = appendUniqueString(out, prefix+"/"+modelID)
 	}
+	for _, prefix := range openRouterModelPrefixes(modelID) {
+		out = appendUniqueString(out, prefix+"/"+modelID)
+	}
 	return out
 }
 
@@ -251,8 +262,28 @@ func openRouterProviderPrefixes(providerName, providerType string) []string {
 		return []string{"cohere"}
 	case store.ProviderPerplexity:
 		return []string{"perplexity"}
-	case store.ProviderDashScope:
+	case store.ProviderDashScope, store.ProviderBailian:
 		return []string{"qwen"}
+	default:
+		return nil
+	}
+}
+
+func openRouterModelPrefixes(modelID string) []string {
+	modelID = strings.ToLower(strings.TrimSpace(modelID))
+	switch {
+	case strings.HasPrefix(modelID, "gpt-"),
+		strings.HasPrefix(modelID, "o1"),
+		strings.HasPrefix(modelID, "o3"),
+		strings.HasPrefix(modelID, "o4"),
+		strings.HasPrefix(modelID, "o5"):
+		return []string{"openai"}
+	case strings.HasPrefix(modelID, "qwen"):
+		return []string{"qwen"}
+	case strings.HasPrefix(modelID, "claude-"):
+		return []string{"anthropic"}
+	case strings.HasPrefix(modelID, "gemini-"):
+		return []string{"google"}
 	default:
 		return nil
 	}

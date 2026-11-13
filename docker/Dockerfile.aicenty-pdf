@@ -1,0 +1,20 @@
+ARG GOCLAW_BASE=ghcr.io/nextlevelbuilder/goclaw@sha256:2938d3b7585e78a18595a7c67844d1ae62b0696c71ce0d9f09092576389affd8
+FROM ${GOCLAW_BASE}
+
+USER root
+
+COPY docker/requirements-aicenty-pdf.txt /tmp/requirements-aicenty-pdf.txt
+RUN python3 -m pip install \
+        --no-cache-dir \
+        --break-system-packages \
+        --only-binary=:all: \
+        --require-hashes \
+        -r /tmp/requirements-aicenty-pdf.txt \
+    && rm -f /tmp/requirements-aicenty-pdf.txt
+
+COPY --chown=goclaw:goclaw skills/images-to-pdf/ /app/bundled-skills/images-to-pdf/
+RUN install -o root -g root -m 755 \
+    /app/bundled-skills/images-to-pdf/scripts/images_to_pdf.py \
+    /usr/local/bin/images-to-pdf
+
+LABEL com.aicenty.butler.feature.images-to-pdf="1.0.2"

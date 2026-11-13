@@ -95,6 +95,121 @@ func TestProvidersHandlerRegisterInMemoryUsesDBNameForAnthropic(t *testing.T) {
 	}
 }
 
+func TestProvidersHandlerRegisterInMemoryMiniMaxUsesM3Default(t *testing.T) {
+	providerReg := providers.NewRegistry(nil)
+	handler := NewProvidersHandler(newMockProviderStore(), newMockSecretsStore(), providerReg, "")
+
+	provider := &store.LLMProviderData{
+		BaseModel:    store.BaseModel{ID: uuid.New()},
+		TenantID:     uuid.New(),
+		Name:         "minimax",
+		ProviderType: store.ProviderMiniMax,
+		APIKey:       "token",
+		Enabled:      true,
+	}
+
+	handler.registerInMemory(provider)
+
+	runtimeProvider, err := providerReg.GetForTenant(provider.TenantID, provider.Name)
+	if err != nil {
+		t.Fatalf("GetForTenant() error = %v", err)
+	}
+	if got := runtimeProvider.DefaultModel(); got != "MiniMax-M3" {
+		t.Fatalf("DefaultModel() = %q, want MiniMax-M3", got)
+	}
+	openai, ok := runtimeProvider.(*providers.OpenAIProvider)
+	if !ok {
+		t.Fatalf("runtime provider = %T, want *providers.OpenAIProvider", runtimeProvider)
+	}
+	if got := openai.APIBase(); got != "https://api.minimax.io/v1" {
+		t.Fatalf("APIBase() = %q, want MiniMax default base", got)
+	}
+}
+
+func TestProvidersHandlerRegisterInMemoryMiniMaxUsesOpenAIChatCompletionsPath(t *testing.T) {
+	var capturedPath string
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		capturedPath = r.URL.Path
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"choices": []map[string]any{
+				{
+					"message":       map[string]string{"content": "ok"},
+					"finish_reason": "stop",
+				},
+			},
+		})
+	}))
+	t.Cleanup(upstream.Close)
+
+	providerReg := providers.NewRegistry(nil)
+	handler := NewProvidersHandler(newMockProviderStore(), newMockSecretsStore(), providerReg, "")
+	provider := &store.LLMProviderData{
+		BaseModel:    store.BaseModel{ID: uuid.New()},
+		TenantID:     uuid.New(),
+		Name:         "minimax",
+		ProviderType: store.ProviderMiniMax,
+		APIBase:      upstream.URL,
+		APIKey:       "token",
+		Enabled:      true,
+	}
+
+	handler.registerInMemory(provider)
+
+	runtimeProvider, err := providerReg.GetForTenant(provider.TenantID, provider.Name)
+	if err != nil {
+		t.Fatalf("GetForTenant() error = %v", err)
+	}
+	_, err = runtimeProvider.Chat(context.Background(), providers.ChatRequest{
+		Messages: []providers.Message{{Role: "user", Content: "hi"}},
+	})
+	if err != nil {
+		t.Fatalf("Chat() error = %v", err)
+	}
+	if capturedPath != "/chat/completions" {
+		t.Fatalf("captured path = %q, want /chat/completions", capturedPath)
+	}
+}
+
+func TestProvidersHandlerRegisterInMemoryZaiUsesGLM52Default(t *testing.T) {
+	for _, tt := range []struct {
+		providerType string
+		wantBase     string
+	}{
+		{providerType: store.ProviderZai, wantBase: "https://api.z.ai/api/paas/v4"},
+		{providerType: store.ProviderZaiCoding, wantBase: "https://api.z.ai/api/coding/paas/v4"},
+	} {
+		t.Run(tt.providerType, func(t *testing.T) {
+			providerReg := providers.NewRegistry(nil)
+			handler := NewProvidersHandler(newMockProviderStore(), newMockSecretsStore(), providerReg, "")
+			provider := &store.LLMProviderData{
+				BaseModel:    store.BaseModel{ID: uuid.New()},
+				TenantID:     uuid.New(),
+				Name:         tt.providerType,
+				ProviderType: tt.providerType,
+				APIKey:       "token",
+				Enabled:      true,
+			}
+
+			handler.registerInMemory(provider)
+
+			runtimeProvider, err := providerReg.GetForTenant(provider.TenantID, provider.Name)
+			if err != nil {
+				t.Fatalf("GetForTenant() error = %v", err)
+			}
+			if got := runtimeProvider.DefaultModel(); got != "glm-5.2" {
+				t.Fatalf("DefaultModel() = %q, want glm-5.2", got)
+			}
+			openai, ok := runtimeProvider.(*providers.OpenAIProvider)
+			if !ok {
+				t.Fatalf("runtime provider = %T, want *providers.OpenAIProvider", runtimeProvider)
+			}
+			if got := openai.APIBase(); got != tt.wantBase {
+				t.Fatalf("APIBase() = %q, want %q", got, tt.wantBase)
+			}
+		})
+	}
+}
+
 // TestProvidersHandlerRegisterInMemoryUsesDBNameForClaudeCLI mirrors the Anthropic guard for Claude CLI.
 // Custom-named CLI providers must be registered under their DB name to be locatable via verify.
 func TestProvidersHandlerRegisterInMemoryUsesDBNameForClaudeCLI(t *testing.T) {
@@ -198,6 +313,74 @@ func TestProvidersHandlerRegisterInMemoryAnthropicUsesModelRegistry(t *testing.T
 	// Field is an interface; .IsNil() panics on non-interface kinds, so guard.
 	if v.Kind() == reflect.Interface && v.IsNil() {
 		t.Fatal("AnthropicProvider.registry is nil, want ModelRegistry set via SetModelRegistry")
+	}
+}
+
+func TestProvidersHandlerRegisterInMemoryDashScopeProxyKeepsCacheDetection(t *testing.T) {
+	providerReg := providers.NewRegistry(nil)
+	handler := NewProvidersHandler(newMockProviderStore(), newMockSecretsStore(), providerReg, "")
+
+	provider := &store.LLMProviderData{
+		BaseModel:    store.BaseModel{ID: uuid.New()},
+		TenantID:     uuid.New(),
+		Name:         "qwen-richard",
+		ProviderType: store.ProviderDashScope,
+		APIBase:      "https://proxy.internal/v1",
+		APIKey:       "sk-test",
+		Enabled:      true,
+	}
+
+	handler.registerInMemory(provider)
+
+	got, err := providerReg.GetForTenant(provider.TenantID, provider.Name)
+	if err != nil {
+		t.Fatalf("GetForTenant() error = %v", err)
+	}
+	assertRuntimeProviderWrapsDashScopeSystem(t, got, "qwen3.6-plus")
+}
+
+func TestProvidersHandlerRegisterInMemoryBailianProxyKeepsCacheDetection(t *testing.T) {
+	providerReg := providers.NewRegistry(nil)
+	handler := NewProvidersHandler(newMockProviderStore(), newMockSecretsStore(), providerReg, "")
+
+	provider := &store.LLMProviderData{
+		BaseModel:    store.BaseModel{ID: uuid.New()},
+		TenantID:     uuid.New(),
+		Name:         "qwen-richard",
+		ProviderType: store.ProviderBailian,
+		APIBase:      "https://proxy.internal/v1",
+		APIKey:       "sk-test",
+		Enabled:      true,
+	}
+
+	handler.registerInMemory(provider)
+
+	got, err := providerReg.GetForTenant(provider.TenantID, provider.Name)
+	if err != nil {
+		t.Fatalf("GetForTenant() error = %v", err)
+	}
+	assertRuntimeProviderWrapsDashScopeSystem(t, got, "qwen3.6-plus")
+}
+
+func assertRuntimeProviderWrapsDashScopeSystem(t *testing.T, runtimeProvider providers.Provider, model string) {
+	t.Helper()
+
+	bodyBuilder, ok := runtimeProvider.(interface {
+		BuildRequestBodyForTest(string, providers.ChatRequest, bool) map[string]any
+	})
+	if !ok {
+		t.Fatalf("runtime provider = %T, want BuildRequestBodyForTest", runtimeProvider)
+	}
+
+	body := bodyBuilder.BuildRequestBodyForTest(model, providers.ChatRequest{
+		Messages: []providers.Message{
+			{Role: "system", Content: "Stable prefix\n" + providers.CacheBoundaryMarker + "\nDynamic suffix"},
+			{Role: "user", Content: "Hi"},
+		},
+	}, false)
+	msgs := body["messages"].([]map[string]any)
+	if _, ok := msgs[0]["content"].([]map[string]any); !ok {
+		t.Fatalf("system content = %T, want DashScope cache blocks", msgs[0]["content"])
 	}
 }
 
@@ -368,6 +551,215 @@ func TestProvidersHandlerUpdateAllowsClaudeCLIExecutablePath(t *testing.T) {
 	}
 	if current.APIBase != nextPath {
 		t.Fatalf("api_base = %q, want %q", current.APIBase, nextPath)
+	}
+}
+
+// TestProvidersHandlerCreateAllowsACPExecutablePath guards the fix for issue #1481:
+// ACP provider api_base is an executable command/path, not a URL, and must not be
+// rejected by the SSRF URL validator.
+func TestProvidersHandlerCreateAllowsACPExecutablePath(t *testing.T) {
+	token := setupProvidersAdminToken(t)
+	providerStore := newMockProviderStore()
+	handler := NewProvidersHandler(providerStore, newMockSecretsStore(), nil, "")
+	mux := http.NewServeMux()
+	handler.RegisterRoutes(mux)
+
+	body := map[string]any{
+		"name":          "acp-gemini",
+		"provider_type": store.ProviderACP,
+		"api_base":      writeFakeClaudeBinary(t), // any absolute path is acceptable
+		"enabled":       true,
+	}
+	rawBody, err := json.Marshal(body)
+	if err != nil {
+		t.Fatalf("Marshal() error = %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/providers", bytes.NewReader(rawBody))
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("status code = %d, want %d, body=%s", w.Code, http.StatusCreated, w.Body.String())
+	}
+	if got := providerStore.providers["acp-gemini"].APIBase; got == "" || !filepath.IsAbs(got) {
+		t.Fatalf("stored ACP api_base = %q, want absolute executable path", got)
+	}
+}
+
+// TestProvidersHandlerCreateAllowsEmptyACPBinary confirms that an empty api_base
+// is accepted at create time; the runtime path may fall back to config/env.
+func TestProvidersHandlerCreateAllowsEmptyACPBinary(t *testing.T) {
+	token := setupProvidersAdminToken(t)
+	providerStore := newMockProviderStore()
+	handler := NewProvidersHandler(providerStore, newMockSecretsStore(), nil, "")
+	mux := http.NewServeMux()
+	handler.RegisterRoutes(mux)
+
+	body := map[string]any{
+		"name":          "acp-empty",
+		"provider_type": store.ProviderACP,
+		"enabled":       true,
+	}
+	rawBody, err := json.Marshal(body)
+	if err != nil {
+		t.Fatalf("Marshal() error = %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/providers", bytes.NewReader(rawBody))
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Fatalf("status code = %d, want %d, body=%s", w.Code, http.StatusCreated, w.Body.String())
+	}
+}
+
+// TestProvidersHandlerCreateRejectsACPURL ensures ACP api_base cannot be a URL
+// (it must be an executable path/command).
+func TestProvidersHandlerCreateRejectsACPURL(t *testing.T) {
+	token := setupProvidersAdminToken(t)
+	providerStore := newMockProviderStore()
+	handler := NewProvidersHandler(providerStore, newMockSecretsStore(), nil, "")
+	mux := http.NewServeMux()
+	handler.RegisterRoutes(mux)
+
+	body := map[string]any{
+		"name":          "acp-url",
+		"provider_type": store.ProviderACP,
+		"api_base":      "http://127.0.0.1:9090",
+		"enabled":       true,
+	}
+	rawBody, err := json.Marshal(body)
+	if err != nil {
+		t.Fatalf("Marshal() error = %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/providers", bytes.NewReader(rawBody))
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("status code = %d, want %d, body=%s", w.Code, http.StatusBadRequest, w.Body.String())
+	}
+}
+
+// TestProvidersHandlerUpdateAllowsACPExecutablePath guards update-time validation
+// for ACP providers.
+func TestProvidersHandlerUpdateAllowsACPExecutablePath(t *testing.T) {
+	token := setupProvidersAdminToken(t)
+	providerStore := newMockProviderStore()
+	provider := &store.LLMProviderData{
+		BaseModel:    store.BaseModel{ID: uuid.New()},
+		Name:         "acp-local",
+		ProviderType: store.ProviderACP,
+		APIBase:      "gemini",
+		Enabled:      true,
+	}
+	if err := providerStore.CreateProvider(context.Background(), provider); err != nil {
+		t.Fatalf("CreateProvider() error = %v", err)
+	}
+
+	handler := NewProvidersHandler(providerStore, newMockSecretsStore(), nil, "")
+	mux := http.NewServeMux()
+	handler.RegisterRoutes(mux)
+
+	nextPath := writeFakeClaudeBinary(t)
+	body := map[string]any{"api_base": nextPath}
+	rawBody, err := json.Marshal(body)
+	if err != nil {
+		t.Fatalf("Marshal() error = %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPut, "/v1/providers/"+provider.ID.String(), bytes.NewReader(rawBody))
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status code = %d, want %d, body=%s", w.Code, http.StatusOK, w.Body.String())
+	}
+	current, err := providerStore.GetProvider(context.Background(), provider.ID)
+	if err != nil {
+		t.Fatalf("GetProvider() error = %v", err)
+	}
+	if current.APIBase != nextPath {
+		t.Fatalf("api_base = %q, want %q", current.APIBase, nextPath)
+	}
+}
+
+// TestProvidersHandlerUpdateRejectsACPURL ensures update-time validation rejects
+// a URL-valued api_base for ACP providers.
+func TestProvidersHandlerUpdateRejectsACPURL(t *testing.T) {
+	token := setupProvidersAdminToken(t)
+	providerStore := newMockProviderStore()
+	provider := &store.LLMProviderData{
+		BaseModel:    store.BaseModel{ID: uuid.New()},
+		Name:         "acp-local",
+		ProviderType: store.ProviderACP,
+		APIBase:      "gemini",
+		Enabled:      true,
+	}
+	if err := providerStore.CreateProvider(context.Background(), provider); err != nil {
+		t.Fatalf("CreateProvider() error = %v", err)
+	}
+
+	handler := NewProvidersHandler(providerStore, newMockSecretsStore(), nil, "")
+	mux := http.NewServeMux()
+	handler.RegisterRoutes(mux)
+
+	body := map[string]any{"api_base": "http://127.0.0.1:9090"}
+	rawBody, err := json.Marshal(body)
+	if err != nil {
+		t.Fatalf("Marshal() error = %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPut, "/v1/providers/"+provider.ID.String(), bytes.NewReader(rawBody))
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("status code = %d, want %d, body=%s", w.Code, http.StatusBadRequest, w.Body.String())
+	}
+}
+
+func TestProvidersHandlerUpdateMarshalsSettingsForStore(t *testing.T) {
+	token := setupProvidersAdminToken(t)
+	providerStore := newMockProviderStore()
+	provider := &store.LLMProviderData{
+		BaseModel:    store.BaseModel{ID: uuid.New()},
+		Name:         "openai",
+		ProviderType: store.ProviderOpenAICompat,
+		Enabled:      true,
+		Settings:     json.RawMessage(`{}`),
+	}
+	if err := providerStore.CreateProvider(context.Background(), provider); err != nil {
+		t.Fatalf("CreateProvider() error = %v", err)
+	}
+
+	handler := NewProvidersHandler(providerStore, newMockSecretsStore(), nil, "")
+	mux := http.NewServeMux()
+	handler.RegisterRoutes(mux)
+
+	body := `{"settings":{"timeout_seconds":60}}`
+	req := httptest.NewRequest(http.MethodPut, "/v1/providers/"+provider.ID.String(), bytes.NewBufferString(body))
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status code = %d, want %d, body=%s", w.Code, http.StatusOK, w.Body.String())
+	}
+	current, err := providerStore.GetProvider(context.Background(), provider.ID)
+	if err != nil {
+		t.Fatalf("GetProvider() error = %v", err)
+	}
+	if got, want := string(current.Settings), `{"timeout_seconds":60}`; got != want {
+		t.Fatalf("settings = %s, want %s", got, want)
 	}
 }
 

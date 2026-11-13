@@ -11,7 +11,7 @@ import (
 	"github.com/nextlevelbuilder/goclaw/internal/store"
 )
 
-const defaultCronCacheTTL = 2 * time.Minute
+const defaultCronCacheTTL = 5 * time.Second
 
 // PGCronStore implements store.CronStore backed by Postgres.
 // GetDueJobs() uses an in-memory cache with TTL to reduce DB polling (1s interval).

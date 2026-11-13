@@ -1,0 +1,15 @@
+{
+  "observed_at": "2026-11-12T04:45:00+07:00",
+  "source_checkout": "/opt/goclaw-aicenty",
+  "source_branch": "fork-current",
+  "source_commit": "22e71c807fe636756d788cf5ce330ddb123a6717",
+  "source_clean": false,
+  "runtime_binary_path": "/opt/goclaw-aicenty/goclaw-bin",
+  "runtime_binary_version": "dev",
+  "runtime_protocol_version": 3,
+  "runtime_binary_sha256": "a8cace3a2602af43189cc13181cd8583673f85938964d39e475664a3bb7bed74",
+  "runtime_container_image_id": "sha256:2938d3b7585e78a18595a7c67844d1ae62b0696c71ce0d9f09092576389affd8",
+  "postgres_schema_version": 99,
+  "provenance_status": "unverified",
+  "release_decision": "no-go"
+}

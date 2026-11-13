@@ -27,8 +27,9 @@ backup/
 # Environment
 .env*
 !.env.example
+!.env.cloudflared.example
 
-app
+/app
 browser-poc
 openclaw-go
 goclaw
@@ -63,6 +64,11 @@ tmp
 .claude/
 
 deploy-*.sh
+# ...but the fork-dev deploy helper IS tracked tooling.
+!scripts/deploy-forkdev.sh
+
+# fork-dev integration worktree (created by scripts/deploy-forkdev.sh)
+.goclaw-forkdev/
 
 docs/technical-diaries
 docs/zuey
@@ -106,9 +112,17 @@ goclaw-patched-linux-amd64
 ui/web/nginx.staging.conf
 
 # Local scratchpad / one-shot artifacts (never commit)
+/.artifacts/
 **/debug-*.log
 /*.sql
 scripts/docker-patch-*.sql
 .env
 data/
 logs/
+
+# Python/runtime artifacts
+__pycache__/
+*.py[cod]
+
+# Local Phase 1 candidate build output
+/candidate-output/

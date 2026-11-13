@@ -4,7 +4,31 @@ All notable changes to GoClaw are documented here. For full documentation, see [
 
 ## Unreleased
 
+### Changed
+
+- **Bitrix24 channel migrated to imbot v2 messaging API** — outbound text now uses
+  `imbot.v2.Chat.Message.send` (replacing `imbot.message.add`); bot verification/lookup
+  uses `imbot.v2.Bot.list` (replacing `imbot.bot.list` + the legacy `imbot.list` fallback);
+  bot teardown uses `imbot.v2.Bot.unregister` (replacing `imbot.unregister`). Bot
+  registration intentionally stays on v1 `imbot.register` — v2 `imbot.v2.Bot.register`
+  changes the event-delivery model (per-event handler URLs → `eventMode`), which would
+  require rewriting the inbound event parser. No user-facing behavior change.
+
 ### Added
+
+- **Task detail dialog shows the full task UUID with one-click copy** — the
+  short identifier (`T-015-cc8e`) carries only the last four hex characters of
+  the UUID, while the agent-facing `team_tasks` tool and RPCs take the full
+  UUID, so a human had no way to name a task to the lead from the dashboard.
+
+- **Dashboard can cancel and retry stuck team tasks** — new WS RPCs
+  `teams.tasks.cancel` (any task not yet completed/cancelled; optional reason is
+  posted as a comment) and `teams.tasks.retry` (stale / failed / cancelled /
+  in_review, and blocked tasks that nothing blocks any more; a human comment is
+  required and is both posted on the task and appended to the assignment prompt).
+  Task detail dialog gets Retry and Cancel buttons. Previously these transitions
+  were reachable only through the lead agent's `team_tasks` tool, so a task that
+  ended up blocked or stale could not be recovered from the UI (#506).
 
 - **Behavior UX sidecar delivery overrides** — Adds sidecar-generated Quick
   Acknowledgement and Intermediate Replies with provider/model, timeout, token,
@@ -21,6 +45,14 @@ All notable changes to GoClaw are documented here. For full documentation, see [
   pre-write discovery via `vault_search`, `memory_search`, and
   `knowledge_graph_search` to surface related files before writing and
   avoid duplicates; documents Vault scope mirroring and id-routing rules.
+- **Bitrix24 channel 2-way media (file) transfer** — Inbound media downloads via
+  `imbot.v2.File.download` (one-time authenticated URL) with MIME preservation for
+  images, PDFs, audio, and video. Outbound uploads via `imbot.v2.File.upload` (base64).
+  Shared `media_max_mb` config knob (default 20 MB) caps both directions. Requires
+  `imbot` OAuth scope (no `disk` scope needed). Inbound handled by new
+  `internal/channels/bitrix24/download.go`; outbound by `send_media.go`. New
+  `BaseChannel.HandleMessageMedia()` method centralizes media-aware message handling.
+  See `docs/05-channels-messaging.md` § 16 (Bitrix24) for configuration.
 
 - **Skill agent manage grants** — Adds per-agent skill edit/delete grants with
   backend checks, HTTP/WS support, SQLite and PostgreSQL schema updates, and web
@@ -57,6 +89,19 @@ All notable changes to GoClaw are documented here. For full documentation, see [
   for provider-first model selection.
 
 ### Fixed
+
+- **Channel reload no longer hangs after a failed channel start (#1627)** —
+  `PendingHistory.StopFlusher` waited on the flush goroutine's `stopped`
+  channel even when `StartFlusher` had never run. Telegram starts its flusher
+  only after `getMe` and long polling succeed, so a Telegram instance whose
+  `Start()` failed (network down at boot) blocked `InstanceLoader.Reload`
+  forever inside `Stop()` with the loader mutex held — every later channel
+  save from the dashboard queued silently behind it and only a process
+  restart recovered. The same wait sat in `LoadInstanceByID`, loader `Stop`
+  and the timed-out-start cleanup path. `StopFlusher` now returns immediately
+  when the flusher was never started and is idempotent (`sync.Once` around
+  `close(stopCh)`, so a second `Stop()` no longer panics with
+  `close of closed channel`); `StartFlusher` spawns at most one loop.
 
 - **Quick Acknowledgement generated mode** — Generated acknowledgements now use
   the sidecar delivery generator instead of always falling back to fixed

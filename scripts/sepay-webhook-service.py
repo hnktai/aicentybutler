@@ -5,7 +5,10 @@ Also serves Deep Healthcheck (/healthz) and Internal Guardrail / Quality Gates
 Listens on 127.0.0.1:18896
 """
 import json
+import hmac
 import logging
+import os
+import re
 import urllib.request
 import urllib.parse
 import socket
@@ -13,12 +16,14 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
+from butler_runtime_health import channel_statuses
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
 
 DB_CONFIG = {
     "dbname": "aicenty_butler_db",
     "user": "aicenty_user",
-    "password": "AicentySuperSecureDbPass2026!",
+    "password": os.environ["BUTLER_DB_PASSWORD"],
     "host": "127.0.0.1",
     "port": 5435
 }
@@ -28,7 +33,7 @@ def check_redis():
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(2.0)
         s.connect(('127.0.0.1', 6380))
-        s.sendall(b"AUTH AicentySuperSecureRedisPass2026!\r\nPING\r\n")
+        s.sendall(b"AUTH " + os.environ["BUTLER_REDIS_PASSWORD"].encode("ascii") + b"\r\nPING\r\n")
         resp = s.recv(1024).decode('utf-8', errors='ignore')
         s.close()
         return "PONG" in resp
@@ -58,6 +63,24 @@ def check_db():
         logging.error(f"DB check error: {e}")
         return False
 
+
+def check_required_channels():
+    try:
+        enabled = get_enabled_zalo_channels()
+        statuses = channel_statuses(os.environ["BUTLER_GATEWAY_TOKEN"])
+        failed = [row["name"] for row in enabled if not statuses.get(row["name"], {}).get("running")]
+        return not failed, failed
+    except Exception as exc:
+        logging.error("Channel health check failed: %s", exc)
+        return False, ["status_unavailable"]
+
+
+def get_enabled_zalo_channels():
+    with psycopg2.connect(**DB_CONFIG) as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT name FROM channel_instances WHERE channel_type = 'zalo_personal' AND enabled = true")
+            return cur.fetchall()
+
 class SePayWebhookHandler(BaseHTTPRequestHandler):
     def _send_json(self, status_code, data):
         self.send_response(status_code)
@@ -70,9 +93,10 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
             db_ok = check_db()
             redis_ok = check_redis()
             engine_ok = check_engine()
-            all_ok = db_ok and redis_ok and engine_ok
+            channels_ok, failed_channels = check_required_channels() if db_ok and engine_ok else (False, ["status_unavailable"])
+            all_ok = db_ok and redis_ok and engine_ok and channels_ok
             status_str = "HEALTHY" if all_ok else "degraded"
-            
+
             self._send_json(200 if all_ok else 503, {
                 "status": status_str,
                 "service": "aicenty-butler",
@@ -80,8 +104,10 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
                     "database": "ok" if db_ok else "down",
                     "redis": "ok" if redis_ok else "down",
                     "engine": "ok" if engine_ok else "down",
-                    "sepay_daemon": "ok"
-                }
+                    "sepay_daemon": "ok",
+                    "zalo_personal": "ok" if channels_ok else "down"
+                },
+                "failed_channels": failed_channels
             })
         elif self.path.startswith('/api/v1/internal/tenant-lookup'):
             try:
@@ -91,28 +117,72 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
                 if not user_id:
                     self._send_json(400, {"ok": False, "error": "user_id is required"})
                     return
+
+                clean_phone = re.sub(r'[^0-9]', '', user_id)
+                possible_uids = [user_id]
+                if clean_phone:
+                    possible_uids.extend([
+                        clean_phone,
+                        'phone_' + clean_phone,
+                        '84' + clean_phone[-9:] if len(clean_phone) >= 9 else clean_phone,
+                        'phone_84' + clean_phone[-9:] if len(clean_phone) >= 9 else clean_phone,
+                        '0' + clean_phone[-9:] if len(clean_phone) >= 9 else clean_phone,
+                        'phone_0' + clean_phone[-9:] if len(clean_phone) >= 9 else clean_phone,
+                    ])
+                possible_uids = list(set(possible_uids))
+
                 conn = psycopg2.connect(**DB_CONFIG)
                 cur = conn.cursor(cursor_factory=RealDictCursor)
+
+                # 1. Tìm trong tenant_users
                 cur.execute("""
                     SELECT t.id, t.name, t.slug, u.role
                     FROM tenant_users u
                     JOIN tenants t ON u.tenant_id = t.id
-                    WHERE LOWER(u.user_id) = %s AND t.status = 'active'
+                    WHERE t.status = 'active'
+                      AND (
+                          LOWER(u.user_id) = ANY(%s)
+                          OR LOWER(COALESCE(u.metadata->>'email', '')) = %s
+                          OR LOWER(COALESCE(u.metadata->>'phone', '')) = %s
+                      )
                     LIMIT 1
-                """, (user_id,))
+                """, (possible_uids, user_id, user_id))
                 row = cur.fetchone()
+
+                # 2. Fallback tìm trong quangia_pending_handover
+                if not row and clean_phone and len(clean_phone) >= 9:
+                    cur.execute("""
+                        SELECT t.id, t.name, t.slug, 'owner' as role
+                        FROM quangia_pending_handover h
+                        JOIN tenants t ON h.dedicated_tenant_id = t.id
+                        WHERE (h.phone = %s OR regexp_replace(h.phone, '[^0-9]', '', 'g') = %s)
+                          AND t.status = 'active'
+                        ORDER BY h.created_at DESC
+                        LIMIT 1
+                    """, (user_id, clean_phone))
+                    row = cur.fetchone()
+
                 cur.close()
                 conn.close()
+
                 if row:
                     self._send_json(200, {
                         "ok": True,
                         "tenant_id": str(row["id"]),
                         "slug": row["slug"],
                         "name": row["name"],
-                        "role": row["role"]
+                        "role": row["role"],
+                        "is_fallback": False
                     })
                 else:
-                    self._send_json(404, {"ok": False, "error": "No tenant found for user"})
+                    self._send_json(200, {
+                        "ok": True,
+                        "tenant_id": "0193a5b0-7000-7000-8000-000000000001",
+                        "slug": "master",
+                        "name": "Aicenty Butler",
+                        "role": "owner",
+                        "is_fallback": True
+                    })
             except Exception as e:
                 logging.error(f"tenant-lookup error: {e}")
                 self._send_json(500, {"ok": False, "error": str(e)})
@@ -120,7 +190,28 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
             self._send_json(404, {"error": "Not Found"})
 
     def do_POST(self):
-        content_length = int(self.headers.get('Content-Length', 0))
+        webhook_paths = ['/api/v1/billing/webhook/sepay', '/webhooks/sepay', '/api/v1/billing/webhook/sepay/']
+        if self.path in webhook_paths:
+            allowed_keys = [k for k in [
+                os.environ.get("BUTLER_SEPAY_INBOUND_KEY", ""),
+                os.environ.get("SEPAY_WEBHOOK_TOKEN", ""),
+            ] if k]
+            provided = self.headers.get("Authorization", "").strip()
+            authorized = any(hmac.compare_digest(provided, "Apikey " + k) or hmac.compare_digest(provided, "Bearer " + k) for k in allowed_keys)
+            if not allowed_keys or not authorized:
+                self._send_json(401, {"success": False, "error": "Unauthorized"})
+                return
+            if os.environ.get("BUTLER_PAYMENTS_ENABLED") != "1":
+                self._send_json(503, {"success": False, "error": "Payment processing paused"})
+                return
+        try:
+            content_length = int(self.headers.get('Content-Length', 0))
+        except ValueError:
+            self._send_json(400, {"success": False, "error": "Invalid Content-Length"})
+            return
+        if content_length < 0 or content_length > 65536:
+            self._send_json(413, {"success": False, "error": "Payload too large"})
+            return
         body = self.rfile.read(content_length).decode('utf-8') if content_length > 0 else "{}"
         try:
             payload = json.loads(body) if body else {}
@@ -130,8 +221,8 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
             return
 
         # 1. Healthcheck via POST
-        if self.path in ['/health', '/healthz'] or payload.get("health") is True:
-            self._send_json(200, {"status": "HEALTHY", "service": "aicenty-butler"})
+        if self.path in ['/health', '/healthz']:
+            self.do_GET()
             return
 
         # 2. Internal Guardrail Simulation Endpoint
@@ -166,11 +257,9 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
             return
 
         # 4. SePay Webhook Handling
-        if self.path not in ['/api/v1/billing/webhook/sepay', '/webhooks/sepay', '/api/v1/billing/webhook/sepay/']:
+        if self.path not in webhook_paths:
             self._send_json(404, {"error": "Endpoint not found"})
             return
-
-        logging.info(f"Incoming SePay Webhook Payload: {payload}")
 
         tx_id = str(payload.get('id') or payload.get('referenceCode') or payload.get('transaction_id') or '')
         amount = float(payload.get('transferAmount') or payload.get('amount') or 0)
@@ -178,28 +267,65 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
         gateway = str(payload.get('gateway') or 'SEPAY_VIETQR')
         ref_code = str(payload.get('referenceCode') or '')
 
-        if not tx_id or amount <= 0:
-            logging.warning("Missing tx_id or invalid amount")
-            self._send_json(400, {"success": False, "error": "Missing transaction id or invalid amount"})
+        if (not tx_id or amount < 50000 or payload.get('transferType') != 'in'
+                or str(payload.get('accountNumber') or '') != '837006868'):
+            logging.warning("Rejected SePay webhook with invalid transaction fields")
+            self._send_json(422, {"success": False, "error": "Invalid transaction fields"})
+            return
+
+        if amount < 350000:
+            try:
+                fwd_data = json.dumps(payload).encode('utf-8')
+                fwd_req = urllib.request.Request(
+                    "https://aicenty.com/api/sepay/webhook",
+                    data=fwd_data,
+                    headers={
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Apikey ' + os.environ['BUTLER_SEPAY_FORWARD_KEY'],
+                        'User-Agent': 'AicentySepayForwarder/1.0'
+                    }
+                )
+                with urllib.request.urlopen(fwd_req, timeout=5.0) as fwd_resp:
+                    logging.info(f"Forwarded underpayment TX {tx_id} ({amount}) to Laravel, status={fwd_resp.status}")
+            except Exception as fwd_err:
+                logging.warning(f"Forward underpayment TX {tx_id} warning: {fwd_err}")
+            self._send_json(200, {"success": False, "status": "manual_review_needed", "message": "Amount below 350000 VND flagged for Ops review"})
             return
 
         try:
             conn = psycopg2.connect(**DB_CONFIG)
             conn.autocommit = True
             cur = conn.cursor(cursor_factory=RealDictCursor)
-            
+
             cur.execute("""
                 SELECT fn_process_sepay_webhook(%s, %s, %s, %s, %s) AS result;
             """, (tx_id, amount, content, gateway, ref_code))
-            
+
             row = cur.fetchone()
             result = row['result'] if row else {}
-            
+
             cur.close()
             conn.close()
 
             logging.info(f"SePay Process Result for TX {tx_id}: {result}")
-            
+
+            # Forward payload to Laravel for complete tenant provisioning, Web Portal & Zalo alerts
+            try:
+                fwd_data = json.dumps(payload).encode('utf-8')
+                fwd_req = urllib.request.Request(
+                    "https://aicenty.com/api/sepay/webhook",
+                    data=fwd_data,
+                    headers={
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Apikey ' + os.environ['BUTLER_SEPAY_FORWARD_KEY'],
+                        'User-Agent': 'AicentySepayForwarder/1.0'
+                    }
+                )
+                with urllib.request.urlopen(fwd_req, timeout=5.0) as fwd_resp:
+                    logging.info(f"Forwarded SePay webhook to Laravel, status={fwd_resp.status}")
+            except Exception as fwd_err:
+                logging.warning(f"Forward to Laravel warning: {fwd_err}")
+
             if result.get('status') == 'ALREADY_PROCESSED':
                 self._send_json(200, {"success": True, "message": "Transaction already processed", "data": result})
             elif result.get('success'):
@@ -209,7 +335,7 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
 
         except Exception as err:
             logging.error(f"Database error processing SePay webhook: {err}")
-            self._send_json(500, {"success": False, "error": str(err)})
+            self._send_json(500, {"success": False, "error": "Payment processing failed"})
 
 def run():
     server_address = ('127.0.0.1', 18896)

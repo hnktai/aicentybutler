@@ -21,6 +21,7 @@ import (
 	"github.com/nextlevelbuilder/goclaw/internal/channels"
 	"github.com/nextlevelbuilder/goclaw/internal/config"
 	"github.com/nextlevelbuilder/goclaw/internal/store"
+	"github.com/nextlevelbuilder/goclaw/internal/systemmessages"
 )
 
 const (
@@ -217,6 +218,11 @@ func (c *Channel) handleTextMessage(msg *zaloMessage) {
 	if content == "" {
 		content = "[empty message]"
 	}
+	senderName := msg.From.Username
+	if senderName == "" {
+		senderName = senderID
+	}
+	content = fmt.Sprintf("[From: %s (UID: %s)]\n%s", senderName, senderID, content)
 
 	slog.Debug("zalo text message received",
 		"sender_id", senderID,
@@ -229,7 +235,7 @@ func (c *Channel) handleTextMessage(msg *zaloMessage) {
 		"platform":   "zalo",
 	}
 
-	c.HandleMessage(senderID, chatID, content, nil, metadata, "direct")
+	c.HandleAuthorizedMessage(senderID, chatID, content, nil, metadata, "direct")
 }
 
 func (c *Channel) handleImageMessage(msg *zaloMessage) {
@@ -253,6 +259,11 @@ func (c *Channel) handleImageMessage(msg *zaloMessage) {
 	if content == "" {
 		content = "[image]"
 	}
+	senderName := msg.From.Username
+	if senderName == "" {
+		senderName = senderID
+	}
+	content = fmt.Sprintf("[From: %s (UID: %s)]\n%s", senderName, senderID, content)
 
 	// Download photo from Zalo CDN to local temp file (CDN URLs are auth-restricted/expiring)
 	var media []string
@@ -287,7 +298,7 @@ func (c *Channel) handleImageMessage(msg *zaloMessage) {
 		"platform":   "zalo",
 	}
 
-	c.HandleMessage(senderID, chatID, content, media, metadata, "direct")
+	c.HandleAuthorizedMessage(senderID, chatID, content, media, metadata, "direct")
 }
 
 // --- DM Policy ---
@@ -322,10 +333,11 @@ func (c *Channel) sendPairingReply(ctx context.Context, senderID, chatID string)
 		return
 	}
 
-	replyText := fmt.Sprintf(
-		"GoClaw: access not configured.\n\nYour Zalo user id: %s\n\nPairing code: %s\n\nAsk the bot owner to approve with:\n  goclaw pairing approve %s",
-		senderID, code, code,
-	)
+	replyText := c.SystemMessage("", systemmessages.KeyPairingAccountRequired, systemmessages.Vars{
+		"platform":  "Zalo",
+		"sender_id": senderID,
+		"code":      code,
+	})
 
 	if err := c.sendMessage(chatID, replyText); err != nil {
 		slog.Warn("failed to send zalo pairing reply", "error", err)
