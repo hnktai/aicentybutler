@@ -1,29 +1,39 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo ">> [FIREWALL] Áp dụng quy tắc iptables DOCKER-USER..."
+network_name="${AICENTY_INTERNAL_NETWORK:-goclaw-aicenty_aicenty_internal_net}"
+chain_name="AICENTY-BUTLER"
 
-# Flush custom rules
-iptables -F DOCKER-USER 2>/dev/null || true
+subnet="$(docker network inspect "$network_name" --format '{{(index .IPAM.Config 0).Subnet}}')"
+gateway="$(docker network inspect "$network_name" --format '{{(index .IPAM.Config 0).Gateway}}')"
 
-# 1. Allow established and related packets
-iptables -A DOCKER-USER -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+if [[ ! "$subnet" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}$ ]]; then
+  echo "invalid IPv4 subnet resolved for $network_name: $subnet" >&2
+  exit 1
+fi
+if [[ ! "$gateway" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]]; then
+  echo "invalid IPv4 gateway resolved for $network_name: $gateway" >&2
+  exit 1
+fi
 
-# 2. Allow intra-network traffic within aicenty network (172.27.0.0/16)
-iptables -A DOCKER-USER -s 172.27.0.0/16 -d 172.27.0.0/16 -j ACCEPT
+echo ">> [FIREWALL] Applying isolated rules for $network_name ($subnet)..."
 
-# 3. Block aicenty containers from accessing other docker networks (172.16.0.0/12)
-iptables -A DOCKER-USER -s 172.27.0.0/16 -d 172.16.0.0/12 -j DROP
+iptables -N "$chain_name" 2>/dev/null || true
+iptables -F "$chain_name"
 
-# 4. Block RFC 1918 private ranges to prevent internal SSRF
-iptables -A DOCKER-USER -s 172.27.0.0/16 -d 10.0.0.0/8 -j DROP
-iptables -A DOCKER-USER -s 172.27.0.0/16 -d 192.168.0.0/16 -j DROP
+while iptables -C DOCKER-USER -s "$subnet" -j "$chain_name" 2>/dev/null; do
+  iptables -D DOCKER-USER -s "$subnet" -j "$chain_name"
+done
+iptables -I DOCKER-USER 1 -s "$subnet" -j "$chain_name"
 
-# 5. Block direct probe to other services ports on the host
-iptables -A DOCKER-USER -s 172.27.0.0/16 -p tcp -m multiport --dports 18890,5433,5434,8069,8070,8073,8074 -j DROP
+iptables -A "$chain_name" -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+iptables -A "$chain_name" -d "$gateway/32" -j DROP
+iptables -A "$chain_name" -d "$subnet" -j ACCEPT
+iptables -A "$chain_name" -d 10.0.0.0/8 -j DROP
+iptables -A "$chain_name" -d 172.16.0.0/12 -j DROP
+iptables -A "$chain_name" -d 192.168.0.0/16 -j DROP
+iptables -A "$chain_name" -d 169.254.0.0/16 -j DROP
+iptables -A "$chain_name" -j RETURN
 
-# 6. Default accept everything else (public internet for AI APIs)
-iptables -A DOCKER-USER -j RETURN
-
-echo ">> [FIREWALL] Danh sách quy tắc hiện tại:"
 iptables -L DOCKER-USER -n -v --line-numbers
+iptables -L "$chain_name" -n -v --line-numbers

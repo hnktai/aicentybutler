@@ -14,7 +14,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('app:crontab-check')->everyMinute();
-        $schedule->command('homepage:send-appointment-reminders')->everyMinute();
+        $schedule->command('homepage:send-appointment-reminders')
+            ->everyMinute()
+            ->withoutOverlapping(10);
 
         $customSchedulerPath = app_path('Console/CustomScheduler.php');
 
@@ -41,12 +43,18 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('app:clear-ai-realtime-image')->daily();
 
-        $schedule->command('app:test-command')->everyMinute();
-
         // Chỉ đồng bộ thành viên đã có binding chính xác; không chạy heuristic owner onboarding legacy.
         $schedule->command('butler:sync-onboarding --verified-members-only')
             ->everyMinute()
             ->withoutOverlapping(5);
+
+        $schedule->command('butler:reconcile-lifecycle-anomalies')
+            ->hourly()
+            ->withoutOverlapping(15);
+
+        $schedule->command('butler:monitor-trace-usage')
+            ->hourly()
+            ->withoutOverlapping(15);
 
         // Quản Gia AI: Tách bạch kênh & khung giờ (Asia/Ho_Chi_Minh)
         // 1. Zalo Quản Gia: Chỉ chào Sáng (07:00) & Tối (21:30)

@@ -1,0 +1,29 @@
+{
+  "product_version": "production-audit-20261113.2",
+  "source_commit": "5fafe76aadcab54a54ac7b06266206c6c0f37bec",
+  "build_time_utc": "2026-11-13T15:11:07Z",
+  "protocol_version": 3,
+  "schema_version": 99,
+  "engine": {
+    "image": "ghcr.io/hnktai/aicentybutler-runtime@sha256:990f5255f9e78f74e904fef052f6502880e5c6dbe067eb849358a871e96be57d",
+    "image_id": "sha256:990f5255f9e78f74e904fef052f6502880e5c6dbe067eb849358a871e96be57d",
+    "binary_sha256": "eb04e4b6bf9a1e35e5166239362d1950946fbf08556e94dcb596d11fb1658149"
+  },
+  "document_renderer": {
+    "image": "ghcr.io/hnktai/aicenty-document-renderer@sha256:c2d245516aea6db714b28cd9b099a3bf37eba81d09c4facdc21069ac183def6b"
+  },
+  "standard_skills": [
+    "document-to-pdf",
+    "images-to-pdf",
+    "quangia-image-generation",
+    "quangia-mobile-messaging"
+  ],
+  "verification": {
+    "go_race_tracing_and_store": "pass",
+    "isolated_canary": "pass",
+    "canary_schema_version": 99,
+    "canary_standard_skill_count": 4,
+    "canary_text_pdf": "pass",
+    "canary_images_pdf": "pass"
+  }
+}

@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # ==============================================================================
 # AICENTY BUTLER: DATABASE VACUUM & VECTOR REINDEX MAINTENANCE SCRIPT
 # Chạy tự động lúc 02:00 sáng Chủ Nhật hàng tuần qua Cronjob
 # ==============================================================================
-set -e
+set -euo pipefail
 
 CONTAINER_NAME="aicenty-butler-postgres"
 DB_NAME="aicenty_butler_db"
@@ -23,10 +23,10 @@ TABLES=(
 
 for TBL in "${TABLES[@]}"; do
     echo ">> [VACUUM] Đang dọn dẹp và thu thập thống kê: $TBL..."
-    docker exec -i "$CONTAINER_NAME" psql -U "$DB_USER" -d "$DB_NAME" -c "VACUUM (ANALYZE, VERBOSE) $TBL;" || echo "⚠️ Lỗi khi VACUUM $TBL"
+    docker exec -i "$CONTAINER_NAME" psql -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DB_NAME" -c "VACUUM (ANALYZE, VERBOSE) $TBL;"
     
     echo ">> [REINDEX] Đang tái tạo chỉ mục không khóa bảng (CONCURRENTLY): $TBL..."
-    docker exec -i "$CONTAINER_NAME" psql -U "$DB_USER" -d "$DB_NAME" -c "REINDEX TABLE CONCURRENTLY $TBL;" || echo "⚠️ Lỗi khi REINDEX $TBL"
+    docker exec -i "$CONTAINER_NAME" psql -v ON_ERROR_STOP=1 -U "$DB_USER" -d "$DB_NAME" -c "REINDEX TABLE CONCURRENTLY $TBL;"
 done
 
 echo "=========================================================="
