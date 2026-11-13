@@ -1,0 +1,4 @@
+# Aicenty Butler production maintenance. Runtime source is immutable; no Git sync runs on production.
+0 */12 * * * root /opt/goclaw-aicenty/scripts/backup-db.sh >> /var/log/aicenty-backup.log 2>&1
+0 0 * * * root docker exec -i aicenty-butler-postgres psql -v ON_ERROR_STOP=1 -U aicenty_user -d aicenty_butler_db -c "SELECT fn_reset_daily_fup();" >> /var/log/aicenty-fup.log 2>&1
+30 2 * * 0 root /opt/goclaw-aicenty/scripts/db-maintenance.sh >> /var/log/aicenty-db-maint.log 2>&1
