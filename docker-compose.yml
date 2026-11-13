@@ -1,6 +1,6 @@
 services:
   aicenty-butler-core:
-    image: ghcr.io/nextlevelbuilder/goclaw:latest
+    image: ${AICENTY_BUTLER_IMAGE:?set AICENTY_BUTLER_IMAGE to an immutable digest}
     container_name: aicenty-butler-engine
     restart: unless-stopped
     stop_grace_period: 30s
@@ -14,6 +14,8 @@ services:
       - GOCLAW_HOST=0.0.0.0
       - GOCLAW_PORT=18790
       - GOCLAW_GATEWAY_TOKEN=${GOCLAW_GATEWAY_TOKEN}
+      - GOCLAW_POSTGRES_DSN=${GOCLAW_POSTGRES_DSN:?set GOCLAW_POSTGRES_DSN}
+      - GOCLAW_REDIS_DSN=${GOCLAW_REDIS_DSN:-}
       - GOCLAW_GEMINI_API_KEY=${GOCLAW_GEMINI_API_KEY}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - GOOGLE_AI_STUDIO_API_KEY=${GOOGLE_AI_STUDIO_API_KEY}
@@ -26,16 +28,84 @@ services:
       - REDIS_HOST=aicenty-butler-redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - AICENTY_DOCUMENT_RENDERER_URL=http://aicenty-document-renderer:8787
+      - AICENTY_WEB_PDF_RENDERER_URL=http://aicenty-web-pdf-renderer:8787
     volumes:
+      - aicenty_runtime_data:/app/data
+      - aicenty_workspace:/app/workspace
       - zalo_sessions_vault:/opt/goclaw-aicenty/data/sessions
       - aicenty_media_vault:/opt/goclaw-aicenty/data/media
     networks:
       - aicenty_internal_net
+      - document_render
     depends_on:
       aicenty-butler-postgres:
         condition: service_healthy
       aicenty-butler-redis:
         condition: service_healthy
+      aicenty-document-renderer:
+        condition: service_healthy
+      aicenty-web-pdf-renderer:
+        condition: service_healthy
+
+  aicenty-document-renderer:
+    image: ${AICENTY_DOCUMENT_RENDERER_IMAGE:?set AICENTY_DOCUMENT_RENDERER_IMAGE to an immutable digest}
+    container_name: aicenty-document-renderer
+    restart: unless-stopped
+    init: true
+    read_only: true
+    stop_grace_period: 30s
+    environment:
+      - PORT=8787
+      - ALLOWED_MODES=text,word
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=512m
+    shm_size: 256m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 200
+    mem_limit: 2g
+    cpus: 1.5
+    networks:
+      - document_render
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8787/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  aicenty-web-pdf-renderer:
+    image: ${AICENTY_DOCUMENT_RENDERER_IMAGE:?set AICENTY_DOCUMENT_RENDERER_IMAGE to an immutable digest}
+    container_name: aicenty-web-pdf-renderer
+    restart: unless-stopped
+    init: true
+    read_only: true
+    stop_grace_period: 30s
+    environment:
+      - PORT=8787
+      - ALLOWED_MODES=web
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=512m
+    shm_size: 256m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 200
+    mem_limit: 2g
+    cpus: 1.5
+    networks:
+      - document_render
+      - web_egress
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8787/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   aicenty-butler-postgres:
     image: pgvector/pgvector:pg16
@@ -91,9 +161,20 @@ services:
 volumes:
   aicenty_pgdata:
   aicenty_redisdata:
+  aicenty_runtime_data:
+    external: true
+    name: goclaw-aicenty_aicenty_runtime_data
+  aicenty_workspace:
+    external: true
+    name: goclaw-aicenty_aicenty_workspace
   zalo_sessions_vault:
   aicenty_media_vault:
 
 networks:
   aicenty_internal_net:
+    driver: bridge
+  document_render:
+    driver: bridge
+    internal: true
+  web_egress:
     driver: bridge

@@ -1,0 +1,9 @@
+const toggle=document.querySelector('.nav-toggle');const links=document.querySelector('#nav-links');
+toggle?.addEventListener('click',()=>{const open=links.classList.toggle('open');toggle.setAttribute('aria-expanded',String(open));});
+document.querySelectorAll('.nav-dropdown-toggle').forEach(b=>b.addEventListener('click',()=>{const open=b.closest('.nav-dropdown').classList.toggle('open');b.setAttribute('aria-expanded',String(open));}));
+links?.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{links.classList.remove('open');toggle?.setAttribute('aria-expanded','false');}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){links?.classList.remove('open');toggle?.setAttribute('aria-expanded','false');document.querySelectorAll('.nav-dropdown.open').forEach(d=>{d.classList.remove('open');d.querySelector('button').setAttribute('aria-expanded','false');});}});
+const search=document.querySelector('#news-search');const buttons=[...document.querySelectorAll('[data-filter]')];let category='all';
+const normalize=s=>s.toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
+function filterArticles(){const query=normalize(search?.value.trim()||'');let total=0;document.querySelectorAll('.news-category').forEach(section=>{let shown=0;section.querySelectorAll('.news-card').forEach(card=>{const visible=(category==='all'||section.dataset.category===category)&&normalize(card.dataset.search).includes(query);card.hidden=!visible;if(visible)shown++;});section.hidden=shown===0;total+=shown;});const status=document.querySelector('#filter-status');if(status)status.textContent=`Hiển thị ${total} / 15 bài viết`;const empty=document.querySelector('#no-results');if(empty)empty.hidden=total>0;}
+buttons.forEach(b=>b.addEventListener('click',()=>{category=b.dataset.filter;buttons.forEach(x=>x.setAttribute('aria-pressed',String(x===b)));filterArticles();}));search?.addEventListener('input',filterArticles);

@@ -1,0 +1,45 @@
+# syntax=docker/dockerfile:1
+
+ARG GOCLAW_BASE=ghcr.io/nextlevelbuilder/goclaw@sha256:2938d3b7585e78a18595a7c67844d1ae62b0696c71ce0d9f09092576389affd8
+
+FROM node:22-alpine AS web-builder
+RUN corepack enable && corepack prepare pnpm@10.30.1 --activate
+WORKDIR /web
+COPY ui/web/.npmrc ui/web/package.json ui/web/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+COPY ui/web/ ./
+RUN pnpm build
+
+FROM golang:1.26-bookworm AS go-builder
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+COPY --from=web-builder /web/dist /src/internal/webui/dist
+
+ARG VERSION=production-sync-20261113
+ARG COMMIT_SHA=unknown
+RUN CGO_ENABLED=0 GOOS=linux go build \
+      -tags embedui \
+      -ldflags="-s -w -X github.com/nextlevelbuilder/goclaw/cmd.Version=${VERSION} -X github.com/nextlevelbuilder/goclaw/cmd.CommitSHA=${COMMIT_SHA}" \
+      -o /out/goclaw . \
+    && CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/pkg-helper ./cmd/pkg-helper
+
+FROM ${GOCLAW_BASE}
+
+USER root
+
+COPY --from=go-builder /out/goclaw /app/goclaw
+COPY --from=go-builder /out/pkg-helper /app/pkg-helper
+COPY --from=go-builder /src/migrations/ /app/migrations/
+COPY --from=go-builder /src/skills/ /app/bundled-skills/
+
+COPY docker/requirements-aicenty-pdf.txt /tmp/requirements-aicenty-pdf.txt
+RUN python3 -m pip install --no-cache-dir --break-system-packages --only-binary=:all: --require-hashes -r /tmp/requirements-aicenty-pdf.txt \
+    && rm -f /tmp/requirements-aicenty-pdf.txt \
+    && install -o root -g root -m 755 /app/bundled-skills/images-to-pdf/scripts/images_to_pdf.py /usr/local/bin/images-to-pdf \
+    && install -o root -g root -m 755 /app/bundled-skills/document-to-pdf/scripts/document_to_pdf_client.py /usr/local/bin/document-to-pdf \
+    && chmod 755 /app/goclaw /app/pkg-helper
+
+LABEL com.aicenty.butler.release="production-sync-20261113" \
+      com.aicenty.butler.feature.document-to-pdf="1.0.3"

@@ -14,6 +14,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,6 +26,13 @@ const maxHistoryKeys = 1000
 
 // DefaultGroupHistoryLimit is the default pending message limit per group.
 const DefaultGroupHistoryLimit = 200
+
+const (
+	// GroupWelcomeMarkerV1 is persisted with group history so a channel sends
+	// its first-use guidance exactly once, including across gateway restarts.
+	GroupWelcomeMarkerV1          = "[[goclaw:internal:group-welcome:v1]]"
+	internalHistoryMarkerSenderID = "__goclaw_internal__"
+)
 
 const (
 	flushInterval        = 3 * time.Second  // periodic flush interval
@@ -45,13 +53,14 @@ type MediaRef struct {
 
 // HistoryEntry represents a single tracked group message.
 type HistoryEntry struct {
-	Sender    string
-	SenderID  string
-	Body      string
-	Media     []string   // temp file paths for images/attachments (RAM-only, not persisted to DB)
-	MediaRefs []MediaRef // deferred media refs for lazy download (RAM-only, not persisted)
-	Timestamp time.Time
-	MessageID string
+	Sender           string
+	SenderID         string
+	Body             string
+	ParentHistoryKey string
+	Media            []string   // temp file paths for images/attachments (RAM-only, not persisted to DB)
+	MediaRefs        []MediaRef // deferred media refs for lazy download (RAM-only, not persisted)
+	Timestamp        time.Time
+	MessageID        string
 }
 
 // PendingHistory tracks group messages across multiple groups.
@@ -69,6 +78,13 @@ type PendingHistory struct {
 	flushSignal chan struct{}
 	stopCh      chan struct{}
 	stopped     chan struct{}
+	// flusherStarted is set by StartFlusher once flushLoop is running, so
+	// StopFlusher knows whether there is a goroutine to wait for. A channel
+	// whose Start() failed before reaching StartFlusher() is still Stop()ped
+	// by InstanceLoader.Reload; without this flag StopFlusher would block
+	// forever on <-stopped and wedge the loader mutex.
+	flusherStarted atomic.Bool
+	stopOnce       sync.Once // guards close(stopCh) so Stop() can run twice
 
 	// Tenant isolation for DB operations.
 	tenantID uuid.UUID
@@ -101,6 +117,47 @@ func NewPersistentHistory(channelName string, s store.PendingMessageStore, tenan
 
 // IsPersistent returns true if this history is backed by a DB store.
 func (ph *PendingHistory) IsPersistent() bool { return ph.store != nil }
+
+// PersistedGroupIDs returns the current channel's stored group and parent
+// history keys. It lets platform metadata refreshes backfill titles for groups
+// that have pending history but no channel-contact record.
+func (ph *PendingHistory) PersistedGroupIDs(ctx context.Context) ([]string, error) {
+	if ph == nil || ph.store == nil || ph.channelName == "" {
+		return nil, nil
+	}
+	groups, err := ph.store.ListGroups(ctx)
+	if err != nil {
+		return nil, err
+	}
+	seen := make(map[string]struct{})
+	var ids []string
+	for _, group := range groups {
+		if group.ChannelName != ph.channelName {
+			continue
+		}
+		for _, id := range []string{group.HistoryKey, group.ParentHistoryKey} {
+			if id == "" {
+				continue
+			}
+			if _, ok := seen[id]; ok {
+				continue
+			}
+			seen[id] = struct{}{}
+			ids = append(ids, id)
+		}
+	}
+	return ids, nil
+}
+
+// SetChannelName updates the channel identity used for DB persistence.
+// DB-backed channel instances are constructed with a platform type first and
+// renamed to the instance name before start.
+func (ph *PendingHistory) SetChannelName(name string) {
+	if name == "" {
+		return
+	}
+	ph.channelName = name
+}
 
 // SetCompactionConfig sets the LLM compaction config. Call after creation.
 func (ph *PendingHistory) SetCompactionConfig(cfg *CompactionConfig) {
@@ -144,6 +201,87 @@ func (ph *PendingHistory) tenantCtx() context.Context {
 	return ctx
 }
 
+func containsHistoryMarker(entries []HistoryEntry, marker string) bool {
+	for _, entry := range entries {
+		if entry.SenderID == internalHistoryMarkerSenderID && entry.Body == marker {
+			return true
+		}
+	}
+	return false
+}
+
+// HasMarker checks RAM, pending persistence, and the consumed archive. Markers
+// survive Clear(), which archives pending rows after the bot replies.
+func (ph *PendingHistory) HasMarker(historyKey, marker string) bool {
+	if ph == nil || historyKey == "" || marker == "" {
+		return false
+	}
+	if containsHistoryMarker(ph.GetEntries(historyKey), marker) {
+		return true
+	}
+	if ph.store == nil || ph.channelName == "" {
+		return false
+	}
+
+	ctx, cancel := context.WithTimeout(ph.tenantCtx(), 10*time.Second)
+	defer cancel()
+	archived, err := ph.store.ListArchivedByKey(ctx, ph.channelName, historyKey, time.Time{}, 1000)
+	if err != nil {
+		slog.Warn("pending_history.marker_archive_lookup_failed",
+			"channel", ph.channelName, "key", historyKey, "error", err)
+		return false
+	}
+	for _, message := range archived {
+		if message.SenderID == internalHistoryMarkerSenderID && message.Body == marker {
+			return true
+		}
+	}
+	return false
+}
+
+// RecordMarker writes an internal marker synchronously before adding it to RAM.
+// Synchronous persistence prevents duplicate first-use messages after restart.
+func (ph *PendingHistory) RecordMarker(historyKey, marker string) error {
+	if ph == nil || historyKey == "" || marker == "" {
+		return nil
+	}
+	now := time.Now()
+	entry := HistoryEntry{
+		Sender:    "system",
+		SenderID:  internalHistoryMarkerSenderID,
+		Body:      marker,
+		Timestamp: now,
+		MessageID: marker,
+	}
+
+	var persistErr error
+	if ph.store != nil && ph.channelName != "" {
+		ctx, cancel := context.WithTimeout(ph.tenantCtx(), 10*time.Second)
+		persistErr = ph.store.AppendBatch(ctx, []store.PendingMessage{{
+			ChannelName:   ph.channelName,
+			HistoryKey:    historyKey,
+			Sender:        entry.Sender,
+			SenderID:      entry.SenderID,
+			Body:          entry.Body,
+			PlatformMsgID: entry.MessageID,
+			CreatedAt:     now,
+			UpdatedAt:     now,
+		}})
+		cancel()
+	}
+
+	ph.mu.Lock()
+	existing := ph.entries[historyKey]
+	if !containsHistoryMarker(existing, marker) {
+		ph.entries[historyKey] = append(existing, entry)
+		ph.removeFromOrder(historyKey)
+		ph.order = append(ph.order, historyKey)
+		ph.evictOldKeys()
+	}
+	ph.mu.Unlock()
+	return persistErr
+}
+
 // Record adds a message to the pending history for a group.
 // If limit ≤ 0, recording is disabled.
 func (ph *PendingHistory) Record(historyKey string, entry HistoryEntry, limit int) {
@@ -171,13 +309,14 @@ func (ph *PendingHistory) Record(historyKey string, entry HistoryEntry, limit in
 	// Queue for DB persistence (batched flush)
 	if ph.store != nil {
 		ph.enqueueFlush(store.PendingMessage{
-			ChannelName:   ph.channelName,
-			HistoryKey:    historyKey,
-			Sender:        entry.Sender,
-			SenderID:      entry.SenderID,
-			Body:          entry.Body,
-			PlatformMsgID: entry.MessageID,
-			CreatedAt:     entry.Timestamp,
+			ChannelName:      ph.channelName,
+			HistoryKey:       historyKey,
+			ParentHistoryKey: entry.ParentHistoryKey,
+			Sender:           entry.Sender,
+			SenderID:         entry.SenderID,
+			Body:             entry.Body,
+			PlatformMsgID:    entry.MessageID,
+			CreatedAt:        entry.Timestamp,
 		})
 	}
 
@@ -205,11 +344,12 @@ func (ph *PendingHistory) loadFromDB(historyKey string) []HistoryEntry {
 	entries := make([]HistoryEntry, 0, len(msgs))
 	for _, m := range msgs {
 		entries = append(entries, HistoryEntry{
-			Sender:    m.Sender,
-			SenderID:  m.SenderID,
-			Body:      m.Body,
-			Timestamp: m.CreatedAt,
-			MessageID: m.PlatformMsgID,
+			Sender:           m.Sender,
+			SenderID:         m.SenderID,
+			Body:             m.Body,
+			ParentHistoryKey: m.ParentHistoryKey,
+			Timestamp:        m.CreatedAt,
+			MessageID:        m.PlatformMsgID,
 		})
 	}
 
@@ -255,6 +395,9 @@ func (ph *PendingHistory) BuildContext(historyKey, currentMessage string, limit 
 
 	var lines []string
 	for _, e := range entriesCopy {
+		if e.SenderID == internalHistoryMarkerSenderID {
+			continue
+		}
 		ts := ""
 		if !e.Timestamp.IsZero() {
 			ts = fmt.Sprintf(" [%s]", e.Timestamp.Format("15:04"))

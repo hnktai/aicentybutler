@@ -1,5 +1,6 @@
 VERSION ?= $(shell git describe --tags --abbrev=0 --match "v[0-9]*" 2>/dev/null || echo dev)
-LDFLAGS  = -s -w -X github.com/nextlevelbuilder/goclaw/cmd.Version=$(VERSION)
+COMMIT_SHA ?= $(shell git rev-parse HEAD 2>/dev/null || echo unknown)
+LDFLAGS  = -s -w -X github.com/nextlevelbuilder/goclaw/cmd.Version=$(VERSION) -X github.com/nextlevelbuilder/goclaw/cmd.CommitSHA=$(COMMIT_SHA)
 BINARY   = goclaw
 
 .PHONY: build build-full build-tui run clean version up up-build down logs reset test vet check-web dev migrate setup ci desktop-dev desktop-build desktop-dmg test-hooks test-hooks-unit test-hooks-e2e test-hooks-chaos test-hooks-rbac test-hooks-tracing
@@ -31,6 +32,8 @@ version:
 # ── Docker Compose ──
 # Default: backend (with embedded web UI) + Postgres. No separate nginx needed.
 # Add WITH_WEB_NGINX=1 for separate nginx on :3000 (custom SSL, reverse proxy).
+# Cloudflare Tunnel: if `.env.cloudflared` exists it is merged automatically (same as
+# docker-compose.cloudflared.yml). Set WITH_CLOUDFLARED=0 to skip.
 COMPOSE_BASE = docker compose -f docker-compose.yml -f docker-compose.postgres.yml
 ifdef WITH_WEB_NGINX
 COMPOSE_BASE += -f docker-compose.selfservice.yml
@@ -54,6 +57,11 @@ COMPOSE_EXTRA += -f docker-compose.redis.yml
 endif
 ifdef WITH_CLAUDE_CLI
 COMPOSE_EXTRA += -f docker-compose.claude-cli.yml
+endif
+ifneq ($(WITH_CLOUDFLARED),0)
+ifneq ($(wildcard .env.cloudflared),)
+COMPOSE_EXTRA += -f docker-compose.cloudflared.yml
+endif
 endif
 COMPOSE = $(COMPOSE_BASE) $(COMPOSE_EXTRA)
 UPGRADE = docker compose -f docker-compose.yml -f docker-compose.postgres.yml -f docker-compose.upgrade.yml

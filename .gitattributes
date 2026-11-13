@@ -1,3 +1,5 @@
 # Ensure shell scripts always use LF line endings (critical for Docker builds on Windows)
 *.sh text eol=lf
 docker-entrypoint.sh text eol=lf
+deploy/aicenty-butler/laravel-patches/*.patch text eol=lf whitespace=-blank-at-eol
+apps/aicenty-laravel/** text=auto eol=lf

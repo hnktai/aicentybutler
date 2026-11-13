@@ -4,46 +4,49 @@ import "database/sql"
 
 // Stores is the top-level container for all storage backends.
 type Stores struct {
-	DB                    *sql.DB // underlying connection
-	Sessions              SessionStore
-	Memory                MemoryStore
-	Cron                  CronStore
-	Pairing               PairingStore
-	Skills                SkillStore
-	Agents                AgentStore
-	Providers             ProviderStore
-	Tracing               TracingStore
-	RunTimeline           RunTimelineStore
-	MCP                   MCPServerStore
-	ChannelInstances      ChannelInstanceStore
-	ConfigSecrets         ConfigSecretsStore
-	AgentLinks            AgentLinkStore
-	Teams                 TeamStore
-	BuiltinTools          BuiltinToolStore
-	PendingMessages       PendingMessageStore
-	ChannelMemory         ChannelMemoryExtractionStore
-	KnowledgeGraph        KnowledgeGraphStore
-	Contacts              ContactStore
-	Activity              ActivityStore
-	Snapshots             SnapshotStore
-	UsageEvents           UsageEventStore
-	BrowserCookies        BrowserCookieStore
-	SecureCLI             SecureCLIStore
-	SecureCLIGrants       SecureCLIAgentGrantStore
-	APIKeys               APIKeyStore
-	Heartbeats            HeartbeatStore
-	ConfigPermissions     ConfigPermissionStore
-	Tenants               TenantStore
-	BuiltinToolTenantCfgs BuiltinToolTenantConfigStore
-	SkillTenantCfgs       SkillTenantConfigStore
-	SkillEvolution        SkillEvolutionStore
-	SystemConfigs         SystemConfigStore
-	SubagentTasks         SubagentTaskStore
-	Vault                 VaultStore
-	Episodic              EpisodicStore
-	EvolutionMetrics      EvolutionMetricsStore
-	EvolutionSuggestions  EvolutionSuggestionStore
-	BitrixPortals         BitrixPortalStore
+	DB                     *sql.DB // underlying connection
+	Sessions               SessionStore
+	Memory                 MemoryStore
+	Cron                   CronStore
+	Pairing                PairingStore
+	Skills                 SkillStore
+	Agents                 AgentStore
+	Providers              ProviderStore
+	Tracing                TracingStore
+	RunTimeline            RunTimelineStore
+	MCP                    MCPServerStore
+	MCPOAuthTokens         MCPOAuthTokenStore
+	ChannelInstances       ChannelInstanceStore
+	ConfigSecrets          ConfigSecretsStore
+	AgentLinks             AgentLinkStore
+	Teams                  TeamStore
+	BuiltinTools           BuiltinToolStore
+	PendingMessages        PendingMessageStore
+	ChannelMemory          ChannelMemoryExtractionStore
+	KnowledgeGraph         KnowledgeGraphStore
+	Contacts               ContactStore
+	Activity               ActivityStore
+	ZaloFriendVerification ZaloFriendVerificationStore
+	Snapshots              SnapshotStore
+	UsageEvents            UsageEventStore
+	BrowserCookies         BrowserCookieStore
+	SecureCLI              SecureCLIStore
+	SecureCLIGrants        SecureCLIAgentGrantStore
+	APIKeys                APIKeyStore
+	Heartbeats             HeartbeatStore
+	ConfigPermissions      ConfigPermissionStore
+	Tenants                TenantStore
+	BuiltinToolTenantCfgs  BuiltinToolTenantConfigStore
+	SkillTenantCfgs        SkillTenantConfigStore
+	SkillEvolution         SkillEvolutionStore
+	SystemConfigs          SystemConfigStore
+	SubagentTasks          SubagentTaskStore
+	SubagentTaskRecovery   SubagentTaskRecoveryStore
+	Vault                  VaultStore
+	Episodic               EpisodicStore
+	EvolutionMetrics       EvolutionMetricsStore
+	EvolutionSuggestions   EvolutionSuggestionStore
+	BitrixPortals          BitrixPortalStore
 	// Hooks is hooks.HookStore — typed as any to avoid import cycle
 	// (hooks package imports store for context helpers).
 	// Callers: type-assert to hooks.HookStore before use.
