@@ -16,6 +16,14 @@ import (
 	"github.com/nextlevelbuilder/goclaw/internal/tools"
 )
 
+func isSticker(content protocol.Content) bool {
+	if len(content.Raw) == 0 {
+		return false
+	}
+	raw := strings.ToLower(string(content.Raw))
+	return strings.Contains(raw, "sticker") || strings.Contains(raw, "cateid") || strings.Contains(raw, "stickerid")
+}
+
 // extractContentAndMedia returns text content with media tags plus local media paths.
 func extractContentAndMedia(content protocol.Content) (string, []string) {
 	if text := content.Text(); text != "" {
@@ -23,12 +31,24 @@ func extractContentAndMedia(content protocol.Content) (string, []string) {
 	}
 	att := content.ParseAttachment()
 	if att == nil || att.URL() == "" {
+		if isSticker(content) {
+			return "[Khách hàng gửi một nhãn dán / sticker cảm xúc]", nil
+		}
+		if text := content.AttachmentText(); text != "" {
+			return text, nil
+		}
+		if len(content.Raw) > 0 {
+			return "[Khách hàng gửi một nhãn dán / sticker cảm xúc]", nil
+		}
 		return "", nil
 	}
 
 	filePath, err := downloadFile(context.Background(), att.URL())
 	if err != nil {
 		slog.Warn("zalo_personal: failed to download attachment", "url", att.URL(), "error", err)
+		if isSticker(content) {
+			return "[Khách hàng gửi một nhãn dán / sticker cảm xúc]", nil
+		}
 		if text := content.AttachmentText(); text != "" {
 			return text, nil
 		}

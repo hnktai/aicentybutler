@@ -75,9 +75,9 @@ func isContextOverflowError(lower string) bool {
 		"input is too long",         // DashScope
 		"token limit",
 		"too many tokens",
-		"请求输入过长",       // Chinese generic
-		"超出最大长度限制",     // Chinese Qwen
-		"上下文长度",        // Chinese context length
+		"请求输入过长",   // Chinese generic
+		"超出最大长度限制", // Chinese Qwen
+		"上下文长度",    // Chinese context length
 	) || (strings.Contains(lower, "context") &&
 		containsAny(lower, "overflow", "too large", "too long", "limit", "exceeded"))
 }
@@ -133,4 +133,42 @@ func formatQuotaExceeded(result channels.QuotaResult) string {
 	labels := map[string]string{"hour": "Hourly", "day": "Daily", "week": "Weekly"}
 	return fmt.Sprintf("⚠️ %s request limit reached (%d/%d). Please try again later.",
 		labels[result.Window], result.Used, result.Limit)
+}
+
+// isZaloChannel reports whether the channel is a Zalo channel (Personal or OA)
+// or named with zalo/quangia.
+func isZaloChannel(channelType, channelName string) bool {
+	if channelType == channels.TypeZaloOA || channelType == channels.TypeZaloPersonal {
+		return true
+	}
+	name := strings.ToLower(channelName)
+	return strings.Contains(name, "zalo") || name == "quangia"
+}
+
+// formatExternalChannelError determines the user-facing message when an agent run fails on an external channel.
+// On Zalo channels, always returns a polite fallback message in Vietnamese so the user never feels abandoned.
+// On other external channels (FB, Telegram, etc.), returns empty string to suppress technical errors.
+// On internal channels (ws, etc.), returns the formatted error.
+func formatExternalChannelError(channelType, channelName, chatID string, meta map[string]string, err error) (string, bool) {
+	if isZaloChannel(channelType, channelName) {
+		targetTitle := "Ba Cường"
+		if chatID != "6631971342486485220" {
+			targetTitle = "Gia chủ"
+			if meta != nil {
+				for _, k := range []string{"display_name", "sender_name", "user_name", "first_name", "push_name", "sender"} {
+					if val := strings.TrimSpace(meta[k]); val != "" && !strings.EqualFold(val, "user") {
+						targetTitle = val
+						break
+					}
+				}
+			}
+		}
+		return fmt.Sprintf("Dạ %s đợi em một chút, hệ thống vừa bị nghẽn mạng tích tắc. Em đã ghi nhận và sẽ phản hồi %s ngay ạ!", targetTitle, targetTitle), true
+	}
+
+	if isExternalChannel(channelType) {
+		return "", true
+	}
+
+	return formatAgentError(err), false
 }

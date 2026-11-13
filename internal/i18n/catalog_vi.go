@@ -188,7 +188,7 @@ func init() {
 		MsgStatusPhaseCompact:  "Giai đoạn: Đang nén ngữ cảnh...",
 		MsgStatusPhaseDefault:  "Giai đoạn: Đang xử lý...",
 		MsgCancelledReply:      "✋ Đã hủy. Bạn muốn làm gì tiếp?",
-		MsgInjectedAck:         "Đã nhận, tôi sẽ xử lý trong tác vụ hiện tại.",
+		MsgInjectedAck:         "Dạ em đã nhận được dặn dò và đang xử lý luôn ạ.",
 
 		// Knowledge Graph
 		MsgEntityIDRequired:       "entity_id là bắt buộc",

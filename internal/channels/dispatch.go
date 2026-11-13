@@ -136,6 +136,49 @@ func (m *Manager) dispatchShard(ctx context.Context, id int, q <-chan bus.Outbou
 func (m *Manager) deliverOutbound(ctx context.Context, msg bus.OutboundMessage) {
 	m.mu.RLock()
 	channel, exists := m.channels[msg.Channel]
+	if !exists {
+		// Fallback 1: match running channel by exact Type (prefer active running instance)
+		for _, ch := range m.channels {
+			if strings.EqualFold(ch.Type(), msg.Channel) && ch.IsRunning() {
+				channel = ch
+				exists = true
+				break
+			}
+		}
+		// Fallback 2: fuzzy match running channel for "zalo"
+		if !exists && strings.Contains(strings.ToLower(msg.Channel), "zalo") {
+			for _, ch := range m.channels {
+				if (strings.Contains(strings.ToLower(ch.Type()), "zalo") || strings.Contains(strings.ToLower(ch.Name()), "zalo") || strings.EqualFold(ch.Name(), "quangia")) && ch.IsRunning() {
+					channel = ch
+					exists = true
+					break
+				}
+			}
+		}
+		// Fallback 3: any matching channel even if not running
+		if !exists {
+			for _, ch := range m.channels {
+				if strings.EqualFold(ch.Type(), msg.Channel) {
+					channel = ch
+					exists = true
+					break
+				}
+			}
+		}
+		// Fallback 4: single registered running channel fallback
+		if !exists {
+			for _, ch := range m.channels {
+				if ch.IsRunning() {
+					channel = ch
+					exists = true
+					break
+				}
+			}
+		}
+		if exists && channel != nil {
+			slog.Info("resolved outbound channel via fallback", "requested", msg.Channel, "resolved", channel.Name(), "type", channel.Type(), "running", channel.IsRunning())
+		}
+	}
 	m.mu.RUnlock()
 
 	if !exists {
@@ -177,6 +220,12 @@ func (m *Manager) deliverOutbound(ctx context.Context, msg bus.OutboundMessage) 
 
 	if err := channel.Send(sendCtx, msg); err != nil {
 		m.handleSendFailure(sendCtx, channel, msg, err)
+	} else {
+		slog.Info("outbound: delivered message to channel successfully",
+			"channel", msg.Channel,
+			"chat_id", msg.ChatID,
+			"content_len", len(msg.Content),
+		)
 	}
 }
 

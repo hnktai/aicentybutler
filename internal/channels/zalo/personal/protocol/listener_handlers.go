@@ -105,6 +105,7 @@ func (ln *Listener) handleControlEvents(ctx context.Context, data string, encTyp
 			Controls []struct {
 				Content struct {
 					ActType string          `json:"act_type"`
+					Act     string          `json:"act"`
 					FileID  any             `json:"fileId"` // can be string or number
 					Data    json.RawMessage `json:"data"`   // can be object {"url":"..."} or string
 				} `json:"content"`
@@ -117,39 +118,50 @@ func (ln *Listener) handleControlEvents(ctx context.Context, data string, encTyp
 	}
 
 	for _, ctrl := range envelope.Data.Controls {
-		if ctrl.Content.ActType != "file_done" {
-			continue
-		}
-		if ctrl.Content.FileID == nil {
-			continue
-		}
-		// FileID can be string or number (float64 from JSON).
-		// fmt.Sprint on large float64 produces scientific notation (3.15e+11),
-		// but callbacks are registered with the plain decimal string.
-		fileID := anyToDecimalString(ctrl.Content.FileID)
-		// Data can be an object {"url":"..."} or a plain string; extract URL from either.
-		var fileURL string
-		if len(ctrl.Content.Data) > 0 {
-			if ctrl.Content.Data[0] == '{' {
-				var dataObj struct {
-					URL string `json:"url"`
-				}
-				if json.Unmarshal(ctrl.Content.Data, &dataObj) == nil {
-					fileURL = dataObj.URL
-				}
-			} else {
-				json.Unmarshal(ctrl.Content.Data, &fileURL)
+		switch ctrl.Content.ActType {
+		case "file_done":
+			if ctrl.Content.FileID == nil {
+				continue
 			}
-		}
-
-		slog.Debug("zalo_personal file upload completed", "file_id", fileID, "url_len", len(fileURL))
-
-		if val, ok := ln.uploadCallbacks.LoadAndDelete(fileID); ok {
-			ch := val.(chan string)
-			select {
-			case ch <- fileURL:
-			default:
+			// FileID can be string or number (float64 from JSON).
+			// fmt.Sprint on large float64 produces scientific notation (3.15e+11),
+			// but callbacks are registered with the plain decimal string.
+			fileID := anyToDecimalString(ctrl.Content.FileID)
+			// Data can be an object {"url":"..."} or a plain string; extract URL from either.
+			var fileURL string
+			if len(ctrl.Content.Data) > 0 {
+				if ctrl.Content.Data[0] == '{' {
+					var dataObj struct {
+						URL string `json:"url"`
+					}
+					if json.Unmarshal(ctrl.Content.Data, &dataObj) == nil {
+						fileURL = dataObj.URL
+					}
+				} else {
+					json.Unmarshal(ctrl.Content.Data, &fileURL)
+				}
 			}
+
+			slog.Debug("zalo_personal file upload completed", "file_id", fileID, "url_len", len(fileURL))
+
+			if val, ok := ln.uploadCallbacks.LoadAndDelete(fileID); ok {
+				ch := val.(chan string)
+				select {
+				case ch <- fileURL:
+				default:
+				}
+			}
+		case "fr":
+			// Zalo emits both req and req_v2 for one request. Process only req_v2.
+			if ctrl.Content.Act != "req_v2" {
+				continue
+			}
+			request, err := parseFriendRequest(ctrl.Content.Data)
+			if err != nil {
+				emit(ctx, ln.errorCh, fmt.Errorf("zalo_personal: parse friend request: %w", err))
+				continue
+			}
+			emit(ctx, ln.friendRequestCh, request)
 		}
 	}
 }
@@ -250,9 +262,9 @@ func (ln *Listener) sendPing(ctx context.Context) {
 	body, _ := json.Marshal(data)
 
 	buf := make([]byte, 4+len(body))
-	buf[0] = 1 // version
+	buf[0] = 1                                 // version
 	binary.LittleEndian.PutUint16(buf[1:3], 2) // cmd=2
-	buf[3] = 1 // subCmd=1
+	buf[3] = 1                                 // subCmd=1
 	copy(buf[4:], body)
 
 	ln.mu.RLock()

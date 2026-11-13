@@ -543,11 +543,15 @@ func (t *CronTool) handleAdd(ctx context.Context, args map[string]any, agentID, 
 	// Always prefer context values over LLM-provided values to prevent
 	// misrouted deliveries (e.g. LLM confusing guild ID with channel ID).
 	if deliver {
-		if ctxChannel := ToolChannelFromCtx(ctx); ctxChannel != "" {
-			channel = ctxChannel
+		if channel == "" || channel == "zalo" || channel == "zalo_personal" || channel == "zalo_oa" {
+			if ctxChannel := ToolChannelFromCtx(ctx); ctxChannel != "" {
+				channel = ctxChannel
+			}
 		}
-		if ctxChatID := ToolChatIDFromCtx(ctx); ctxChatID != "" {
-			to = ctxChatID
+		if to == "" {
+			if ctxChatID := ToolChatIDFromCtx(ctx); ctxChatID != "" {
+				to = ctxChatID
+			}
 		}
 	}
 

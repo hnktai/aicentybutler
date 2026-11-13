@@ -47,6 +47,12 @@ func (c *Channel) runListenerLoop(ctx context.Context) bool {
 			}
 			c.handleMessage(msg)
 
+		case request, ok := <-ln.FriendRequests():
+			if !ok {
+				return false
+			}
+			c.dispatchFriendRequest(ctx, request)
+
 		case ci := <-ln.Disconnected():
 			slog.Warn("zalo_personal disconnected", "code", ci.Code, "reason", ci.Reason)
 

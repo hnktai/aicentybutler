@@ -1,0 +1,21 @@
+ARG GOCLAW_BASE=ghcr.io/nextlevelbuilder/goclaw@sha256:2938d3b7585e78a18595a7c67844d1ae62b0696c71ce0d9f09092576389affd8
+FROM ${GOCLAW_BASE}
+
+USER root
+
+RUN apk add --no-cache libreoffice-writer chromium-headless-shell font-noto font-noto-arabic font-noto-cjk font-carlito font-croscore ttf-liberation
+COPY docker/requirements-aicenty-document-renderer.txt /tmp/requirements-aicenty-document-renderer.txt
+RUN python3 -m pip install --no-cache-dir --break-system-packages --only-binary=:all: --require-hashes -r /tmp/requirements-aicenty-document-renderer.txt \
+    && rm -f /tmp/requirements-aicenty-document-renderer.txt
+
+COPY services/document-renderer/server.py /app/document-renderer/server.py
+RUN chmod 755 /app/document-renderer/server.py
+
+USER goclaw
+WORKDIR /app
+ENV PORT=8787
+EXPOSE 8787
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 CMD wget -qO- http://127.0.0.1:8787/health || exit 1
+ENTRYPOINT ["python3", "/app/document-renderer/server.py"]
+
+LABEL com.aicenty.butler.feature.document-renderer="1.0.5"

@@ -43,3 +43,25 @@
 - `09:30 VN`: Gửi tin nhắn đồng hành dùng thử (`--type=trial`).
 - `17:00 VN`: Gửi cảnh báo học tập nhẹ nhàng cho con (`--type=study_alert`).
 - `20:00 VN`: Đề xuất báo cáo tuần/tháng kín cho Ba Mẹ (`--type=report_offer`).
+
+---
+
+## 4. Quy Trình Vận Hành Khẩn Cấp Khi Sai Lệch Nội Dung Thanh Toán (Mục tiêu xử lý 3 Phút)
+Khi khách hàng chuyển khoản từ `50.000 VNĐ` trở lên nhưng ghi thiếu hoặc sai cú pháp `SUB <SĐT>`, hàm `ButlerTrialController::sepayWebhook()` sẽ trả trạng thái `manual_review_needed` và kích hoạt `ButlerAutomationService::sendOpsAlert()`:
+1. **Nhận cảnh báo khẩn:** Đội vận hành kiểm tra log `[ButlerAutomation][OPS_ALERT]`, email cảnh báo từ Resend, hoặc thông báo nội bộ kèm mã giao dịch `txId`, số tiền và nội dung chuyển khoản gốc.
+2. **Tra cứu khách hàng:** Đối chiếu tên người chuyển/thời điểm giao dịch với bảng `quangia_pending_handover` trên Postgres (`port 5435`, DB `aicenty_butler_db`).
+3. **Liên hệ & kích hoạt bù:** Liên hệ xác nhận đúng SĐT của Gia Chủ và tiến hành kích hoạt/cộng ngày VIP tương ứng (chú ý giữ nguyên `PHASE0_STATUS.md` nếu hệ thống đang tạm dừng nhận đơn mới).
+4. **Thông báo bàn giao:** Đảm bảo Quản Gia gửi xác nhận kích hoạt gói thành công cho đúng Zalo UID Gia Chủ Tối Cao.
+
+---
+
+## 5. Kế Hoạch Ứng Cứu Kênh Zalo SIM & Dự Phòng Kênh Zalo OA
+1. **Giám sát liên tục:** Dịch vụ `aicenty-zalo-keepalive.service` kiểm tra trạng thái thực tế `channels.status` của GoClaw Engine và báo `degraded` qua `/healthz` nếu phát hiện kênh (`quangia`, `butlerguru`, hoặc SIM riêng gia đình) ngừng chạy.
+2. **Dự phòng gửi tin qua Zalo OA:** Đối với các thông báo giao dịch/nhắc hạn quan trọng, hệ thống hỗ trợ gửi song song hoặc fallback qua `ZaloOAService` (khi có `zalo_oa_user_id`) để không làm gián đoạn trải nghiệm của Gia Chủ khi SIM cá nhân bảo trì.
+3. **Khôi phục kết nối SIM:** Khi phát hiện kênh Zalo SIM ngắt kết nối, kỹ thuật viên kiểm tra log `journalctl -u aicenty-zalo-keepalive.service` và đăng nhập/quét lại mã QR cho đúng `channel_instances` bị gián đoạn.
+
+---
+
+## 6. Chính Sách Không Hoàn Tiền & Cơ Chế Cộng Bù Ngày Sử Dụng
+- **Chính sách thanh toán:** Hiện tại hệ thống **chưa áp dụng chính sách hoàn tiền** sau khi tài nguyên Quản Gia AI riêng (Dedicated Tenant/Agent & bộ nhớ gia đình) đã được khởi tạo và kích hoạt.
+- **Bảo vệ quyền lợi khách hàng:** Khách hàng được khuyến nghị kiểm tra kỹ gói dịch vụ trên trang thanh toán trước khi chuyển khoản. Trong trường hợp phát sinh gián đoạn kỹ thuật từ phía hạ tầng Aicenty Butler làm ảnh hưởng thời gian sử dụng, bộ phận vận hành sẽ thực hiện **cộng bù ngày sử dụng** tương ứng vào `vip_until` / `expires_at` của gia đình.

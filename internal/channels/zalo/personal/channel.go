@@ -21,9 +21,15 @@ import (
 // WARNING: Zalo Personal is an unofficial, reverse-engineered integration. Account may be locked/banned.
 type Channel struct {
 	*channels.BaseChannel
-	config      config.ZaloPersonalConfig
-	typingCtrls sync.Map // threadID → *typing.Controller
-	replyCache  *replycontext.Cache
+	config                config.ZaloPersonalConfig
+	typingCtrls           sync.Map // threadID → *typing.Controller
+	groupWelcomeClaims    sync.Map // threadID → struct{}, prevents concurrent duplicate welcomes
+	friendRequestClaims   sync.Map // Zalo UID → struct{}, prevents duplicate accepts per process
+	friendRequestSlots    chan struct{}
+	replyCache            *replycontext.Cache
+	friendVerifier        store.ZaloFriendVerificationStore
+	activityStore         store.ActivityStore
+	acceptFriendRequestFn func(context.Context, *protocol.Session, string) error
 
 	mu       sync.RWMutex // protects sess and listener
 	sess     *protocol.Session
@@ -59,10 +65,12 @@ func New(cfg config.ZaloPersonalConfig, msgBus *bus.MessageBus, pairingSvc store
 	}
 
 	ch := &Channel{
-		BaseChannel: base,
-		config:      cfg,
-		replyCache:  replycontext.NewCache(replycontext.DefaultOptions()),
-		stopCh:      make(chan struct{}),
+		BaseChannel:           base,
+		config:                cfg,
+		replyCache:            replycontext.NewCache(replycontext.DefaultOptions()),
+		stopCh:                make(chan struct{}),
+		acceptFriendRequestFn: protocol.AcceptFriendRequest,
+		friendRequestSlots:    make(chan struct{}, 4),
 	}
 	ch.SetPairingService(pairingSvc)
 	ch.SetGroupHistory(channels.MakeHistory(channels.TypeZaloPersonal, pendingStore, base.TenantID()))
@@ -76,6 +84,12 @@ func (c *Channel) BlockReplyEnabled() *bool { return c.config.BlockReply }
 
 // ChatBehaviorConfig returns the per-channel chat_behavior override.
 func (c *Channel) ChatBehaviorConfig() *config.ChatBehaviorConfig { return c.config.ChatBehavior }
+
+// SetFriendRequestServices wires verified-customer policy and durable auditing.
+func (c *Channel) SetFriendRequestServices(verifier store.ZaloFriendVerificationStore, activity store.ActivityStore) {
+	c.friendVerifier = verifier
+	c.activityStore = activity
+}
 
 // session returns the current session snapshot (thread-safe).
 func (c *Channel) session() *protocol.Session {

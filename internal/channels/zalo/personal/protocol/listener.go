@@ -31,17 +31,18 @@ type Listener struct {
 	client      *WSClient
 	cipherKey   string
 	connectedAt time.Time
-	stopped     bool         // prevents reconnect after Stop()
-	reconnTimer *time.Timer  // pending reconnect timer, cancelled on Stop()
+	stopped     bool        // prevents reconnect after Stop()
+	reconnTimer *time.Timer // pending reconnect timer, cancelled on Stop()
 
 	retryStates map[string]*retryState
 
 	uploadCallbacks sync.Map // fileID (string) → chan string (fileURL)
 
-	messageCh      chan Message
-	disconnectedCh chan CloseInfo
-	closedCh       chan CloseInfo
-	errorCh        chan error
+	messageCh       chan Message
+	friendRequestCh chan FriendRequest
+	disconnectedCh  chan CloseInfo
+	closedCh        chan CloseInfo
+	errorCh         chan error
 
 	pingCancel context.CancelFunc
 	cancel     context.CancelFunc
@@ -81,22 +82,24 @@ func NewListener(sess *Session) (*Listener, error) {
 
 	wsURL := buildWSURL(sess, sess.LoginInfo.ZpwWebsocket[0])
 	return &Listener{
-		sess:           sess,
-		wsURLs:         sess.LoginInfo.ZpwWebsocket,
-		wsURL:          wsURL,
-		retryStates:    buildListenerRetryStates(sess.Settings),
-		messageCh:      make(chan Message, msgBufferSize),
-		disconnectedCh: make(chan CloseInfo, 4),
-		closedCh:       make(chan CloseInfo, 1),
-		errorCh:        make(chan error, 16),
+		sess:            sess,
+		wsURLs:          sess.LoginInfo.ZpwWebsocket,
+		wsURL:           wsURL,
+		retryStates:     buildListenerRetryStates(sess.Settings),
+		messageCh:       make(chan Message, msgBufferSize),
+		friendRequestCh: make(chan FriendRequest, msgBufferSize),
+		disconnectedCh:  make(chan CloseInfo, 4),
+		closedCh:        make(chan CloseInfo, 1),
+		errorCh:         make(chan error, 16),
 	}, nil
 }
 
 // Channel accessors.
-func (ln *Listener) Messages() <-chan Message      { return ln.messageCh }
-func (ln *Listener) Disconnected() <-chan CloseInfo { return ln.disconnectedCh }
-func (ln *Listener) Closed() <-chan CloseInfo       { return ln.closedCh }
-func (ln *Listener) Errors() <-chan error           { return ln.errorCh }
+func (ln *Listener) Messages() <-chan Message             { return ln.messageCh }
+func (ln *Listener) FriendRequests() <-chan FriendRequest { return ln.friendRequestCh }
+func (ln *Listener) Disconnected() <-chan CloseInfo       { return ln.disconnectedCh }
+func (ln *Listener) Closed() <-chan CloseInfo             { return ln.closedCh }
+func (ln *Listener) Errors() <-chan error                 { return ln.errorCh }
 
 // Start connects to WebSocket and begins reading messages.
 func (ln *Listener) Start(ctx context.Context) error {
@@ -282,4 +285,3 @@ func (ln *Listener) handleCipherKey(ctx context.Context, key *string) {
 		}
 	}
 }
-

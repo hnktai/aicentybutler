@@ -12,6 +12,7 @@ commit_sha="$(git rev-parse HEAD)"
 short_sha="${commit_sha:0:12}"
 build_revision="${version}-${short_sha}"
 image_reference="local/aicenty-butler:${build_revision}"
+renderer_reference="local/aicenty-document-renderer:${build_revision}"
 
 if test -n "$(git status --porcelain)"; then
   echo "refusing to build from a dirty worktree" >&2
@@ -31,13 +32,18 @@ fi
 
 mkdir -p "$output_dir"
 docker build \
-  --build-arg ENABLE_EMBEDUI=true \
-  --build-arg ENABLE_PYTHON=true \
+  --file docker/Dockerfile.aicenty-document-pdf \
   --build-arg VERSION="$version" \
   --build-arg COMMIT_SHA="$commit_sha" \
   --label org.opencontainers.image.version="$version" \
   --label org.opencontainers.image.revision="$commit_sha" \
   --tag "$image_reference" .
+
+docker build \
+  --file docker/Dockerfile.aicenty-document-renderer \
+  --label org.opencontainers.image.version="$version" \
+  --label org.opencontainers.image.revision="$commit_sha" \
+  --tag "$renderer_reference" .
 
 container_id="$(docker create "$image_reference")"
 trap 'docker rm -f "$container_id" >/dev/null 2>&1 || true' EXIT
@@ -45,6 +51,7 @@ docker cp "$container_id:/app/goclaw" "$output_dir/goclaw"
 chmod 755 "$output_dir/goclaw"
 
 image_id="$(docker image inspect "$image_reference" --format '{{.Id}}')"
+renderer_image_id="$(docker image inspect "$renderer_reference" --format '{{.Id}}')"
 binary_sha256="$(sha256sum "$output_dir/goclaw" | awk '{print $1}')"
 build_time="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
@@ -58,8 +65,11 @@ cat > "$output_dir/manifest.json" <<EOF
   "build_time_utc": "$build_time",
   "image_reference": "$image_reference",
   "image_id": "$image_id",
+  "renderer_image_reference": "$renderer_reference",
+  "renderer_image_id": "$renderer_image_id",
   "binary_sha256": "$binary_sha256"
 }
 EOF
 
-printf 'candidate image: %s\nmanifest: %s\n' "$image_reference" "$output_dir/manifest.json"
+printf 'candidate image: %s\nrenderer image: %s\nmanifest: %s\n' \
+  "$image_reference" "$renderer_reference" "$output_dir/manifest.json"

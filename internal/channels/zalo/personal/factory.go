@@ -21,13 +21,14 @@ type zaloCreds struct {
 
 // zaloInstanceConfig maps the config JSONB from the channel_instances table.
 type zaloInstanceConfig struct {
-	DMPolicy       string                     `json:"dm_policy,omitempty"`
-	GroupPolicy    string                     `json:"group_policy,omitempty"`
-	RequireMention *bool                      `json:"require_mention,omitempty"`
-	HistoryLimit   int                        `json:"history_limit,omitempty"`
-	AllowFrom      []string                   `json:"allow_from,omitempty"`
-	BlockReply     *bool                      `json:"block_reply,omitempty"`
-	ChatBehavior   *config.ChatBehaviorConfig `json:"chat_behavior,omitempty"`
+	DMPolicy                         string                     `json:"dm_policy,omitempty"`
+	GroupPolicy                      string                     `json:"group_policy,omitempty"`
+	RequireMention                   *bool                      `json:"require_mention,omitempty"`
+	HistoryLimit                     int                        `json:"history_limit,omitempty"`
+	AllowFrom                        []string                   `json:"allow_from,omitempty"`
+	BlockReply                       *bool                      `json:"block_reply,omitempty"`
+	AutoAcceptVerifiedFriendRequests bool                       `json:"auto_accept_verified_friend_requests,omitempty"`
+	ChatBehavior                     *config.ChatBehaviorConfig `json:"chat_behavior,omitempty"`
 }
 
 // Factory creates a Zalo Personal channel from DB instance data.
@@ -56,14 +57,15 @@ func Factory(name string, creds json.RawMessage, cfg json.RawMessage,
 	}
 
 	zaloCfg := config.ZaloPersonalConfig{
-		Enabled:        true,
-		AllowFrom:      ic.AllowFrom,
-		DMPolicy:       ic.DMPolicy,
-		GroupPolicy:    ic.GroupPolicy,
-		RequireMention: ic.RequireMention,
-		HistoryLimit:   ic.HistoryLimit,
-		BlockReply:     ic.BlockReply,
-		ChatBehavior:   ic.ChatBehavior,
+		Enabled:                          true,
+		AllowFrom:                        ic.AllowFrom,
+		DMPolicy:                         ic.DMPolicy,
+		GroupPolicy:                      ic.GroupPolicy,
+		RequireMention:                   ic.RequireMention,
+		HistoryLimit:                     ic.HistoryLimit,
+		BlockReply:                       ic.BlockReply,
+		AutoAcceptVerifiedFriendRequests: ic.AutoAcceptVerifiedFriendRequests,
+		ChatBehavior:                     ic.ChatBehavior,
 	}
 
 	ch, err := New(zaloCfg, msgBus, pairingSvc, nil)
@@ -85,6 +87,15 @@ func Factory(name string, creds json.RawMessage, cfg json.RawMessage,
 
 // FactoryWithPendingStore returns a ChannelFactory with persistent history support.
 func FactoryWithPendingStore(pendingStore store.PendingMessageStore) channels.ChannelFactory {
+	return FactoryWithFriendRequestServices(pendingStore, nil, nil)
+}
+
+// FactoryWithFriendRequestServices adds verified-customer policy and durable auditing.
+func FactoryWithFriendRequestServices(
+	pendingStore store.PendingMessageStore,
+	verifier store.ZaloFriendVerificationStore,
+	activity store.ActivityStore,
+) channels.ChannelFactory {
 	return func(name string, creds json.RawMessage, cfg json.RawMessage,
 		msgBus *bus.MessageBus, pairingSvc store.PairingStore) (channels.Channel, error) {
 
@@ -107,20 +118,22 @@ func FactoryWithPendingStore(pendingStore store.PendingMessageStore) channels.Ch
 		}
 
 		zaloCfg := config.ZaloPersonalConfig{
-			Enabled:        true,
-			AllowFrom:      ic.AllowFrom,
-			DMPolicy:       ic.DMPolicy,
-			GroupPolicy:    ic.GroupPolicy,
-			RequireMention: ic.RequireMention,
-			HistoryLimit:   ic.HistoryLimit,
-			BlockReply:     ic.BlockReply,
-			ChatBehavior:   ic.ChatBehavior,
+			Enabled:                          true,
+			AllowFrom:                        ic.AllowFrom,
+			DMPolicy:                         ic.DMPolicy,
+			GroupPolicy:                      ic.GroupPolicy,
+			RequireMention:                   ic.RequireMention,
+			HistoryLimit:                     ic.HistoryLimit,
+			BlockReply:                       ic.BlockReply,
+			AutoAcceptVerifiedFriendRequests: ic.AutoAcceptVerifiedFriendRequests,
+			ChatBehavior:                     ic.ChatBehavior,
 		}
 
 		ch, err := New(zaloCfg, msgBus, pairingSvc, pendingStore)
 		if err != nil {
 			return nil, err
 		}
+		ch.SetFriendRequestServices(verifier, activity)
 
 		protoCred := &protocol.Credentials{
 			IMEI:      c.IMEI,

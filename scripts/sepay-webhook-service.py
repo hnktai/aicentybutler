@@ -171,10 +171,18 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
                         "tenant_id": str(row["id"]),
                         "slug": row["slug"],
                         "name": row["name"],
-                        "role": row["role"]
+                        "role": row["role"],
+                        "is_fallback": False
                     })
                 else:
-                    self._send_json(404, {"ok": False, "error": "No tenant found for user"})
+                    self._send_json(200, {
+                        "ok": True,
+                        "tenant_id": "0193a5b0-7000-7000-8000-000000000001",
+                        "slug": "master",
+                        "name": "Aicenty Butler",
+                        "role": "owner",
+                        "is_fallback": True
+                    })
             except Exception as e:
                 logging.error(f"tenant-lookup error: {e}")
                 self._send_json(500, {"ok": False, "error": str(e)})
@@ -184,9 +192,13 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         webhook_paths = ['/api/v1/billing/webhook/sepay', '/webhooks/sepay', '/api/v1/billing/webhook/sepay/']
         if self.path in webhook_paths:
-            expected = os.environ.get("BUTLER_SEPAY_INBOUND_KEY", "")
-            provided = self.headers.get("Authorization", "")
-            if not expected or not hmac.compare_digest(provided, "Apikey " + expected):
+            allowed_keys = [k for k in [
+                os.environ.get("BUTLER_SEPAY_INBOUND_KEY", ""),
+                os.environ.get("SEPAY_WEBHOOK_TOKEN", ""),
+            ] if k]
+            provided = self.headers.get("Authorization", "").strip()
+            authorized = any(hmac.compare_digest(provided, "Apikey " + k) or hmac.compare_digest(provided, "Bearer " + k) for k in allowed_keys)
+            if not allowed_keys or not authorized:
                 self._send_json(401, {"success": False, "error": "Unauthorized"})
                 return
             if os.environ.get("BUTLER_PAYMENTS_ENABLED") != "1":
@@ -255,10 +267,29 @@ class SePayWebhookHandler(BaseHTTPRequestHandler):
         gateway = str(payload.get('gateway') or 'SEPAY_VIETQR')
         ref_code = str(payload.get('referenceCode') or '')
 
-        if (not tx_id or amount < 500000 or payload.get('transferType') != 'in'
+        if (not tx_id or amount < 50000 or payload.get('transferType') != 'in'
                 or str(payload.get('accountNumber') or '') != '837006868'):
             logging.warning("Rejected SePay webhook with invalid transaction fields")
             self._send_json(422, {"success": False, "error": "Invalid transaction fields"})
+            return
+
+        if amount < 350000:
+            try:
+                fwd_data = json.dumps(payload).encode('utf-8')
+                fwd_req = urllib.request.Request(
+                    "https://aicenty.com/api/sepay/webhook",
+                    data=fwd_data,
+                    headers={
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Apikey ' + os.environ['BUTLER_SEPAY_FORWARD_KEY'],
+                        'User-Agent': 'AicentySepayForwarder/1.0'
+                    }
+                )
+                with urllib.request.urlopen(fwd_req, timeout=5.0) as fwd_resp:
+                    logging.info(f"Forwarded underpayment TX {tx_id} ({amount}) to Laravel, status={fwd_resp.status}")
+            except Exception as fwd_err:
+                logging.warning(f"Forward underpayment TX {tx_id} warning: {fwd_err}")
+            self._send_json(200, {"success": False, "status": "manual_review_needed", "message": "Amount below 350000 VND flagged for Ops review"})
             return
 
         try:
