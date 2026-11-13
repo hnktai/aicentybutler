@@ -1,12 +1,6 @@
 services:
   aicenty-butler-core:
-    image: aicenty-butler-runtime:${AICENTY_BUTLER_IMAGE_TAG:-production-sync-20261113}
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.aicenty-document-pdf
-      args:
-        VERSION: ${AICENTY_BUTLER_VERSION:-production-sync-20261113}
-        COMMIT_SHA: ${AICENTY_BUTLER_COMMIT_SHA:-unknown}
+    image: ${AICENTY_BUTLER_IMAGE:?set AICENTY_BUTLER_IMAGE to an immutable digest}
     container_name: aicenty-butler-engine
     restart: unless-stopped
     stop_grace_period: 30s
@@ -20,6 +14,8 @@ services:
       - GOCLAW_HOST=0.0.0.0
       - GOCLAW_PORT=18790
       - GOCLAW_GATEWAY_TOKEN=${GOCLAW_GATEWAY_TOKEN}
+      - GOCLAW_POSTGRES_DSN=${GOCLAW_POSTGRES_DSN:?set GOCLAW_POSTGRES_DSN}
+      - GOCLAW_REDIS_DSN=${GOCLAW_REDIS_DSN:-}
       - GOCLAW_GEMINI_API_KEY=${GOCLAW_GEMINI_API_KEY}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - GOOGLE_AI_STUDIO_API_KEY=${GOOGLE_AI_STUDIO_API_KEY}
@@ -53,10 +49,7 @@ services:
         condition: service_healthy
 
   aicenty-document-renderer:
-    image: aicenty-document-renderer:${AICENTY_DOCUMENT_RENDERER_TAG:-1.0.5}
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.aicenty-document-renderer
+    image: ${AICENTY_DOCUMENT_RENDERER_IMAGE:?set AICENTY_DOCUMENT_RENDERER_IMAGE to an immutable digest}
     container_name: aicenty-document-renderer
     restart: unless-stopped
     init: true
@@ -85,7 +78,7 @@ services:
       start_period: 20s
 
   aicenty-web-pdf-renderer:
-    image: aicenty-document-renderer:${AICENTY_DOCUMENT_RENDERER_TAG:-1.0.5}
+    image: ${AICENTY_DOCUMENT_RENDERER_IMAGE:?set AICENTY_DOCUMENT_RENDERER_IMAGE to an immutable digest}
     container_name: aicenty-web-pdf-renderer
     restart: unless-stopped
     init: true
