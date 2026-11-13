@@ -101,9 +101,10 @@ VALID ACTIONS AND EXACT PAYLOAD SHAPES:
 { "action": "runs", "jobId": "string" }
 
 SCHEDULE SCHEMA:
-- at: { "kind": "at", "in_minutes": 5 } OR { "kind": "at", "delay": "5m" } OR { "kind": "at", "time": "YYYY-MM-DD HH:mm:ss", "tz": "Asia/Ho_Chi_Minh" }
+- at: { "kind": "at", "in_minutes": 5 } OR { "kind": "at", "delay": "5m" } OR { "kind": "at", "time": "YYYY-MM-DD HH:mm:ss", "tz": "Asia/Ho_Chi_Minh", "expectedWeekday": 1..7 }
   * RELATIVE TIME (RECOMMENDED for reminders/delays): Use "in_minutes": 5 or "delay": "5m" (supports "5p", "5 phút", "1h", "30s"). No need to query datetime!
   * ABSOLUTE TIME: Use "time" string (e.g. "2026-11-10 07:00:00") with "tz". Or "time": "HH:mm" for today/tomorrow.
+  * WEEKDAY SAFETY: If the user names a weekday, always set "expectedWeekday" to its ISO value (Monday=1 ... Sunday=7). The backend rejects a date/weekday mismatch.
   * Fallback: { "kind": "at", "atMs": <unix-milliseconds> }
 - every: { "kind": "every", "everyMs": <interval-ms> }
 - cron: { "kind": "cron", "expr": "<5-field cron>", "tz": "<IANA timezone, e.g. Asia/Ho_Chi_Minh; omit for gateway default>" }
@@ -115,6 +116,7 @@ RULES:
 - "name", "schedule", and "message" are required for add.
 - "name" must match: lowercase letters, numbers, hyphens only.
 - Before creating or updating a scheduled job, call the datetime tool first to get the precise current time and unix_ms timestamp. Never guess timestamps.
+- The cron result's "scheduledLocal" fields are authoritative. Use its date, time, and weekday verbatim in the confirmation; never recalculate them.
 - Omit optional fields when unknown; do not invent placeholder values like "", 0, or null unless required.
 - Jobs run as isolated agent turns using the provided "message".
 
@@ -331,6 +333,133 @@ func parseRelativeDuration(scheduleObj map[string]any) (time.Duration, bool) {
 	return 0, false
 }
 
+type scheduledLocalCalendar struct {
+	Date       string `json:"date"`
+	Time       string `json:"time"`
+	DateTime   string `json:"dateTime"`
+	Weekday    string `json:"weekday"`
+	ISOWeekday int    `json:"isoWeekday"`
+	Timezone   string `json:"timezone"`
+}
+
+var weekdayMentionPatterns = []struct {
+	iso int
+	re  *regexp.Regexp
+}{
+	{1, regexp.MustCompile(`(?i)(?:^|[\s,.;:()/_-])(?:(?:thứ|thu)\s*(?:2|hai)|monday)(?:$|[\s,.;:()/_-])`)},
+	{2, regexp.MustCompile(`(?i)(?:^|[\s,.;:()/_-])(?:(?:thứ|thu)\s*(?:3|ba)|tuesday)(?:$|[\s,.;:()/_-])`)},
+	{3, regexp.MustCompile(`(?i)(?:^|[\s,.;:()/_-])(?:(?:thứ|thu)\s*(?:4|tư|tu|bốn|bon)|wednesday)(?:$|[\s,.;:()/_-])`)},
+	{4, regexp.MustCompile(`(?i)(?:^|[\s,.;:()/_-])(?:(?:thứ|thu)\s*(?:5|năm|nam)|thursday)(?:$|[\s,.;:()/_-])`)},
+	{5, regexp.MustCompile(`(?i)(?:^|[\s,.;:()/_-])(?:(?:thứ|thu)\s*(?:6|sáu|sau)|friday)(?:$|[\s,.;:()/_-])`)},
+	{6, regexp.MustCompile(`(?i)(?:^|[\s,.;:()/_-])(?:(?:thứ|thu)\s*(?:7|bảy|bay)|saturday)(?:$|[\s,.;:()/_-])`)},
+	{7, regexp.MustCompile(`(?i)(?:^|[\s,.;:()/_-])(?:chủ\s*nhật|chu\s*nhat|sunday)(?:$|[\s,.;:()/_-])`)},
+}
+
+func scheduleLocation(scheduleObj map[string]any) (string, *time.Location, error) {
+	tzName := stringFromMap(scheduleObj, "tz")
+	if tzName == "" {
+		tzName = stringFromMap(scheduleObj, "timezone")
+	}
+	if tzName == "" {
+		tzName = "Asia/Ho_Chi_Minh"
+	}
+
+	loc, err := time.LoadLocation(tzName)
+	if err != nil {
+		return "", nil, fmt.Errorf("invalid timezone %q: use an IANA timezone such as Asia/Ho_Chi_Minh", tzName)
+	}
+	return tzName, loc, nil
+}
+
+func parseExpectedWeekday(value any) (int, bool) {
+	var iso int
+	switch v := value.(type) {
+	case int:
+		iso = v
+	case int64:
+		iso = int(v)
+	case float64:
+		if v != float64(int(v)) {
+			return 0, false
+		}
+		iso = int(v)
+	case json.Number:
+		parsed, err := strconv.Atoi(v.String())
+		if err != nil {
+			return 0, false
+		}
+		iso = parsed
+	case string:
+		normalized := strings.TrimSpace(strings.ToLower(v))
+		if parsed, err := strconv.Atoi(normalized); err == nil {
+			iso = parsed
+		} else {
+			for _, pattern := range weekdayMentionPatterns {
+				if pattern.re.MatchString(" " + normalized + " ") {
+					return pattern.iso, true
+				}
+			}
+			return 0, false
+		}
+	default:
+		return 0, false
+	}
+	return iso, iso >= 1 && iso <= 7
+}
+
+func mentionedWeekdays(text string) map[int]struct{} {
+	found := make(map[int]struct{})
+	for _, pattern := range weekdayMentionPatterns {
+		if pattern.re.MatchString(text) {
+			found[pattern.iso] = struct{}{}
+		}
+	}
+	return found
+}
+
+func validateAtScheduleWeekday(scheduleObj map[string]any, message string, atMS int64) (*scheduledLocalCalendar, error) {
+	tzName, loc, err := scheduleLocation(scheduleObj)
+	if err != nil {
+		return nil, err
+	}
+
+	expected := mentionedWeekdays(message)
+	for _, key := range []string{"expectedWeekday", "expected_weekday"} {
+		value, exists := scheduleObj[key]
+		if !exists {
+			continue
+		}
+		iso, ok := parseExpectedWeekday(value)
+		if !ok {
+			return nil, fmt.Errorf("job.schedule.%s must be an ISO weekday from 1 (Monday) to 7 (Sunday), or a weekday name", key)
+		}
+		expected[iso] = struct{}{}
+	}
+	if len(expected) > 1 {
+		return nil, fmt.Errorf("conflicting weekday references in the reminder; provide one unambiguous weekday before creating the job")
+	}
+
+	local := time.UnixMilli(atMS).In(loc)
+	actualISO := isoWeekday(local)
+	for wantedISO := range expected {
+		if wantedISO != actualISO {
+			return nil, fmt.Errorf(
+				"weekday mismatch: scheduled time %s is %s (ISO %d), but the reminder says ISO weekday %d; correct the date before creating the job",
+				local.Format("2006-01-02 15:04:05 MST"), local.Weekday().String(), actualISO, wantedISO,
+			)
+		}
+	}
+
+	return &scheduledLocalCalendar{
+		Date:       local.Format("2006-01-02"),
+		Time:       local.Format("15:04:05"),
+		DateTime:   local.Format(time.RFC3339),
+		Weekday:    local.Weekday().String(),
+		ISOWeekday: actualISO,
+		Timezone:   tzName,
+	}, nil
+}
+
 // parseAtSchedule extracts and validates the target timestamp in milliseconds for schedule.kind="at".
 // It supports relative durations (in_minutes: 5, delay: "5m"), human datetime strings, and atMs.
 func parseAtSchedule(scheduleObj map[string]any) (*int64, error) {
@@ -362,17 +491,9 @@ func parseAtSchedule(scheduleObj map[string]any) (*int64, error) {
 	}
 
 	// Timezone resolution (default Asia/Ho_Chi_Minh)
-	tzName := stringFromMap(scheduleObj, "tz")
-	if tzName == "" {
-		tzName = stringFromMap(scheduleObj, "timezone")
-	}
-	if tzName == "" {
-		tzName = "Asia/Ho_Chi_Minh"
-	}
-
-	loc, err := time.LoadLocation(tzName)
+	_, loc, err := scheduleLocation(scheduleObj)
 	if err != nil {
-		loc = time.FixedZone("Asia/Ho_Chi_Minh", 7*3600)
+		return nil, err
 	}
 
 	now := time.Now().In(loc)
@@ -487,6 +608,7 @@ func (t *CronTool) handleAdd(ctx context.Context, args map[string]any, agentID, 
 	schedule := store.CronSchedule{
 		Kind: stringFromMap(scheduleObj, "kind"),
 	}
+	var scheduledLocal *scheduledLocalCalendar
 	if schedule.Kind == "" {
 		return ErrorResult("job.schedule.kind is required (at, every, or cron)")
 	}
@@ -497,7 +619,12 @@ func (t *CronTool) handleAdd(ctx context.Context, args map[string]any, agentID, 
 		if err != nil {
 			return ErrorResult(err.Error())
 		}
+		scheduledLocal, err = validateAtScheduleWeekday(scheduleObj, message, *ms)
+		if err != nil {
+			return ErrorResult(err.Error())
+		}
 		schedule.AtMS = ms
+		schedule.TZ = scheduledLocal.Timezone
 	case "every":
 		if v, ok := numberFromMap(scheduleObj, "everyMs"); ok {
 			ms := int64(v)
@@ -598,7 +725,11 @@ func (t *CronTool) handleAdd(ctx context.Context, args map[string]any, agentID, 
 		}
 	}
 
-	data, _ := json.MarshalIndent(map[string]any{"job": store.RedactCronJobCredentialContext(*job)}, "", "  ")
+	response := map[string]any{"job": store.RedactCronJobCredentialContext(*job)}
+	if scheduledLocal != nil {
+		response["scheduledLocal"] = scheduledLocal
+	}
+	data, _ := json.MarshalIndent(response, "", "  ")
 	return NewResult(string(data))
 }
 
@@ -673,8 +804,16 @@ func (t *CronTool) handleUpdate(ctx context.Context, args map[string]any, agentI
 		patch.ProviderID = pid
 	}
 
+	validationScheduleObj := map[string]any{}
+	messageForValidation := existing.Payload.Message
+	if updatedMessage, _ := patchObj["message"].(string); updatedMessage != "" {
+		messageForValidation = updatedMessage
+	}
 	// Support schedule relative fields (in_minutes, delay) or absolute time in patch
 	if scheduleObj, ok := patchObj["schedule"].(map[string]any); ok && scheduleObj != nil {
+		for key, value := range scheduleObj {
+			validationScheduleObj[key] = value
+		}
 		if stringFromMap(scheduleObj, "kind") == "" {
 			if _, hasRel := parseRelativeDuration(scheduleObj); hasRel {
 				scheduleObj["kind"] = "at"
@@ -689,6 +828,11 @@ func (t *CronTool) handleUpdate(ctx context.Context, args map[string]any, agentI
 				patch.Schedule = &store.CronSchedule{Kind: "at"}
 			}
 			patch.Schedule.AtMS = ms
+			calendar, err := validateAtScheduleWeekday(scheduleObj, messageForValidation, *ms)
+			if err != nil {
+				return ErrorResult(err.Error())
+			}
+			patch.Schedule.TZ = calendar.Timezone
 		}
 	} else if patch.Schedule != nil && patch.Schedule.Kind == "at" && patch.Schedule.AtMS != nil {
 		if *patch.Schedule.AtMS <= time.Now().UnixMilli() {
@@ -704,9 +848,33 @@ func (t *CronTool) handleUpdate(ctx context.Context, args map[string]any, agentI
 						patch.Schedule = &store.CronSchedule{Kind: "at"}
 					}
 					patch.Schedule.AtMS = ms
+					calendar, validationErr := validateAtScheduleWeekday(sched, messageForValidation, *ms)
+					if validationErr != nil {
+						return ErrorResult(validationErr.Error())
+					}
+					patch.Schedule.TZ = calendar.Timezone
 					break
 				}
 			}
+		}
+	}
+
+	// A message-only update can introduce a weekday claim that conflicts with
+	// the already persisted one-shot date, so validate the effective schedule too.
+	var scheduledLocal *scheduledLocalCalendar
+	effectiveSchedule := store.MergeCronSchedule(existing.Schedule, patch.Schedule)
+	if effectiveSchedule.Kind == "at" && effectiveSchedule.AtMS != nil {
+		if _, exists := validationScheduleObj["tz"]; !exists {
+			validationScheduleObj["tz"] = effectiveSchedule.TZ
+		}
+		var err error
+		scheduledLocal, err = validateAtScheduleWeekday(
+			validationScheduleObj,
+			messageForValidation,
+			*effectiveSchedule.AtMS,
+		)
+		if err != nil {
+			return ErrorResult(err.Error())
 		}
 	}
 
@@ -715,7 +883,11 @@ func (t *CronTool) handleUpdate(ctx context.Context, args map[string]any, agentI
 		return ErrorResult(fmt.Sprintf("failed to update cron job: %v", err))
 	}
 
-	data, _ := json.MarshalIndent(map[string]any{"job": store.RedactCronJobCredentialContext(*job)}, "", "  ")
+	response := map[string]any{"job": store.RedactCronJobCredentialContext(*job)}
+	if scheduledLocal != nil {
+		response["scheduledLocal"] = scheduledLocal
+	}
+	data, _ := json.MarshalIndent(response, "", "  ")
 	return NewResult(string(data))
 }
 
