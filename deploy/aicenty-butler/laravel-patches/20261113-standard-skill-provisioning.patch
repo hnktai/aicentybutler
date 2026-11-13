@@ -1,0 +1,198 @@
+diff --git a/app/Services/ButlerAutomationService.php b/app/Services/ButlerAutomationService.php
+index d2d04288..c34abac5 100644
+--- a/app/Services/ButlerAutomationService.php
++++ b/app/Services/ButlerAutomationService.php
+@@ -11,6 +11,15 @@ use Illuminate\Support\Str;
+ 
+ class ButlerAutomationService
+ {
++    private const MASTER_TENANT_ID = '0193a5b0-7000-7000-8000-000000000001';
++
++    private const STANDARD_BUTLER_SKILL_SLUGS = [
++        'document-to-pdf',
++        'images-to-pdf',
++        'quangia-image-generation',
++        'quangia-mobile-messaging',
++    ];
++
+     public function __construct(
+         private readonly ButlerIdentityRegistryService $identityRegistry
+     ) {
+@@ -439,6 +448,11 @@ class ButlerAutomationService
+                 }
+             }
+ 
++            if (!$newMasterButlerId) {
++                throw new \RuntimeException("Không tìm thấy aicenty-master-butler trong tenant {$newTenantId}.");
++            }
++            $this->ensureStandardButlerSkillsForAgent((string) $newTenantId, (string) $newMasterButlerId);
++
+             // 2b. Clone toàn bộ LLM Providers từ Master sang Tenant mới (bỏ qua wizard Setup Provider)
+             $masterProviders = $db->table('llm_providers')
+                 ->where('tenant_id', $masterTenantId)
+@@ -659,6 +673,11 @@ class ButlerAutomationService
+             }
+         }
+ 
++        if (!$newMasterButlerId) {
++            throw new \RuntimeException("Không tìm thấy aicenty-master-butler trong tenant {$newTenantId}.");
++        }
++        $this->ensureStandardButlerSkillsForAgent((string) $newTenantId, (string) $newMasterButlerId);
++
+         if ($newMasterButlerId) {
+             $handoverId = $db->table('quangia_pending_handover')
+                 ->whereRaw("regexp_replace(phone, '[^0-9]', '', 'g') = ?", [$cleanPhone])
+@@ -1268,6 +1287,11 @@ class ButlerAutomationService
+             }
+         }
+ 
++        if (!$newMasterButlerId) {
++            throw new \RuntimeException("Không tìm thấy aicenty-master-butler trong tenant {$newTenantId}.");
++        }
++        $this->ensureStandardButlerSkillsForAgent((string) $newTenantId, (string) $newMasterButlerId);
++
+         // 2b. Đồng bộ SOUL.md cho Quản Gia riêng
+         if ($newMasterButlerId) {
+             $customSoul = "# SOUL.md - Bản Sắc & Quy Tắc Quản Gia AI Aicenty\n\n"
+@@ -2502,6 +2526,141 @@ class ButlerAutomationService
+             : '01a1ac58-1bf3-7000-a68c-c6d36beaa62b';
+     }
+ 
++    /**
++     * Ensure every provisioned Quản Gia receives the release-owned standard skill set.
++     *
++     * System skills are granted directly. Tenant-scoped standard skills receive a
++     * tenant-local catalog row that references the canonical release-owned files.
++     * The grant upsert pins the current standard version and is safe to rerun.
++     *
++     * @return array<string, int> slug => pinned version
++     */
++    public function ensureStandardButlerSkillsForAgent(string $tenantId, string $agentId): array
++    {
++        $db = DB::connection('butler_pgsql');
++        $agent = $db->table('agents')
++            ->select(['id', 'tenant_id', 'agent_key'])
++            ->where('id', $agentId)
++            ->where('tenant_id', $tenantId)
++            ->where('agent_key', 'aicenty-master-butler')
++            ->whereNull('deleted_at')
++            ->first();
++
++        if (!$agent) {
++            throw new \InvalidArgumentException(
++                "Agent {$agentId} không phải aicenty-master-butler đang hoạt động của tenant {$tenantId}."
++            );
++        }
++
++        return $db->transaction(function () use ($db, $tenantId, $agentId): array {
++            $sourceSkills = $db->table('skills')
++                ->where('tenant_id', self::MASTER_TENANT_ID)
++                ->whereIn('slug', self::STANDARD_BUTLER_SKILL_SLUGS)
++                ->where('status', 'active')
++                ->where('enabled', true)
++                ->orderByDesc('version')
++                ->get()
++                ->unique('slug')
++                ->keyBy('slug');
++
++            $missing = array_values(array_diff(
++                self::STANDARD_BUTLER_SKILL_SLUGS,
++                $sourceSkills->keys()->all()
++            ));
++            if ($missing !== []) {
++                throw new \RuntimeException('Thiếu standard Butler skills: ' . implode(', ', $missing));
++            }
++
++            $now = now();
++            $grants = [];
++            $pinned = [];
++
++            foreach (self::STANDARD_BUTLER_SKILL_SLUGS as $slug) {
++                $source = $sourceSkills->get($slug);
++                $skillId = (string) $source->id;
++                $version = (int) $source->version;
++
++                if (!(bool) $source->is_system) {
++                    $tenantSkill = $db->table('skills')
++                        ->where('tenant_id', $tenantId)
++                        ->where('slug', $slug)
++                        ->first();
++
++                    $catalog = [
++                        'name'        => $source->name,
++                        'description' => $source->description,
++                        'owner_id'    => 'system',
++                        'visibility'  => 'internal',
++                        'version'     => $version,
++                        'status'      => 'active',
++                        'frontmatter' => $source->frontmatter,
++                        'file_path'   => $source->file_path,
++                        'file_size'   => $source->file_size,
++                        'file_hash'   => $source->file_hash,
++                        'tags'        => $source->tags,
++                        'updated_at'  => $now,
++                        'is_system'   => false,
++                        'deps'        => $source->deps,
++                        'enabled'     => true,
++                    ];
++
++                    if ($tenantSkill) {
++                        $skillId = (string) $tenantSkill->id;
++                        $db->table('skills')->where('id', $skillId)->update($catalog);
++                    } else {
++                        $skillId = (string) Str::uuid();
++                        $db->table('skills')->insert(array_merge($catalog, [
++                            'id'         => $skillId,
++                            'slug'       => $slug,
++                            'tenant_id'  => $tenantId,
++                            'created_at' => $now,
++                        ]));
++                    }
++                }
++
++                $grants[] = [
++                    'id'             => (string) Str::uuid(),
++                    'skill_id'       => $skillId,
++                    'agent_id'       => $agentId,
++                    'pinned_version' => $version,
++                    'granted_by'     => 'system:butler-provisioning',
++                    'created_at'     => $now,
++                    'tenant_id'      => $tenantId,
++                    'can_manage'     => false,
++                ];
++                $pinned[$slug] = $version;
++            }
++
++            $db->table('skill_agent_grants')->upsert(
++                $grants,
++                ['skill_id', 'agent_id'],
++                ['pinned_version', 'granted_by', 'tenant_id', 'can_manage']
++            );
++
++            $verified = $db->table('skill_agent_grants as grant')
++                ->join('skills as skill', 'skill.id', '=', 'grant.skill_id')
++                ->where('grant.agent_id', $agentId)
++                ->where('grant.tenant_id', $tenantId)
++                ->whereIn('skill.slug', self::STANDARD_BUTLER_SKILL_SLUGS)
++                ->distinct()
++                ->count('skill.slug');
++            if ($verified !== count(self::STANDARD_BUTLER_SKILL_SLUGS)) {
++                throw new \RuntimeException(
++                    "Provisioning standard skills không đầy đủ cho agent {$agentId}: {$verified}/"
++                    . count(self::STANDARD_BUTLER_SKILL_SLUGS)
++                );
++            }
++
++            Log::info('[ButlerAutomation] Standard skills provisioned', [
++                'tenant_id' => $tenantId,
++                'agent_id' => $agentId,
++                'skills' => $pinned,
++            ]);
++
++            return $pinned;
++        }, 3);
++    }
++
+     /**
+      * Guarantee valid LLM & background summarization configuration on every provisioned family tenant.
+      */
