@@ -12,12 +12,12 @@ import (
 const (
 	toolLoopHistorySize       = 30
 	toolLoopWarningThreshold  = 3 // inject warning into conversation
-	toolLoopCriticalThreshold = 5 // force stop the iteration loop
+	toolLoopCriticalThreshold = 5 // force stop the iteration loop (tightened for token protection)
 
 	// Read-only streak: consecutive non-mutating tool calls without any write/edit.
-	// Stuck mode (uniqueness ratio ≤ 0.6): original thresholds.
-	readOnlyStreakWarning  = 8
-	readOnlyStreakCritical = 12
+	// Stuck mode (uniqueness ratio ≤ 0.6): tight thresholds to prevent token exhaustion.
+	readOnlyStreakWarning  = 3
+	readOnlyStreakCritical = 4
 
 	// Exploration mode (uniqueness ratio > 0.6): relaxed thresholds.
 	// Agents exploring unique files should not be killed as early as stuck loops.

@@ -4,16 +4,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/nextlevelbuilder/goclaw/internal/store"
 )
 
 // CronTool lets agents manage Gateway cron jobs.
 // Matching OpenClaw src/agents/tools/cron-tool.ts.
 type CronTool struct {
-	cronStore store.CronStore
-	permStore store.ConfigPermissionStore // nil = no group restriction
+	cronStore      store.CronStore
+	permStore      store.ConfigPermissionStore // nil = no group restriction
+	providerStore  store.ProviderStore         // nil = provider override by name unavailable
+	commandEnabled bool                        // allow deterministic command payloads (mirrors cron.command_enabled)
 }
 
 func NewCronTool(cronStore store.CronStore) *CronTool {
@@ -23,6 +29,17 @@ func NewCronTool(cronStore store.CronStore) *CronTool {
 // SetConfigPermStore enables group cron mutation restriction.
 func (t *CronTool) SetConfigPermStore(s store.ConfigPermissionStore) {
 	t.permStore = s
+}
+
+// SetProviderStore enables resolving per-job LLM provider overrides by name.
+func (t *CronTool) SetProviderStore(s store.ProviderStore) {
+	t.providerStore = s
+}
+
+// SetCommandEnabled allows this tool to create deterministic command-payload
+// cron jobs (kind="command", no LLM). Mirrors the gateway's cron.command_enabled.
+func (t *CronTool) SetCommandEnabled(enabled bool) {
+	t.commandEnabled = enabled
 }
 
 func (t *CronTool) Name() string { return "cron" }
@@ -49,6 +66,8 @@ VALID ACTIONS AND EXACT PAYLOAD SHAPES:
     "channel": "string",          // optional, auto-filled from current channel context
     "to": "string",               // optional
     "agentId": "string",          // optional, defaults to current agent
+    "provider": "string",         // optional, LLM provider NAME (e.g. "groq") to run this job on a cheaper model; unset → agent default
+    "model": "string",            // optional, model id for the override provider
     "deleteAfterRun": true|false  // optional, default true for schedule.kind="at"
   }
 }
@@ -65,6 +84,8 @@ VALID ACTIONS AND EXACT PAYLOAD SHAPES:
     "channel": "string",
     "to": "string",
     "agentId": "string",
+    "provider": "string",
+    "model": "string",
     "deleteAfterRun": true|false,
     "disabled": true|false
   }
@@ -80,7 +101,10 @@ VALID ACTIONS AND EXACT PAYLOAD SHAPES:
 { "action": "runs", "jobId": "string" }
 
 SCHEDULE SCHEMA:
-- at: { "kind": "at", "atMs": <unix-milliseconds> }
+- at: { "kind": "at", "in_minutes": 5 } OR { "kind": "at", "delay": "5m" } OR { "kind": "at", "time": "YYYY-MM-DD HH:mm:ss", "tz": "Asia/Ho_Chi_Minh" }
+  * RELATIVE TIME (RECOMMENDED for reminders/delays): Use "in_minutes": 5 or "delay": "5m" (supports "5p", "5 phút", "1h", "30s"). No need to query datetime!
+  * ABSOLUTE TIME: Use "time" string (e.g. "2026-11-10 07:00:00") with "tz". Or "time": "HH:mm" for today/tomorrow.
+  * Fallback: { "kind": "at", "atMs": <unix-milliseconds> }
 - every: { "kind": "every", "everyMs": <interval-ms> }
 - cron: { "kind": "cron", "expr": "<5-field cron>", "tz": "<IANA timezone, e.g. Asia/Ho_Chi_Minh; omit for gateway default>" }
 
@@ -92,7 +116,16 @@ RULES:
 - "name" must match: lowercase letters, numbers, hyphens only.
 - Before creating or updating a scheduled job, call the datetime tool first to get the precise current time and unix_ms timestamp. Never guess timestamps.
 - Omit optional fields when unknown; do not invent placeholder values like "", 0, or null unless required.
-- Jobs run as isolated agent turns using the provided "message".`
+- Jobs run as isolated agent turns using the provided "message".
+
+DETERMINISTIC COMMAND JOBS (no LLM, zero tokens):
+- Instead of "message", set "command" to a shell string (run as sh -c) OR
+  "commandArgv" to an explicit argv array (no shell parsing).
+- Optional: "commandCwd", "commandEnv" {"KEY":"VAL"}, "commandTimeoutSeconds".
+- The command runs inside the gateway process. Only available when the gateway
+  has cron.command_enabled=true; otherwise add returns an error.
+- Use for scheduled probes/scripts that don't need the model. Output is delivered
+  like a normal job when "deliver" is set; a non-zero exit records the run as an error.`
 }
 
 func (t *CronTool) Parameters() map[string]any {
@@ -110,7 +143,7 @@ func (t *CronTool) Parameters() map[string]any {
 			},
 			"job": map[string]any{
 				"type":                 "object",
-				"description":          "Job definition for add action (name, schedule, message, deliver, channel, to, agentId, deleteAfterRun)",
+				"description":          "Job definition for add action (name, schedule, message, deliver, channel, to, agentId, provider, model, deleteAfterRun)",
 				"additionalProperties": true,
 			},
 			"jobId": map[string]any{
@@ -195,6 +228,205 @@ func (t *CronTool) handleList(ctx context.Context, args map[string]any, agentID,
 	return NewResult(string(data))
 }
 
+// parseDurationString parses standard and colloquial/Vietnamese duration strings.
+// Supports: "5m", "5min", "5p", "5 phút", "30s", "30 giây", "1h", "1 giờ", "1 tiếng", etc.
+func parseDurationString(raw string) (time.Duration, bool) {
+	s := strings.TrimSpace(strings.ToLower(raw))
+	if s == "" {
+		return 0, false
+	}
+	// Try standard Go time.ParseDuration first (e.g. "5m", "10s", "1h30m")
+	if d, err := time.ParseDuration(s); err == nil && d > 0 {
+		return d, true
+	}
+
+	// Clean common prefixes ("in ", "sau ", "trong ")
+	s = strings.TrimPrefix(s, "in ")
+	s = strings.TrimPrefix(s, "sau ")
+	s = strings.TrimPrefix(s, "trong ")
+	// Clean common Vietnamese suffixes (" nữa", " toi", " tới", " sau")
+	s = strings.TrimSuffix(s, " nữa")
+	s = strings.TrimSuffix(s, " toi")
+	s = strings.TrimSuffix(s, " tới")
+	s = strings.TrimSuffix(s, " sau")
+	s = strings.TrimSpace(s)
+	if d, err := time.ParseDuration(s); err == nil && d > 0 {
+		return d, true
+	}
+
+	// Minutes: 5m, 5p, 5phut, 5 phút, 5 min, 5 mins, 5 minutes
+	reMin := regexp.MustCompile(`^(\d+(?:\.\d+)?)\s*(p|phut|phút|min|mins|minutes|m)$`)
+	if m := reMin.FindStringSubmatch(s); len(m) == 3 {
+		if v, err := strconv.ParseFloat(m[1], 64); err == nil && v > 0 {
+			return time.Duration(v * float64(time.Minute)), true
+		}
+	}
+
+	// Seconds: 30s, 30 sec, 30 giay, 30 giây
+	reSec := regexp.MustCompile(`^(\d+(?:\.\d+)?)\s*(s|sec|secs|seconds|giay|giây)$`)
+	if m := reSec.FindStringSubmatch(s); len(m) == 3 {
+		if v, err := strconv.ParseFloat(m[1], 64); err == nil && v > 0 {
+			return time.Duration(v * float64(time.Second)), true
+		}
+	}
+
+	// Hours: 1h, 1 hr, 1 hour, 1 gio, 1 giờ, 1 tieng, 1 tiếng
+	reHr := regexp.MustCompile(`^(\d+(?:\.\d+)?)\s*(h|hr|hrs|hour|hours|gio|giờ|tieng|tiếng)$`)
+	if m := reHr.FindStringSubmatch(s); len(m) == 3 {
+		if v, err := strconv.ParseFloat(m[1], 64); err == nil && v > 0 {
+			return time.Duration(v * float64(time.Hour)), true
+		}
+	}
+
+	// Days: 1d, 1 day, 1 ngay, 1 ngày
+	reDay := regexp.MustCompile(`^(\d+(?:\.\d+)?)\s*(d|day|days|ngay|ngày)$`)
+	if m := reDay.FindStringSubmatch(s); len(m) == 3 {
+		if v, err := strconv.ParseFloat(m[1], 64); err == nil && v > 0 {
+			return time.Duration(v * 24 * float64(time.Hour)), true
+		}
+	}
+
+	return 0, false
+}
+
+// parseRelativeDuration extracts relative duration from numeric fields or string delay fields.
+func parseRelativeDuration(scheduleObj map[string]any) (time.Duration, bool) {
+	// Numeric minute fields
+	for _, k := range []string{"in_minutes", "inMinutes", "in_mins", "minutes"} {
+		if v, ok := numberFromMap(scheduleObj, k); ok && v > 0 {
+			return time.Duration(v * float64(time.Minute)), true
+		}
+	}
+	// Numeric second fields
+	for _, k := range []string{"in_seconds", "inSeconds", "seconds"} {
+		if v, ok := numberFromMap(scheduleObj, k); ok && v > 0 {
+			return time.Duration(v * float64(time.Second)), true
+		}
+	}
+	// Numeric hour fields
+	for _, k := range []string{"in_hours", "inHours", "hours"} {
+		if v, ok := numberFromMap(scheduleObj, k); ok && v > 0 {
+			return time.Duration(v * float64(time.Hour)), true
+		}
+	}
+
+	// String delay fields
+	for _, k := range []string{"delay", "in", "after"} {
+		if s, ok := scheduleObj[k].(string); ok && strings.TrimSpace(s) != "" {
+			if d, ok := parseDurationString(s); ok {
+				return d, true
+			}
+		}
+	}
+
+	// Also check if "time" or "at" was mistakenly given a relative expression like "5m", "5p", "in 5 minutes"
+	for _, k := range []string{"time", "at"} {
+		if s, ok := scheduleObj[k].(string); ok && strings.TrimSpace(s) != "" {
+			if d, ok := parseDurationString(s); ok {
+				return d, true
+			}
+		}
+	}
+
+	return 0, false
+}
+
+// parseAtSchedule extracts and validates the target timestamp in milliseconds for schedule.kind="at".
+// It supports relative durations (in_minutes: 5, delay: "5m"), human datetime strings, and atMs.
+func parseAtSchedule(scheduleObj map[string]any) (*int64, error) {
+	// 0. Relative duration support (in_minutes, delay, etc.)
+	if dur, ok := parseRelativeDuration(scheduleObj); ok {
+		ms := time.Now().Add(dur).UnixMilli()
+		return &ms, nil
+	}
+	// 1. Direct atMs support (numeric)
+	if v, ok := numberFromMap(scheduleObj, "atMs"); ok {
+		ms := int64(v)
+		if ms <= time.Now().UnixMilli() {
+			return nil, fmt.Errorf("job.schedule.atMs is in the past (%d). Use a future timestamp. Current time is %d ms", ms, time.Now().UnixMilli())
+		}
+		return &ms, nil
+	}
+
+	// 2. String datetime support
+	var rawTime string
+	for _, key := range []string{"time", "datetime", "at", "targetTime"} {
+		if s, ok := scheduleObj[key].(string); ok && strings.TrimSpace(s) != "" {
+			rawTime = strings.TrimSpace(s)
+			break
+		}
+	}
+
+	if rawTime == "" {
+		return nil, fmt.Errorf("job.schedule.time (e.g. 'YYYY-MM-DD HH:mm:ss' or 'HH:mm') or job.schedule.atMs is required for 'at' schedule")
+	}
+
+	// Timezone resolution (default Asia/Ho_Chi_Minh)
+	tzName := stringFromMap(scheduleObj, "tz")
+	if tzName == "" {
+		tzName = stringFromMap(scheduleObj, "timezone")
+	}
+	if tzName == "" {
+		tzName = "Asia/Ho_Chi_Minh"
+	}
+
+	loc, err := time.LoadLocation(tzName)
+	if err != nil {
+		loc = time.FixedZone("Asia/Ho_Chi_Minh", 7*3600)
+	}
+
+	now := time.Now().In(loc)
+	var targetTime time.Time
+	var parsed bool
+
+	formats := []string{
+		"2006-01-02 15:04:05",
+		"2006-01-02 15:04",
+		time.RFC3339,
+		"2006-01-02T15:04:05",
+		"2006-01-02T15:04",
+		"02/01/2006 15:04:05",
+		"02/01/2006 15:04",
+		"15:04:05",
+		"15:04",
+	}
+
+	for _, layout := range formats {
+		if layout == "15:04:05" || layout == "15:04" {
+			if t, err := time.ParseInLocation(layout, rawTime, loc); err == nil {
+				targetTime = time.Date(now.Year(), now.Month(), now.Day(), t.Hour(), t.Minute(), t.Second(), 0, loc)
+				if targetTime.Before(now) {
+					targetTime = targetTime.AddDate(0, 0, 1)
+				}
+				parsed = true
+				break
+			}
+		} else if strings.Contains(layout, "Z07:00") {
+			if t, err := time.Parse(layout, rawTime); err == nil {
+				targetTime = t.In(loc)
+				parsed = true
+				break
+			}
+		} else {
+			if t, err := time.ParseInLocation(layout, rawTime, loc); err == nil {
+				targetTime = t
+				parsed = true
+				break
+			}
+		}
+	}
+
+	if !parsed {
+		return nil, fmt.Errorf("unable to parse scheduled time %q (supported formats: 'YYYY-MM-DD HH:mm:ss', 'YYYY-MM-DD HH:mm', 'HH:mm')", rawTime)
+	}
+
+	ms := targetTime.UnixMilli()
+	if ms <= time.Now().UnixMilli() {
+		return nil, fmt.Errorf("scheduled time %s (%q) is in the past. Current time is %s", targetTime.Format("2006-01-02 15:04:05 MST"), rawTime, now.Format("2006-01-02 15:04:05 MST"))
+	}
+	return &ms, nil
+}
+
 func (t *CronTool) handleAdd(ctx context.Context, args map[string]any, agentID, userID string) *Result {
 	jobObj, ok := args["job"].(map[string]any)
 	if !ok {
@@ -207,13 +439,48 @@ func (t *CronTool) handleAdd(ctx context.Context, args map[string]any, agentID, 
 	}
 
 	scheduleObj, ok := jobObj["schedule"].(map[string]any)
-	if !ok {
-		return ErrorResult("job.schedule is required")
+	if !ok || scheduleObj == nil {
+		scheduleObj = make(map[string]any)
+	}
+
+	// Forward relative time fields from jobObj root if specified there
+	for _, k := range []string{"in_minutes", "inMinutes", "in_mins", "minutes", "delay", "in", "after", "in_seconds", "in_hours"} {
+		if val, exists := jobObj[k]; exists {
+			if _, inSched := scheduleObj[k]; !inSched {
+				scheduleObj[k] = val
+			}
+		}
+	}
+
+	// Auto-infer schedule kind if missing
+	if stringFromMap(scheduleObj, "kind") == "" {
+		if _, hasRel := parseRelativeDuration(scheduleObj); hasRel {
+			scheduleObj["kind"] = "at"
+		} else if _, hasAtMs := scheduleObj["atMs"]; hasAtMs {
+			scheduleObj["kind"] = "at"
+		} else if _, hasTime := scheduleObj["time"]; hasTime {
+			scheduleObj["kind"] = "at"
+		} else if _, hasEvery := scheduleObj["everyMs"]; hasEvery {
+			scheduleObj["kind"] = "every"
+		} else if _, hasExpr := scheduleObj["expr"]; hasExpr {
+			scheduleObj["kind"] = "cron"
+		}
+	}
+
+	// Optional deterministic command payload (runs a shell command, no LLM turn).
+	cmdSpec := parseCronCommandSpec(jobObj)
+	if cmdSpec != nil {
+		if !t.commandEnabled {
+			return ErrorResult("command cron is disabled on this gateway (set cron.command_enabled=true to allow it)")
+		}
+		if err := store.ValidateCronCommandSpec(cmdSpec); err != nil {
+			return ErrorResult(err.Error())
+		}
 	}
 
 	message, _ := jobObj["message"].(string)
-	if message == "" {
-		return ErrorResult("job.message is required")
+	if cmdSpec == nil && message == "" {
+		return ErrorResult("job.message is required (or set job.command/job.commandArgv for a deterministic command job)")
 	}
 
 	// Parse schedule
@@ -226,15 +493,11 @@ func (t *CronTool) handleAdd(ctx context.Context, args map[string]any, agentID, 
 
 	switch schedule.Kind {
 	case "at":
-		if v, ok := numberFromMap(scheduleObj, "atMs"); ok {
-			ms := int64(v)
-			if ms <= time.Now().UnixMilli() {
-				return ErrorResult(fmt.Sprintf("job.schedule.atMs is in the past (%d). Use a future Unix timestamp in milliseconds. Current time is %d ms", ms, time.Now().UnixMilli()))
-			}
-			schedule.AtMS = &ms
-		} else {
-			return ErrorResult("job.schedule.atMs is required for 'at' schedule")
+		ms, err := parseAtSchedule(scheduleObj)
+		if err != nil {
+			return ErrorResult(err.Error())
 		}
+		schedule.AtMS = ms
 	case "every":
 		if v, ok := numberFromMap(scheduleObj, "everyMs"); ok {
 			ms := int64(v)
@@ -280,11 +543,15 @@ func (t *CronTool) handleAdd(ctx context.Context, args map[string]any, agentID, 
 	// Always prefer context values over LLM-provided values to prevent
 	// misrouted deliveries (e.g. LLM confusing guild ID with channel ID).
 	if deliver {
-		if ctxChannel := ToolChannelFromCtx(ctx); ctxChannel != "" {
-			channel = ctxChannel
+		if channel == "" || channel == "zalo" || channel == "zalo_personal" || channel == "zalo_oa" {
+			if ctxChannel := ToolChannelFromCtx(ctx); ctxChannel != "" {
+				channel = ctxChannel
+			}
 		}
-		if ctxChatID := ToolChatIDFromCtx(ctx); ctxChatID != "" {
-			to = ctxChatID
+		if to == "" {
+			if ctxChatID := ToolChatIDFromCtx(ctx); ctxChatID != "" {
+				to = ctxChatID
+			}
 		}
 	}
 
@@ -293,15 +560,40 @@ func (t *CronTool) handleAdd(ctx context.Context, args map[string]any, agentID, 
 		agentID = explicit
 	}
 
+	// Resolve optional per-job provider/model override before creating the job.
+	providerID, errR := t.resolveProviderID(ctx, jobObj)
+	if errR != nil {
+		return errR
+	}
+	modelOverride, _ := jobObj["model"].(string)
+
 	job, err := t.cronStore.AddJob(ctx, name, schedule, message, deliver, channel, to, agentID, userID)
 	if err != nil {
 		return ErrorResult(fmt.Sprintf("failed to create cron job: %v", err))
 	}
 
-	// Set wake_heartbeat if requested (triggers heartbeat after cron job completes)
+	// Apply post-create overrides (wake_heartbeat, provider/model) in a single patch.
+	overridePatch := store.CronJobPatch{}
+	needOverride := false
 	if wh, _ := jobObj["wake_heartbeat"].(bool); wh {
 		wakeTrue := true
-		if updated, uErr := t.cronStore.UpdateJob(ctx, job.ID, store.CronJobPatch{WakeHeartbeat: &wakeTrue}); uErr == nil {
+		overridePatch.WakeHeartbeat = &wakeTrue
+		needOverride = true
+	}
+	if providerID != nil {
+		overridePatch.ProviderID = providerID
+		needOverride = true
+	}
+	if modelOverride != "" {
+		overridePatch.Model = &modelOverride
+		needOverride = true
+	}
+	if cmdSpec != nil {
+		overridePatch.Command = cmdSpec
+		needOverride = true
+	}
+	if needOverride {
+		if updated, uErr := t.cronStore.UpdateJob(ctx, job.ID, overridePatch); uErr == nil {
 			job = updated
 		}
 	}
@@ -348,15 +640,73 @@ func (t *CronTool) handleUpdate(ctx context.Context, args map[string]any, agentI
 		return ErrorResult("patch object is required for update action")
 	}
 
+	// A command payload on update follows the same forms (shell string or argv)
+	// and the same gate as add. Parse it out first and drop the raw keys so the
+	// generic patch unmarshal below — whose Command field is a structured spec —
+	// can't choke on a shell string, and so update can't slip a command payload
+	// past the command-enabled gate.
+	cmdSpec := parseCronCommandSpec(patchObj)
+	delete(patchObj, "command")
+	delete(patchObj, "commandArgv")
+
 	var patch store.CronJobPatch
 	// Re-marshal and unmarshal to leverage JSON tags
 	patchJSON, _ := json.Marshal(patchObj)
 	json.Unmarshal(patchJSON, &patch)
 
-	// Validate atMs not in the past when updating schedule
-	if patch.Schedule != nil && patch.Schedule.Kind == "at" && patch.Schedule.AtMS != nil {
+	if cmdSpec != nil {
+		if !t.commandEnabled {
+			return ErrorResult("command cron is disabled on this gateway (set cron.command_enabled=true to allow it)")
+		}
+		if err := store.ValidateCronCommandSpec(cmdSpec); err != nil {
+			return ErrorResult(err.Error())
+		}
+		patch.Command = cmdSpec
+	}
+
+	// Resolve provider override by name (providerId UUID is handled by JSON tags above).
+	if name, _ := patchObj["provider"].(string); name != "" {
+		pid, errR := t.resolveProviderID(ctx, patchObj)
+		if errR != nil {
+			return errR
+		}
+		patch.ProviderID = pid
+	}
+
+	// Support schedule relative fields (in_minutes, delay) or absolute time in patch
+	if scheduleObj, ok := patchObj["schedule"].(map[string]any); ok && scheduleObj != nil {
+		if stringFromMap(scheduleObj, "kind") == "" {
+			if _, hasRel := parseRelativeDuration(scheduleObj); hasRel {
+				scheduleObj["kind"] = "at"
+			}
+		}
+		if kind := stringFromMap(scheduleObj, "kind"); kind == "at" {
+			ms, err := parseAtSchedule(scheduleObj)
+			if err != nil {
+				return ErrorResult(err.Error())
+			}
+			if patch.Schedule == nil {
+				patch.Schedule = &store.CronSchedule{Kind: "at"}
+			}
+			patch.Schedule.AtMS = ms
+		}
+	} else if patch.Schedule != nil && patch.Schedule.Kind == "at" && patch.Schedule.AtMS != nil {
 		if *patch.Schedule.AtMS <= time.Now().UnixMilli() {
 			return ErrorResult(fmt.Sprintf("schedule.atMs is in the past (%d). Use the datetime tool to get current time, then set a future timestamp. Current time is %d ms", *patch.Schedule.AtMS, time.Now().UnixMilli()))
+		}
+	} else {
+		// Check if in_minutes or delay was provided at patchObj root
+		for _, k := range []string{"in_minutes", "inMinutes", "in_mins", "minutes", "delay", "in_seconds", "in_hours"} {
+			if val, exists := patchObj[k]; exists {
+				sched := map[string]any{k: val, "kind": "at"}
+				if ms, err := parseAtSchedule(sched); err == nil {
+					if patch.Schedule == nil {
+						patch.Schedule = &store.CronSchedule{Kind: "at"}
+					}
+					patch.Schedule.AtMS = ms
+					break
+				}
+			}
 		}
 	}
 
@@ -447,6 +797,30 @@ func (t *CronTool) handleRuns(ctx context.Context, args map[string]any, agentID,
 	return NewResult(string(data))
 }
 
+// resolveProviderID resolves an optional per-job provider override from a job/patch
+// map. Accepts "providerId" (UUID string) or "provider" (provider name, looked up
+// via the provider store). Returns (nil, nil) when neither is present.
+func (t *CronTool) resolveProviderID(ctx context.Context, m map[string]any) (*uuid.UUID, *Result) {
+	if raw, _ := m["providerId"].(string); raw != "" {
+		id, err := uuid.Parse(raw)
+		if err != nil {
+			return nil, ErrorResult(fmt.Sprintf("invalid providerId %q: must be a UUID", raw))
+		}
+		return &id, nil
+	}
+	if name, _ := m["provider"].(string); name != "" {
+		if t.providerStore == nil {
+			return nil, ErrorResult("provider override by name is unavailable; pass providerId instead")
+		}
+		pd, err := t.providerStore.GetProviderByName(ctx, name)
+		if err != nil || pd == nil {
+			return nil, ErrorResult(fmt.Sprintf("provider %q not found; register it first or pass a valid providerId", name))
+		}
+		return &pd.ID, nil
+	}
+	return nil, nil
+}
+
 // --- helpers ---
 
 func resolveJobID(args map[string]any) string {
@@ -465,6 +839,75 @@ func stringFromMap(m map[string]any, key string) string {
 }
 
 func numberFromMap(m map[string]any, key string) (float64, bool) {
-	v, ok := m[key].(float64)
-	return v, ok
+	val, ok := m[key]
+	if !ok || val == nil {
+		return 0, false
+	}
+	switch v := val.(type) {
+	case float64:
+		return v, true
+	case float32:
+		return float64(v), true
+	case int:
+		return float64(v), true
+	case int64:
+		return float64(v), true
+	case int32:
+		return float64(v), true
+	case json.Number:
+		if f, err := v.Float64(); err == nil {
+			return f, true
+		}
+	case string:
+		if f, err := strconv.ParseFloat(strings.TrimSpace(v), 64); err == nil {
+			return f, true
+		}
+	}
+	return 0, false
+}
+
+// parseCronCommandSpec extracts an optional deterministic command payload from a
+// cron tool "job" object. It accepts either a shell string ("command", wrapped
+// as ["sh","-c",...]) or an explicit argv array ("commandArgv"). Returns nil
+// when no command fields are present (i.e. it's a normal agent-turn job).
+func parseCronCommandSpec(jobObj map[string]any) *store.CronCommandSpec {
+	var argv []string
+	if raw, ok := jobObj["commandArgv"].([]any); ok {
+		for _, v := range raw {
+			if s, ok := v.(string); ok {
+				argv = append(argv, s)
+			}
+		}
+	}
+	if len(argv) == 0 {
+		if s, _ := jobObj["command"].(string); s != "" {
+			argv = []string{"sh", "-c", s}
+		}
+	}
+	if len(argv) == 0 {
+		return nil
+	}
+
+	spec := &store.CronCommandSpec{Argv: argv}
+	if cwd, _ := jobObj["commandCwd"].(string); cwd != "" {
+		spec.Cwd = cwd
+	}
+	if v, ok := numberFromMap(jobObj, "commandTimeoutSeconds"); ok {
+		spec.TimeoutSeconds = int(v)
+	}
+	if v, ok := numberFromMap(jobObj, "commandNoOutputTimeoutSeconds"); ok {
+		spec.NoOutputTimeoutSeconds = int(v)
+	}
+	if v, ok := numberFromMap(jobObj, "commandOutputMaxBytes"); ok {
+		spec.OutputMaxBytes = int(v)
+	}
+	if env, ok := jobObj["commandEnv"].(map[string]any); ok && len(env) > 0 {
+		spec.Env = make(map[string]string, len(env))
+		for k, v := range env {
+			if s, ok := v.(string); ok {
+				spec.Env[k] = s
+			}
+		}
+	}
+	return spec
 }

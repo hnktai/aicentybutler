@@ -99,14 +99,6 @@ func (c *Channel) handleMessage(ev *slackevents.MessageEvent) {
 		}
 	}
 
-	// For DMs, apply global allowlist filter (allow_from contains user IDs).
-	// For groups, skip — group policy already handles channel/user filtering.
-	if isDM && !c.IsAllowed(senderID) {
-		slog.Debug("slack message rejected by allowlist",
-			"user_id", senderID, "display_name", displayName)
-		return
-	}
-
 	// Process file attachments from Slack message
 	var mediaPaths []string
 	var allItems []mediaItem
@@ -229,7 +221,7 @@ func (c *Channel) handleMessage(ev *slackevents.MessageEvent) {
 
 	_, placeholderTS, err := c.api.PostMessage(channelID, placeholderOpts...)
 	if err == nil {
-		c.placeholders.Store(localKey, placeholderTS)
+		c.placeholders.Store(threadPlaceholderKey(localKey, replyThreadTS), placeholderTS)
 	}
 
 	// Build final content with group history context
@@ -255,7 +247,7 @@ func (c *Channel) handleMessage(ev *slackevents.MessageEvent) {
 		"channel_id":      channelID,
 		"is_dm":           fmt.Sprintf("%t", isDM),
 		"local_key":       localKey,
-		"placeholder_key": localKey,
+		"placeholder_key": threadPlaceholderKey(localKey, replyThreadTS),
 	}
 	if replyThreadTS != "" {
 		metadata["message_thread_id"] = replyThreadTS
@@ -263,7 +255,7 @@ func (c *Channel) handleMessage(ev *slackevents.MessageEvent) {
 
 	// Message debounce: batch rapid messages per-thread
 	if c.debounceDelay > 0 {
-		if c.debounceMessage(localKey, senderID, channelID, finalContent, mediaPaths, metadata, peerKind) {
+		if c.debounceMessage(localKey, senderID, channelID, finalContent, mediaPaths, metadata, peerKind, true) {
 			// Record thread participation even when debounced
 			if peerKind == "group" && replyThreadTS != "" {
 				participKey := channelID + ":particip:" + replyThreadTS
@@ -273,7 +265,7 @@ func (c *Channel) handleMessage(ev *slackevents.MessageEvent) {
 		}
 	}
 
-	c.HandleMessage(senderID, channelID, finalContent, mediaPaths, metadata, peerKind)
+	c.HandleAuthorizedMessage(senderID, channelID, finalContent, mediaPaths, metadata, peerKind)
 
 	// Record thread participation for auto-reply cache
 	if peerKind == "group" {
@@ -292,7 +284,7 @@ func (c *Channel) fetchThreadParentContext(ctx context.Context, channelID, threa
 		ChannelID: channelID,
 		Latest:    threadTS,
 		Limit:     1,
-		Inclusive:  true,
+		Inclusive: true,
 	}
 	history, err := c.api.GetConversationHistoryContext(ctx, params)
 	if err != nil || len(history.Messages) == 0 {

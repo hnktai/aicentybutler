@@ -153,7 +153,7 @@ func (m *HookMethods) handleCreate(ctx context.Context, client *gateway.Client, 
 		cfg.TenantID = hooks.SentinelTenantID
 	}
 
-	if err := cfg.Validate(m.edition); err != nil {
+	if err := cfg.Validate(m.edition, store.IsMasterScope(ctx)); err != nil {
 		client.SendResponse(protocol.NewErrorResponse(req.ID, protocol.ErrInvalidRequest, err.Error()))
 		return
 	}
@@ -215,7 +215,7 @@ func (m *HookMethods) handleUpdate(ctx context.Context, client *gateway.Client, 
 		return
 	}
 	merged := applyHookPatch(*current, params.Updates)
-	if verr := merged.Validate(m.edition); verr != nil {
+	if verr := merged.Validate(m.edition, store.IsMasterScope(ctx)); verr != nil {
 		client.SendResponse(protocol.NewErrorResponse(req.ID, protocol.ErrInvalidRequest, verr.Error()))
 		return
 	}
@@ -377,7 +377,7 @@ func (m *HookMethods) handleTest(ctx context.Context, client *gateway.Client, re
 	if cfg.Scope == hooks.ScopeGlobal {
 		cfg.TenantID = hooks.SentinelTenantID
 	}
-	if err := cfg.Validate(m.edition); err != nil {
+	if err := cfg.Validate(m.edition, store.IsMasterScope(ctx)); err != nil {
 		client.SendResponse(protocol.NewErrorResponse(req.ID, protocol.ErrInvalidRequest, err.Error()))
 		return
 	}
@@ -454,9 +454,13 @@ func parseTestEventParams(raw json.RawMessage, cfg *hooks.HookConfig) (hooks.Eve
 		return ev, nil
 	}
 	var sample struct {
-		ToolName  string         `json:"toolName"`
-		ToolInput map[string]any `json:"toolInput"`
-		RawInput  string         `json:"rawInput"`
+		ToolName      string         `json:"toolName"`
+		ToolInput     map[string]any `json:"toolInput"`
+		RawInput      string         `json:"rawInput"`
+		SenderID      string         `json:"senderId"`
+		SenderIDSnake string         `json:"sender_id"`
+		UserID        string         `json:"userId"`
+		UserIDSnake   string         `json:"user_id"`
 	}
 	if err := json.Unmarshal(raw, &sample); err != nil {
 		return ev, fmt.Errorf("invalid sampleEvent: %w", err)
@@ -464,5 +468,32 @@ func parseTestEventParams(raw json.RawMessage, cfg *hooks.HookConfig) (hooks.Eve
 	ev.ToolName = sample.ToolName
 	ev.ToolInput = sample.ToolInput
 	ev.RawInput = sample.RawInput
+
+	senderID := sample.SenderID
+	if senderID == "" {
+		senderID = sample.SenderIDSnake
+	}
+	userID := sample.UserID
+	if userID == "" {
+		userID = sample.UserIDSnake
+	}
+	if sample.ToolInput != nil {
+		if senderID == "" {
+			if s, ok := sample.ToolInput["sender_id"].(string); ok && s != "" {
+				senderID = s
+			} else if s, ok := sample.ToolInput["senderId"].(string); ok && s != "" {
+				senderID = s
+			}
+		}
+		if userID == "" {
+			if u, ok := sample.ToolInput["user_id"].(string); ok && u != "" {
+				userID = u
+			} else if u, ok := sample.ToolInput["userId"].(string); ok && u != "" {
+				userID = u
+			}
+		}
+	}
+	ev.SenderID = senderID
+	ev.UserID = userID
 	return ev, nil
 }

@@ -196,6 +196,7 @@ export function AiDefaultsSection({ data, onSave, saving }: Props) {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label={t("agents.compaction.reserveTokensFloor")} tip={t("agents.compaction.reserveTokensFloorTip")} type="number" value={compaction.reserveTokensFloor} onChange={(v) => updateNested("compaction", { reserveTokensFloor: Number(v) })} placeholder="20000" />
             <Field label={t("agents.compaction.maxHistoryShare")} tip={t("agents.compaction.maxHistoryShareTip")} type="number" step="0.05" value={compaction.maxHistoryShare} onChange={(v) => updateNested("compaction", { maxHistoryShare: Number(v) })} placeholder="0.75" />
+            <Field label={t("agents.compaction.timeoutSeconds")} tip={t("agents.compaction.timeoutSecondsTip")} type="number" value={compaction.timeoutSeconds} onChange={(v) => updateNested("compaction", { timeoutSeconds: Number(v) })} placeholder="120" />
           </div>
         </SubSection>
 
@@ -208,7 +209,7 @@ export function AiDefaultsSection({ data, onSave, saving }: Props) {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="grid gap-1.5">
               <Label>{t("agents.pruning.mode")}</Label>
-              <Select value={pruning.mode ?? "auto"} onValueChange={(v) => updateNested("contextPruning", { mode: v })}>
+              <Select value={pruning.mode ?? "cache-ttl"} onValueChange={(v) => updateNested("contextPruning", { mode: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="off">Off</SelectItem>
@@ -263,4 +264,3 @@ export function AiDefaultsSection({ data, onSave, saving }: Props) {
     </Card>
   );
 }
-
